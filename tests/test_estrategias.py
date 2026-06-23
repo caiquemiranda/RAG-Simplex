@@ -48,6 +48,9 @@ def test_extrativo_renderiza_dupla_camada():
     # Camada simples traz a explicação; a técnica traz causas/passos.
     assert "não enxerga o cabeçote" in resp.texto
     assert "Passos de solução" in resp.texto
+    # Trecho do guia na íntegra (sugestão do fabricante) presente, ao final.
+    assert "Sugestão do fabricante" in resp.texto
+    assert "na íntegra" in resp.texto
     # Sem aviso de segurança para severidade Média sem termos de risco.
     assert "AVISO DE SEGURANÇA" not in resp.texto
 
@@ -90,9 +93,13 @@ def test_obter_estrategia_padrao_e_invalida():
         obter_estrategia("inexistente")
 
 
-def test_formatar_fontes():
-    blocos = [Resultado("c1", "t", _META_HEAD_MISSING, 0.912345)]
+def test_formatar_fontes_inclui_trecho_integral():
+    blocos = [Resultado("c1", _TEXTO_HEAD_MISSING, _META_HEAD_MISSING, 0.912345)]
     fontes = _formatar_fontes(blocos)
     assert fontes[0]["header"] == "Falha: Head Missing (Cabeçote Ausente)"
     assert fontes[0]["similaridade"] == 0.912
     assert fontes[0]["sistema"] == "4100"
+    # Trecho na íntegra: sem a linha técnica [header_path], com o conteúdo do guia.
+    assert not fontes[0]["trecho"].startswith("[")
+    assert "Explicação simples" in fontes[0]["trecho"]
+    assert "Passos de solução" in fontes[0]["trecho"]

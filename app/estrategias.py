@@ -70,8 +70,19 @@ _RISCO_KW = (
 )
 
 
+def trecho_integral(bloco: Resultado) -> str:
+    """Texto do bloco **na íntegra** (sugestão do fabricante), só removendo a
+    linha técnica ``[header_path]`` que a ingestão prepende. Mantém título + corpo.
+    """
+    texto = bloco.texto
+    if texto.startswith("["):
+        _, _, resto = texto.partition("\n")
+        texto = resto.lstrip("\n")
+    return texto.strip()
+
+
 def _formatar_fontes(blocos: list[Resultado]) -> list[dict]:
-    """Resumo das fontes para exibição/auditoria."""
+    """Resumo das fontes para exibição/auditoria, com o trecho original do guia."""
     return [
         {
             "id": b.id,
@@ -79,6 +90,8 @@ def _formatar_fontes(blocos: list[Resultado]) -> list[dict]:
             "sistema": b.metadados.get("sistema"),
             "severidade": b.metadados.get("severidade"),
             "similaridade": round(b.similaridade, 3),
+            "fonte": b.metadados.get("fonte"),
+            "trecho": trecho_integral(b),  # texto do guia na íntegra
         }
         for b in blocos
     ]
@@ -165,10 +178,13 @@ class LocalExtrativa(EstrategiaGeracao):
         if tecnica:
             partes.append("## 🔧 Resolução técnica\n\n" + tecnica)
 
+        # Trecho original do guia, na íntegra (sugestão do fabricante), para o
+        # técnico conferir a fonte exata — reforça a ancoragem (PRD §2.2).
         partes.append(
-            f"---\n*Trecho extraído diretamente do guia oficial "
-            f"({bloco.metadados.get('fonte', 'guia')}, similaridade "
-            f"{bloco.similaridade:.2f}) — sem geração por IA.*"
+            "## 📄 Sugestão do fabricante (trecho do guia, na íntegra)\n\n"
+            + trecho_integral(bloco)
+            + f"\n\n*Fonte: {bloco.metadados.get('fonte', 'guia')} — similaridade "
+            f"{bloco.similaridade:.2f}. Conteúdo reproduzido sem geração por IA.*"
         )
 
         if relacionados:

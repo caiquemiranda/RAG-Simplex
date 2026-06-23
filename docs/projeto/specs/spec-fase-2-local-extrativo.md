@@ -40,8 +40,11 @@ estrategias.Resposta  →  geracao.gerar_resposta / _stream  →  main (API)
   - **`_precisa_aviso`**: aviso de segurança no topo se `severidade ∈ {Alta, Crítica}`
     ou se o texto contém termos de risco (`terra`, `tensão`, `fonte`, `bateria`,
     `curto`, `supress`, `evacua`, `carregador`, `aterr`, `4100-0157`, ...).
-  - Monta: `[aviso?]` + título + `🟢` + `🔧` + nota de origem + `📎 Blocos relacionados`
-    (até `settings.extrativo_max_relacionados`).
+  - Monta: `[aviso?]` + título + `🟢` + `🔧` + **`📄 Sugestão do fabricante (trecho do
+    guia, na íntegra)`** + `📎 Blocos relacionados` (até `settings.extrativo_max_relacionados`).
+- **`trecho_integral(bloco)`**: devolve o texto do guia **na íntegra** (só remove a
+  linha técnica `[header_path]`). Exposto em cada fonte (`fontes[].trecho`) e renderizado
+  na resposta — o técnico confere a palavra exata do fabricante (reforça ancoragem).
 - **Registro:** `ESTRATEGIAS` (dict nome→instância) + `obter_estrategia(nome)`
   (resolve o padrão de `settings`; erro acionável se nome inválido) +
   `registrar_estrategia()` (estratégias de nuvem se auto-registram).

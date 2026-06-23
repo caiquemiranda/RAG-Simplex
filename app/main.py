@@ -48,6 +48,8 @@ class FonteOut(BaseModel):
     sistema: str | None = None
     severidade: str | None = None
     similaridade: float
+    fonte: str | None = None
+    trecho: str | None = None  # texto do guia na íntegra (sugestão do fabricante)
 
 
 class RespostaOut(BaseModel):
