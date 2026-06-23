@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python -m app.ingestao:*)",
+      "Bash(python -m app.recuperacao:*)",
+      "Bash(python -m app.geracao:*)",
+      "Bash(pytest:*)",
+      "Bash(uvicorn:*)",
+      "Bash(pip install:*)"
+    ],
+    "deny": [
+      "Read(./.env)"
+    ]
+  },
+  "env": {
+    "PYTHONUTF8": "1"
+  }
+}

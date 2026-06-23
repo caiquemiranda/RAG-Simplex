@@ -1,0 +1,2 @@
+# Artefatos processados: o banco vetorial ChromaDB é gerado em ./chroma/
+# (ignorado pelo git). Rode `python -m app.ingestao --reset` para (re)criar.
