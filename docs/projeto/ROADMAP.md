@@ -16,7 +16,7 @@ administrativo e controle de acesso por usuário**.
 | 1 | Sistema de documentação & planejamento | — | ✅ |
 | 2 | Estratégia `LOCAL_EXTRATIVO` + interface plugável | ❌ Não | ✅ |
 | 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ✅ |
-| 4 | Autenticação (JWT) | ❌ Não | ⬜ |
+| 4 | Autenticação (JWT) | ❌ Não | ✅ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ⬜ |
 | 6 | Painel ADM (API) | ❌ Não | ⬜ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
@@ -105,15 +105,22 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 4 — Autenticação (JWT) ⬜
+## Fase 4 — Autenticação (JWT) ✅
 
-- [ ] Login usuário/senha com hash (argon2/bcrypt)
-- [ ] Emissão/validação de JWT (access + refresh)
-- [ ] Dependency `usuario_atual`; seed de admin inicial
+- [x] Login usuário/senha com hash **argon2** (`auth.py`)
+- [x] Emissão/validação de JWT (access + refresh, PyJWT HS256)
+- [x] Dependency `usuario_atual`; seed de admin (`--criar-admin`)
+- [x] `/auth/login`, `/auth/refresh`, `/auth/me`; `/query`,`/query/stream`,`/ingest` protegidos
+- [x] Integra Fase 3: estratégia por usuário + `LogConsulta` em `/query`
 
-**Testes:** [ ] senha certa/errada · [ ] endpoint protegido nega sem token · [ ] token expirado rejeitado
+**Testes (rodados — 33 passed):**
+- [x] senha certa/errada (argon2)
+- [x] endpoint protegido nega sem token; aceita com token válido
+- [x] token expirado/malformado rejeitado; refresh ≠ access
 
-**DoD:** `/query` exige login.
+**DoD:** ✅ `/query` exige login.
+
+📄 Spec: [`specs/spec-fase-4-auth.md`](specs/spec-fase-4-auth.md)
 
 ---
 

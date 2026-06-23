@@ -1,10 +1,13 @@
 """API HTTP (FastAPI) do RAG-Simplex.
 
 Endpoints:
+- ``POST /auth/login``    — e-mail/senha → tokens (access + refresh).
+- ``POST /auth/refresh``  — refresh token → novo access token.
+- ``GET  /auth/me``       — dados do usuário autenticado.
 - ``GET  /health``        — verificação de saúde + estado da coleção.
-- ``POST /ingest``        — (re)indexa o guia no banco vetorial.
-- ``POST /query``         — pergunta → resposta em dupla camada + fontes.
-- ``POST /query/stream``  — mesma resposta, em streaming (text/plain).
+- ``POST /ingest``        — (re)indexa o guia (requer login).
+- ``POST /query``         — pergunta → resposta em dupla camada + fontes (requer login).
+- ``POST /query/stream``  — mesma resposta, em streaming (requer login).
 
 Execução local:
     uvicorn app.main:app --reload
@@ -12,14 +15,27 @@ Execução local:
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app import __version__
+from app.auth import (
+    TokenInvalido,
+    criar_access_token,
+    criar_refresh_token,
+    decodificar_token,
+    usuario_atual,
+    verificar_senha,
+)
 from app.config import settings
+from app.db import get_session
 from app.geracao import gerar_resposta, gerar_resposta_stream
 from app.ingestao import get_collection, indexar
+from app.modelos import LogConsulta, Usuario
+from app.preferencias import resolver_estrategia
 from app.recuperacao import buscar
 
 app = FastAPI(
@@ -64,6 +80,78 @@ class IngestOut(BaseModel):
     colecao: str
 
 
+class LoginIn(BaseModel):
+    email: str = Field(..., examples=["admin@example.com"])
+    senha: str = Field(..., min_length=1)
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
+
+
+class UsuarioOut(BaseModel):
+    id: int
+    email: str
+    nome: str
+    papel: str | None = None
+    permissoes: list[str] = []
+
+
+# --------------------------------------------------------------------------- #
+# Autenticação                                                                 #
+# --------------------------------------------------------------------------- #
+@app.post("/auth/login", response_model=TokenOut)
+def login(dados: LoginIn, sessao: Session = Depends(get_session)) -> TokenOut:
+    """Autentica por e-mail/senha e devolve tokens de acesso e refresh."""
+    usuario = sessao.scalar(select(Usuario).where(Usuario.email == dados.email))
+    if usuario is None or not verificar_senha(dados.senha, usuario.hash_senha):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="E-mail ou senha inválidos.")
+    if not usuario.ativo:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuário inativo.")
+    papel = usuario.papel.nome if usuario.papel else None
+    return TokenOut(
+        access_token=criar_access_token(usuario.id, papel),
+        refresh_token=criar_refresh_token(usuario.id),
+    )
+
+
+@app.post("/auth/refresh", response_model=TokenOut)
+def refresh(dados: RefreshIn, sessao: Session = Depends(get_session)) -> TokenOut:
+    """Emite um novo token de acesso a partir de um refresh token válido."""
+    try:
+        payload = decodificar_token(dados.refresh_token)
+    except TokenInvalido as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+    if payload.get("tipo") != "refresh":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token de refresh esperado.")
+    usuario = sessao.get(Usuario, int(payload["sub"]))
+    if usuario is None or not usuario.ativo:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Usuário inexistente ou inativo.")
+    papel = usuario.papel.nome if usuario.papel else None
+    return TokenOut(access_token=criar_access_token(usuario.id, papel))
+
+
+@app.get("/auth/me", response_model=UsuarioOut)
+def me(usuario: Usuario = Depends(usuario_atual)) -> UsuarioOut:
+    """Dados do usuário autenticado."""
+    return UsuarioOut(
+        id=usuario.id,
+        email=usuario.email,
+        nome=usuario.nome,
+        papel=usuario.papel.nome if usuario.papel else None,
+        permissoes=[p.chave for p in usuario.papel.permissoes] if usuario.papel else [],
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Endpoints                                                                    #
 # --------------------------------------------------------------------------- #
@@ -85,7 +173,7 @@ def health() -> dict:
 
 
 @app.post("/ingest", response_model=IngestOut)
-def ingest() -> IngestOut:
+def ingest(usuario: Usuario = Depends(usuario_atual)) -> IngestOut:
     """(Re)indexa o guia padrão definido em ``settings.knowledge_base``."""
     try:
         total = indexar(reset=True)
@@ -97,13 +185,33 @@ def ingest() -> IngestOut:
 
 
 @app.post("/query", response_model=RespostaOut)
-def query(consulta: ConsultaIn) -> RespostaOut:
-    """Recupera contexto e gera a resposta em dupla camada."""
+def query(
+    consulta: ConsultaIn,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> RespostaOut:
+    """Recupera contexto e gera a resposta na estratégia configurada para o usuário."""
+    papel = usuario.papel.nome if usuario.papel else None
+    estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
     try:
         rec = buscar(consulta.pergunta, top_k=consulta.top_k, sistema=consulta.sistema)
-        resp = gerar_resposta(consulta.pergunta, recuperacao=rec, persona=consulta.persona)
+        resp = gerar_resposta(
+            consulta.pergunta, recuperacao=rec, persona=consulta.persona, estrategia=estrategia
+        )
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+
+    # Auditoria (PRD §6.2): registra a consulta sem expor a chave do provedor.
+    sessao.add(LogConsulta(
+        usuario_id=usuario.id,
+        pergunta=consulta.pergunta,
+        estrategia=resp.estrategia or estrategia,
+        latencia_ms=resp.latencia_ms,
+        custo_estimado=resp.custo_estimado,
+        fallback=resp.fallback,
+    ))
+    sessao.commit()
+
     return RespostaOut(
         pergunta=consulta.pergunta,
         resposta=resp.texto,
@@ -113,12 +221,20 @@ def query(consulta: ConsultaIn) -> RespostaOut:
 
 
 @app.post("/query/stream")
-def query_stream(consulta: ConsultaIn) -> StreamingResponse:
+def query_stream(
+    consulta: ConsultaIn,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> StreamingResponse:
     """Mesma resposta de ``/query``, porém em streaming (text/plain; charset=utf-8)."""
+    papel = usuario.papel.nome if usuario.papel else None
+    estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
     try:
         rec = buscar(consulta.pergunta, top_k=consulta.top_k, sistema=consulta.sistema)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 
-    gerador = gerar_resposta_stream(consulta.pergunta, recuperacao=rec, persona=consulta.persona)
+    gerador = gerar_resposta_stream(
+        consulta.pergunta, recuperacao=rec, persona=consulta.persona, estrategia=estrategia
+    )
     return StreamingResponse(gerador, media_type="text/plain; charset=utf-8")

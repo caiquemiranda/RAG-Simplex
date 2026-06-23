@@ -9,6 +9,33 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 4 — Autenticação (JWT)
+
+**Branch:** `feat/fase-4-auth` (sobre a 3).
+
+**Feito:**
+- `app/auth.py`: hash **argon2**, tokens **PyJWT HS256** (access+refresh),
+  `usuario_atual`, `criar_ou_atualizar_admin` + CLI `--criar-admin`.
+- `main.py`: `/auth/login` (JSON), `/auth/refresh`, `/auth/me`; `/query`,
+  `/query/stream`, `/ingest` protegidos. Em `/query`, estratégia resolvida por
+  usuário (Fase 3) + gravação de `LogConsulta` (auditoria).
+- `config.py`: `jwt_secret`, `jwt_algorithm`, expirações.
+- `requirements.txt`: +PyJWT, +argon2-cffi, **+email-validator** (D-018: FastAPI
+  carrega `Contact.email=EmailStr` ao importar `fastapi.security`).
+
+**Decisão:** D-018 (argon2 + PyJWT + login JSON; email-validator obrigatório).
+
+**Validação (rodada aqui):** `pytest` = **33 passed** (8 novos, inclui TestClient
+com SQLite em memória); `python -m app.auth --criar-admin` criou admin id=1.
+`email-validator` instalado no ambiente (pip funcionou; só HF/GitHub tinham SSL).
+
+**Próximo:** Fase 5 — Autorização / RBAC.
+
+**Arquivos:** `app/{auth,main,config}.py`, `tests/test_auth.py`, `requirements.txt`,
+`docs/projeto/specs/spec-fase-4-auth.md`.
+
+---
+
 ## 2026-06-23 — Fase 3 — Persistência (SQLite) & config hierárquica
 
 **Branch:** `feat/fase-3-persistencia`.

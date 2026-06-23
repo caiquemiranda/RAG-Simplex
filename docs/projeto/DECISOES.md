@@ -91,6 +91,15 @@ vez") aparece quando há **backend + frontend** para orquestrar.
 - **Dev segue nativo** (venv + pip) pela agilidade no note fraco; o compose é para
   integração "tudo junto" e deploy.
 
+### D-018 ✅ Auth: argon2 + PyJWT (HS256) + login JSON; +email-validator
+**2026-06-23.** Senha com **argon2** (argon2-cffi), tokens **PyJWT** HS256 (access +
+refresh). Login por **corpo JSON** em vez de OAuth2 form → evita a dependência
+`python-multipart`. O `OAuth2PasswordBearer` é usado só para ler o header `Bearer`.
+Segredo do JWT = `RAG_JWT_SECRET` (ou `RAG_SECRET_KEY` como fallback).
+**Dependência nova obrigatória:** `email-validator` — o FastAPI constrói modelos
+OpenAPI (`Contact.email = EmailStr`) ao importar `fastapi.security`; sem o pacote a
+API não sobe.
+
 ### D-016 ✅ Persistência com SQLAlchemy 2.0 (não SQLModel)
 **2026-06-23.** O `sqlmodel` não estava instalado, mas `SQLAlchemy 2.0` e
 `cryptography` já vinham com o Chroma. Optei por **SQLAlchemy 2.0 direto**: zero

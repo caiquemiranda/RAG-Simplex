@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     # Gere uma com: python -m app.cripto
     secret_key: str = ""
 
+    # --- Autenticação (JWT) ---
+    # Segredo HMAC dos tokens. Se vazio, usa `secret_key` como fallback.
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    access_token_expira_min: int = 60
+    refresh_token_expira_dias: int = 7
+
     # --- Recuperação (PRD §6.1) ---
     # Distância de cosseno; limiar mínimo de aceitação do score de similaridade.
     similarity_threshold: float = 0.78
