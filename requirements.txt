@@ -1,0 +1,21 @@
+# --- API / servidor ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# --- Banco vetorial ---
+chromadb==0.6.3
+
+# --- Embeddings locais (multilíngue PT/EN) ---
+sentence-transformers==3.3.1
+
+# --- Geração com Claude (Anthropic) ---
+anthropic==0.42.0
+
+# --- Utilidades ---
+python-dotenv==1.0.1
+
+# --- Testes ---
+pytest==8.3.4
+httpx==0.28.1

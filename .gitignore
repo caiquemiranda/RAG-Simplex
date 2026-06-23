@@ -1,0 +1,19 @@
+# --- Segredos ---
+.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# --- Banco vetorial persistido (ChromaDB) ---
+data/processed/chroma/
+
+# --- Caches de modelos / SO ---
+.cache/
+.DS_Store
+Thumbs.db
