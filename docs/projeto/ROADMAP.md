@@ -15,7 +15,7 @@ administrativo e controle de acesso por usuário**.
 | 0 | MVP RAG backend (pipeline + FastAPI) | — | ✅ |
 | 1 | Sistema de documentação & planejamento | — | ✅ |
 | 2 | Estratégia `LOCAL_EXTRATIVO` + interface plugável | ❌ Não | ✅ |
-| 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ⬜ |
+| 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ✅ |
 | 4 | Autenticação (JWT) | ❌ Não | ⬜ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ⬜ |
 | 6 | Painel ADM (API) | ❌ Não | ⬜ |
@@ -84,21 +84,24 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 3 — Persistência (SQLite) & configuração hierárquica ⬜
+## Fase 3 — Persistência (SQLite) & configuração hierárquica ✅
 
 **Objetivo:** tirar config/usuários do `.env`; permitir edição em runtime.
 
-- [ ] SQLite + modelos (SQLModel/SQLAlchemy)
-- [ ] Entidades: `Usuario`, `Papel`, `Permissao`, `Provedor` (key cifrada), `ConfigEstrategia`, `LogConsulta`
-- [ ] Resolução hierárquica: requisição → usuário → papel → global
-- [ ] Chaves de API **cifradas em repouso** (campo preparado; uso só na Fase 10)
+- [x] SQLite + modelos **SQLAlchemy 2.0** (sem SQLModel — D-016)
+- [x] Entidades: `Usuario`, `Papel`, `Permissao`, `Provedor` (key cifrada), `ConfigEstrategia`, `LogConsulta`
+- [x] Resolução hierárquica: override → usuário → papel → global (`preferencias.py`)
+- [x] Chaves de API **cifradas em repouso** (`cripto.py`, Fernet; uso só na Fase 10)
+- [x] Seed de papéis/permissões/config global (`seed.py`); CLI `python -m app.db --init`
 
-**Testes:**
-- [ ] Precedência de resolução de estratégia correta
-- [ ] Cifra/decifra de chave ida e volta
-- [ ] Migração cria o schema do zero
+**Testes (rodados — 25 passed):**
+- [x] Precedência de resolução de estratégia correta
+- [x] Cifra/decifra de chave ida e volta + máscara + erro sem chave
+- [x] Seed cria o schema/dados e é idempotente
 
-**DoD:** estratégia por usuário resolvida a partir do banco.
+**DoD:** ✅ estratégia por usuário resolvida a partir do banco.
+
+📄 Spec: [`specs/spec-fase-3-persistencia.md`](specs/spec-fase-3-persistencia.md)
 
 ---
 

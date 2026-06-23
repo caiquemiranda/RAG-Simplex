@@ -9,6 +9,36 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 3 — Persistência (SQLite) & config hierárquica
+
+**Branch:** `feat/fase-3-persistencia`.
+
+**Feito:**
+- Decisão D-016: usar **SQLAlchemy 2.0 direto** (já instalado; sem SQLModel) → testes
+  rodam offline.
+- `app/modelos.py`: `Usuario`, `Papel`, `Permissao` (N:N), `Provedor` (key cifrada),
+  `ConfigEstrategia` (escopo global/papel/usuario), `LogConsulta` (auditoria).
+- `app/db.py`: engine/sessão SQLite + `criar_tabelas` + `get_session` + CLI `--init`.
+- `app/seed.py`: 8 permissões, 4 papéis (personas PRD §3), config global = local; idempotente.
+- `app/cripto.py`: Fernet (`cifrar`/`decifrar`/`mascarar`/`gerar_chave_secreta`).
+- `app/preferencias.py`: resolução override→usuário→papel→global→settings.
+- `config.py`: `database_url`, `secret_key`. `requirements.txt`: +SQLAlchemy +cryptography.
+- `.gitignore`: ignora `data/processed/*.db`.
+
+**Validação (rodada aqui):** `pytest` = **25 passed** (7 novos de persistência);
+`python -m app.db --init` → 8 permissões, 4 papéis, 1 config global.
+
+**Também nesta sessão (Fase 2 +):** trecho do guia na íntegra na resposta e em
+`fontes[].trecho` (commit `773af51`).
+
+**Próximo:** Fase 4 — Autenticação (JWT). Pendência aberta: calibrar limiar (D-015).
+
+**Arquivos:** `app/{modelos,db,seed,cripto,preferencias,config}.py`,
+`tests/test_persistencia.py`, `requirements.txt`, `.gitignore`,
+`docs/projeto/specs/spec-fase-3-persistencia.md`.
+
+---
+
 ## 2026-06-23 — Fase 2 (calibração) — e5 confirmado; calibrando o limiar
 
 **Resultado do e5 (reingestão do usuário):** ranking **corrigido** — bloco certo é

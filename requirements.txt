@@ -7,6 +7,11 @@ pydantic-settings==2.7.1
 # --- Banco vetorial ---
 chromadb==0.6.3
 
+# --- Banco relacional (persistência: usuários, papéis, config, auditoria) ---
+SQLAlchemy==2.0.23
+# Cifragem das chaves de provedor em repouso (Fernet)
+cryptography==45.0.4
+
 # --- Embeddings locais (multilíngue PT/EN) ---
 sentence-transformers==3.3.1
 

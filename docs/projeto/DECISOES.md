@@ -79,6 +79,18 @@ prefixos; `config` guarda modelo e prefixos.
 `python -m app.recuperacao --diagnostico` após reingestão). O limiar 0.78 do PRD é
 mantido até termos os dados; ajuste será justificado em D-015 se necessário.
 
+### D-016 ✅ Persistência com SQLAlchemy 2.0 (não SQLModel)
+**2026-06-23.** O `sqlmodel` não estava instalado, mas `SQLAlchemy 2.0` e
+`cryptography` já vinham com o Chroma. Optei por **SQLAlchemy 2.0 direto**: zero
+dependência nova para o usuário baixar e permite **rodar os testes da Fase 3 offline**
+(SQLite em memória). Modelos tipados (`Mapped`/`mapped_column`) em `app/modelos.py`.
+
+### D-015 🔄 Limiar de similaridade — calibração pendente
+**2026-06-23.** Com o e5 (D-014), positivos top-1 ficam 0.848–0.915, mas os scores
+são comprimidos e blocos fracos passam de 0.78. Falta rodar `--diagnostico` com a
+bateria de negativos (outra marca/fora de domínio) para cravar o valor. Mantido 0.78
+até ter os dados. **Não conclama mudar antes de medir os negativos.**
+
 ### D-013 ✅ Separação de camadas no extrativo por marcadores do guia
 **2026-06-23.** Como o `local_extrativa` não usa LLM, a "dupla camada" é obtida
 parseando os marcadores consistentes do guia: `**Explicação simples.**` → camada 🟢;

@@ -7,40 +7,41 @@
 
 ## 📍 Você está aqui
 
-- **Fase atual:** Fase 2 ✅ (extrativo funcionando) + **ajuste de recuperação em
-  andamento**. Próxima fase: **Fase 3 (Persistência SQLite)**.
-- **O que acabou de ser feito:** implementado `LOCAL_EXTRATIVO` (offline, grátis);
-  ingestão e testes rodando na máquina do usuário (73 blocos, 18/18 testes).
-- **e5 confirmado:** reingestão feita; ranking **corrigido** — bloco certo é o #1 em
-  todas as consultas reais (Head Missing 0.893, Warm Start 0.915, Short Circuit 0.900).
-- **Falta calibrar o limiar:** o e5 comprime os scores no alto (0.84–0.92), então
-  0.78 ficou baixo demais (deixa passar quase tudo). Diagnóstico melhorado para
-  medir também perguntas **fora da base** e recomendar o limiar.
+- **Branch:** `feat/fase-3-persistencia` (ainda **não** está em `main`; PR pendente —
+  `gh`/SSL precisam ser resolvidos para abrir o PR).
+- **Fase 3 ✅ concluída:** persistência SQLite com **SQLAlchemy 2.0** (D-016) —
+  modelos, seed de papéis/permissões, cifragem de chaves (Fernet) e resolução
+  hierárquica da estratégia. **25 testes passando** (rodados aqui).
+- **Fase 2 +:** resposta agora inclui o **trecho do guia na íntegra** (seção
+  "📄 Sugestão do fabricante") e `fontes[].trecho` na API.
+- **Próxima fase:** **Fase 4 — Autenticação (JWT)**.
 
-## ⏭️ Próximo passo (AÇÃO DO USUÁRIO — só o diagnóstico, sem reingerir)
+## ⏭️ Próximos passos
 
-1. `python -m app.recuperacao --diagnostico`  (agora roda positivos + negativos e
-   imprime o **limiar recomendado**)
-2. Colar a seção "RESUMO / RECOMENDAÇÃO" → cravamos `RAG_SIMILARITY_THRESHOLD`
-   (registro em D-015). **Só então** seguimos para a Fase 3.
+1. **Pendência aberta (D-015):** calibrar o limiar de similaridade. Rodar
+   `python -m app.recuperacao --diagnostico` e colar o "RESUMO / RECOMENDAÇÃO".
+   Não bloqueia a Fase 4 (o top-1 já está correto).
+2. **Fase 4 — Autenticação (JWT):** login usuário/senha (hash argon2/bcrypt),
+   dependency `usuario_atual`, seed de admin, gravar `LogConsulta` nas consultas.
 
-> Se houver sobreposição (negativo ≥ positivo), avaliamos reranker/híbrido antes.
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
 ## 🧱 Base já existente
 
-- **Fase 0:** pipeline RAG (`ingestao`/`recuperacao`/`geracao`/`main`), 73 blocos.
-- **Fase 2:** `app/estrategias.py` (`EstrategiaGeracao`, `LocalExtrativa`,
-  `obter_estrategia`); `geracao.py` virou orquestrador; `ClaudeNuvem` registrada
-  mas **inerte** até a Fase 10. Padrão = `local_extrativa`.
+- **Fase 0–2:** pipeline RAG; estratégia `local_extrativa` (sem LLM); `ClaudeNuvem`
+  registrada mas inerte até a Fase 10. Embeddings: `e5-small` (D-014).
+- **Fase 3:** `app/{modelos,db,seed,cripto,preferencias}.py`. Entidades: `Usuario`,
+  `Papel`, `Permissao`, `Provedor` (key cifrada), `ConfigEstrategia`, `LogConsulta`.
 
-## ⚠️ Bloqueios / pendências de ambiente
+## 🔧 Para rodar na sua máquina (Fase 3)
+```bash
+pip install -r requirements.txt   # agora inclui SQLAlchemy + cryptography
+python -m app.cripto              # gera RAG_SECRET_KEY (cole no .env)
+python -m app.db --init           # cria tabelas + semeia padrões
+```
 
-- Dependências **não instaladas** → validações feitas offline (stub de `app.config`).
-  Para rodar de verdade: `pip install -r requirements.txt` + `python -m app.ingestao --reset`.
-- Hardware fraco → **não usar LLM local**; "local" = extrativo (CPU). API só na Fase 10.
+## 🎯 Decisões abertas (confirmar na fase)
 
-## 🎯 Decisões abertas (a confirmar quando chegar a fase)
-
-- **D-006** — provedor grátis de nuvem (Gemini Flash vs Groq): decidir na Fase 10.
-- **D-010** — stack do frontend (Vite + React + TS + Tailwind): confirmar na Fase 7.
+- **D-015** — limiar de similaridade (calibrar com `--diagnostico`).
+- **D-006** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
+- **D-010** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.

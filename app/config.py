@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     chroma_dir: Path = BASE_DIR / "data" / "processed" / "chroma"
     collection_name: str = "simplex_falhas"
 
+    # --- Banco relacional (usuários, papéis, config, auditoria) ---
+    database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'processed' / 'ragsimplex.db').as_posix()}"
+    # Chave Fernet p/ cifrar chaves de provedor em repouso (uso na Fase 10).
+    # Gere uma com: python -m app.cripto
+    secret_key: str = ""
+
     # --- Recuperação (PRD §6.1) ---
     # Distância de cosseno; limiar mínimo de aceitação do score de similaridade.
     similarity_threshold: float = 0.78
