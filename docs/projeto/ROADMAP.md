@@ -52,7 +52,9 @@ administrativo e controle de acesso por usuário**.
 
 - [x] `docs/projeto/{README,ROADMAP,ESTADO_ATUAL,LOG,DECISOES}.md`
 - [x] `.claude/CLAUDE.md` com o protocolo de retomada
-- [ ] Validar: janela nova retoma lendo ≤ 3 arquivos
+- [x] Validar: janela nova retoma lendo ≤ 3 arquivos (confirmado nas Fases 2–4)
+
+📄 Spec: [`specs/spec-fase-1-documentacao.md`](specs/spec-fase-1-documentacao.md)
 
 ---
 
