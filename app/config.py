@@ -28,7 +28,17 @@ class Settings(BaseSettings):
     # A chave da Anthropic é lida sem o prefixo RAG_ (nome padrão do SDK).
     anthropic_api_key: str = ""
 
-    # --- Geração (Claude) ---
+    # --- Geração ---
+    # Estratégia padrão de geração da resposta. Opções:
+    #   "local_extrativa" → sem LLM, grátis, roda em CPU fraca (padrão atual).
+    #   "claude_nuvem"    → API do Claude (requer ANTHROPIC_API_KEY; Fase 10).
+    # Demais provedores de nuvem entram na Fase 10.
+    estrategia_geracao: str = "local_extrativa"
+
+    # Quantos blocos relacionados (além do principal) o extrativo lista no rodapé.
+    extrativo_max_relacionados: int = 3
+
+    # --- Geração via Claude (usado só pela estratégia de nuvem, Fase 10) ---
     claude_model: str = "claude-opus-4-8"
     max_tokens: int = 4096
 

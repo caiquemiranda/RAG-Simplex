@@ -6,6 +6,18 @@ IMS/TrueSite). Guia técnicos de campo, analistas de engenharia e operadores nã
 técnicos na triagem, diagnóstico e correção de falhas. Documento de referência:
 [`docs/prd_sistema_rag_simplex.md`](../docs/prd_sistema_rag_simplex.md).
 
+## 🔁 Protocolo de retomada (LEIA PRIMEIRO em sessão nova)
+
+O projeto é desenvolvido por fases com governança em [`docs/projeto/`](../docs/projeto/).
+Para retomar sem carregar contexto antigo:
+
+1. Ler [`docs/projeto/ESTADO_ATUAL.md`](../docs/projeto/ESTADO_ATUAL.md) → fase e próximo passo.
+2. Ler a seção da fase em [`docs/projeto/ROADMAP.md`](../docs/projeto/ROADMAP.md) → objetivos e testes.
+3. Se existir, ler `docs/projeto/fases/fase-N-*.md` → detalhe só daquela fase.
+4. **Não** reler `LOG.md` inteiro nem fases concluídas.
+5. Ao terminar: atualizar `ESTADO_ATUAL.md`, marcar checkboxes no `ROADMAP.md` e
+   **adicionar** entrada no `LOG.md`. Decisões novas vão em `DECISOES.md`.
+
 ## Arquitetura (pipeline RAG)
 
 ```
@@ -15,19 +27,25 @@ docs/guia_falhas_simplex_ptbr.md            (base de conhecimento, Markdown)
 ChromaDB (data/processed/chroma/)           (banco vetorial, cosseno)
         │  app/recuperacao.py → busca semântica, threshold 0.78
         ▼
-app/geracao.py  → API Claude (claude-opus-4-8) → resposta em dupla camada
-        │
+app/estrategias.py → estratégia de resposta (padrão: LocalExtrativa, sem LLM)
+app/geracao.py     → orquestra a estratégia; ClaudeNuvem (Fase 10, requer API key)
+        │           → resposta em dupla camada / fallback gracioso
         ▼
 app/main.py     → FastAPI (/health, /ingest, /query, /query/stream)
 ```
 
 | Módulo | Responsabilidade |
 | --- | --- |
-| `app/config.py` | Configuração central (paths, modelos, threshold). Não espalhar constantes. |
+| `app/config.py` | Configuração central (paths, modelos, threshold, estratégia). Não espalhar constantes. |
 | `app/ingestao.py` | Parse Markdown → blocos autocontidos → embeddings → ChromaDB. |
 | `app/recuperacao.py` | Busca vetorial (cosseno) com limiar e filtro de metadados. |
-| `app/geracao.py` | Prompt + chamada ao Claude; fallback gracioso. |
+| `app/estrategias.py` | Interface `EstrategiaGeracao` + `LocalExtrativa` (extrativo, sem LLM); registro/seleção. |
+| `app/geracao.py` | Orquestra a estratégia selecionada; `ClaudeNuvem` (nuvem, Fase 10); fallback. |
 | `app/main.py` | API HTTP FastAPI. |
+
+**Estratégia padrão:** `local_extrativa` (sem LLM, grátis). Estratégias de nuvem
+(API key) só na Fase 10 — ver [`docs/CONFIGURAR_APIKEYS.md`](../docs/CONFIGURAR_APIKEYS.md)
+e o roadmap em [`docs/projeto/`](../docs/projeto/).
 
 ## Decisões técnicas (confirmadas)
 

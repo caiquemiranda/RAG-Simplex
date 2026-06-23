@@ -1,4 +1,4 @@
-"""Testes da geração que não exigem a API do Claude (caminho de fallback)."""
+"""Testes do orquestrador de geração (sem a API do Claude)."""
 
 from __future__ import annotations
 
@@ -6,14 +6,14 @@ from app.geracao import (
     FALLBACK_MSG,
     Resposta,
     _formatar_contexto,
-    _fontes,
+    _montar_mensagem,
     gerar_resposta,
 )
 from app.recuperacao import Recuperacao, Resultado
 
 
 def test_fallback_sem_chamar_llm():
-    """Quando nada atinge o limiar, retorna o fallback sem tocar na API."""
+    """Abaixo do limiar → fallback, sem tocar em nenhuma API (estratégia local)."""
     rec = Recuperacao(consulta="xyz", resultados=[Resultado("a", "t", {}, 0.3)],
                       acima_do_limiar=False)
     resp = gerar_resposta("xyz", recuperacao=rec)
@@ -21,6 +21,7 @@ def test_fallback_sem_chamar_llm():
     assert resp.fallback is True
     assert resp.fontes == []
     assert resp.texto == FALLBACK_MSG
+    assert resp.estrategia == "local_extrativa"
 
 
 def test_formatar_contexto_inclui_metadados():
@@ -32,11 +33,9 @@ def test_formatar_contexto_inclui_metadados():
     assert "corpo do bloco" in ctx
 
 
-def test_fontes_resumo():
-    blocos = [
-        Resultado("c1", "t", {"header": "Falha: Head Missing", "sistema": "4100",
-                              "severidade": "Alta"}, 0.912345)
-    ]
-    fontes = _fontes(blocos)
-    assert fontes[0]["header"] == "Falha: Head Missing"
-    assert fontes[0]["similaridade"] == 0.912  # arredondado a 3 casas
+def test_montar_mensagem_inclui_persona_e_pergunta():
+    blocos = [Resultado("c1", "corpo", {}, 0.9)]
+    msg = _montar_mensagem("HEAD MISSING", blocos, "operador não-técnico")
+    assert "HEAD MISSING" in msg
+    assert "operador não-técnico" in msg
+    assert "BLOCO 1" in msg

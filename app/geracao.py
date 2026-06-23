@@ -1,25 +1,65 @@
-"""Geração: conecta a API do Claude para produzir a resposta em dupla camada.
+"""Geração: orquestra a estratégia de resposta selecionada.
 
-Recebe os blocos recuperados pelo RAG e gera uma resposta **ancorada** (sem
-alucinação) e estruturada em duas camadas (PRD §5.2): linguagem simples para
-não-técnicos e resolução técnica para campo/engenharia. Quando o contexto
-envolve risco elétrico, gera um bloco de aviso de segurança no topo (PRD §5.2).
+Este módulo é o **ponto de entrada da geração**. Ele resolve qual estratégia usar
+(ver :mod:`app.estrategias`) e delega. A API pública (`gerar_resposta`,
+`gerar_resposta_stream`) é estável e consumida por :mod:`app.main`.
 
-Latência: o PRD §2.2 exige resposta fim-a-fim < 3s, então o *extended thinking*
-fica desligado e o modelo é instruído a responder direto (sem rascunho visível).
+Estratégia padrão: ``local_extrativa`` (sem LLM, grátis). A estratégia de **nuvem**
+``claude_nuvem`` é definida aqui e registrada, mas só funciona quando a
+``ANTHROPIC_API_KEY`` está configurada (Fase 10 — ver `docs/CONFIGURAR_APIKEYS.md`).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-import anthropic
+import time
+from typing import Iterator
 
 from app.config import settings
+from app.estrategias import (
+    AVISO_SEGURANCA,
+    FALLBACK_MSG,
+    EstrategiaGeracao,
+    Resposta,
+    _formatar_fontes,
+    obter_estrategia,
+    registrar_estrategia,
+)
 from app.recuperacao import Recuperacao, Resultado, buscar
 
+__all__ = ["gerar_resposta", "gerar_resposta_stream", "Resposta", "FALLBACK_MSG"]
+
+
 # --------------------------------------------------------------------------- #
-# Prompts                                                                      #
+# Orquestração (API pública)                                                   #
+# --------------------------------------------------------------------------- #
+def gerar_resposta(
+    consulta: str,
+    recuperacao: Recuperacao | None = None,
+    persona: str | None = None,
+    estrategia: str | None = None,
+) -> Resposta:
+    """Gera a resposta final usando a estratégia selecionada.
+
+    Se ``recuperacao`` não for passada, a busca é feita aqui. Se ``estrategia`` não
+    for passada, usa ``settings.estrategia_geracao``.
+    """
+    rec = recuperacao if recuperacao is not None else buscar(consulta)
+    return obter_estrategia(estrategia).gerar(consulta, rec, persona)
+
+
+def gerar_resposta_stream(
+    consulta: str,
+    recuperacao: Recuperacao | None = None,
+    persona: str | None = None,
+    estrategia: str | None = None,
+) -> Iterator[str]:
+    """Versão streaming da geração (delega à estratégia)."""
+    rec = recuperacao if recuperacao is not None else buscar(consulta)
+    yield from obter_estrategia(estrategia).gerar_stream(consulta, rec, persona)
+
+
+# --------------------------------------------------------------------------- #
+# Estratégia de NUVEM — Claude (Fase 10, requer API key)                       #
 # --------------------------------------------------------------------------- #
 SYSTEM_PROMPT = """\
 Você é o assistente técnico do RAG-Simplex, especializado em painéis de detecção \
@@ -53,31 +93,7 @@ ESTILO: responda direto, em português (PT-BR), sem exibir raciocínio intermedi
 nem rascunhos. Seja objetivo — o técnico está em campo.\
 """
 
-# Mensagem de fallback gracioso (PRD §6.1) — determinística, sem chamada ao LLM.
-FALLBACK_MSG = (
-    "Não encontrei na base de conhecimento oficial uma falha que corresponda com "
-    "segurança à sua consulta (nenhum bloco atingiu o limiar mínimo de similaridade "
-    f"de {settings.similarity_threshold:.2f}).\n\n"
-    "Para evitar orientação incorreta em um sistema de segurança de vida, **não vou "
-    "improvisar um procedimento**. Recomendações:\n"
-    "- Confira a mensagem **exata** exibida no display LCD do painel e tente novamente.\n"
-    "- Verifique se selecionou o sistema correto (4100 / F3200 / QE90 / REDE).\n"
-    "- Acione o suporte de engenharia Simplex (contatos na Seção 6 do guia).\n"
-)
 
-
-@dataclass
-class Resposta:
-    """Resposta final do pipeline RAG."""
-
-    texto: str
-    fontes: list[dict]
-    fallback: bool  # True quando nenhum bloco atingiu o limiar
-
-
-# --------------------------------------------------------------------------- #
-# Montagem do contexto                                                         #
-# --------------------------------------------------------------------------- #
 def _formatar_contexto(blocos: list[Resultado]) -> str:
     partes = []
     for i, b in enumerate(blocos, 1):
@@ -90,27 +106,6 @@ def _formatar_contexto(blocos: list[Resultado]) -> str:
     return "\n\n".join(partes)
 
 
-def _fontes(blocos: list[Resultado]) -> list[dict]:
-    return [
-        {
-            "id": b.id,
-            "header": b.metadados.get("header"),
-            "sistema": b.metadados.get("sistema"),
-            "severidade": b.metadados.get("severidade"),
-            "similaridade": round(b.similaridade, 3),
-        }
-        for b in blocos
-    ]
-
-
-def _client() -> anthropic.Anthropic:
-    if not settings.anthropic_api_key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY não configurada. Defina-a no arquivo .env."
-        )
-    return anthropic.Anthropic(api_key=settings.anthropic_api_key)
-
-
 def _montar_mensagem(consulta: str, blocos: list[Resultado], persona: str | None) -> str:
     persona_txt = f"\nPERFIL DO USUÁRIO: {persona}." if persona else ""
     return (
@@ -119,61 +114,61 @@ def _montar_mensagem(consulta: str, blocos: list[Resultado], persona: str | None
     )
 
 
-# --------------------------------------------------------------------------- #
-# Geração                                                                      #
-# --------------------------------------------------------------------------- #
-def gerar_resposta(
-    consulta: str,
-    recuperacao: Recuperacao | None = None,
-    persona: str | None = None,
-) -> Resposta:
-    """Gera a resposta final ancorada nos blocos recuperados.
+class ClaudeNuvem(EstrategiaGeracao):
+    """Geração via API do Claude. **Requer** ``ANTHROPIC_API_KEY`` (Fase 10)."""
 
-    Se ``recuperacao`` não for passada, a busca é feita aqui. Quando nenhum bloco
-    atinge o limiar, retorna o fallback gracioso sem chamar o modelo.
-    """
-    rec = recuperacao or buscar(consulta)
+    nome = "claude_nuvem"
 
-    if not rec.acima_do_limiar:
-        return Resposta(texto=FALLBACK_MSG, fontes=[], fallback=True)
+    def _client(self):
+        if not settings.anthropic_api_key:
+            raise RuntimeError(
+                "Estratégia 'claude_nuvem' selecionada, mas ANTHROPIC_API_KEY não "
+                "está configurada. Configure a chave (veja docs/CONFIGURAR_APIKEYS.md) "
+                "ou use a estratégia padrão 'local_extrativa'."
+            )
+        import anthropic  # import preguiçoso: app roda sem o SDK no modo local
 
-    blocos = rec.relevantes
-    client = _client()
-    resposta = client.messages.create(
-        model=settings.claude_model,
-        max_tokens=settings.max_tokens,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": _montar_mensagem(consulta, blocos, persona)}],
-    )
-    texto = "".join(b.text for b in resposta.content if b.type == "text")
-    return Resposta(texto=texto, fontes=_fontes(blocos), fallback=False)
+        return anthropic.Anthropic(api_key=settings.anthropic_api_key)
+
+    def gerar(self, consulta: str, recuperacao: Recuperacao,
+              persona: str | None = None) -> Resposta:
+        inicio = time.perf_counter()
+        if not recuperacao.acima_do_limiar:
+            return Resposta(texto=FALLBACK_MSG, fontes=[], fallback=True,
+                            estrategia=self.nome,
+                            latencia_ms=(time.perf_counter() - inicio) * 1000)
+
+        blocos = recuperacao.relevantes
+        resp = self._client().messages.create(
+            model=settings.claude_model,
+            max_tokens=settings.max_tokens,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user",
+                       "content": _montar_mensagem(consulta, blocos, persona)}],
+        )
+        texto = "".join(b.text for b in resp.content if b.type == "text")
+        return Resposta(texto=texto, fontes=_formatar_fontes(blocos), fallback=False,
+                        estrategia=self.nome,
+                        latencia_ms=(time.perf_counter() - inicio) * 1000)
+
+    def gerar_stream(self, consulta: str, recuperacao: Recuperacao,
+                     persona: str | None = None) -> Iterator[str]:
+        if not recuperacao.acima_do_limiar:
+            yield FALLBACK_MSG
+            return
+        blocos = recuperacao.relevantes
+        with self._client().messages.stream(
+            model=settings.claude_model,
+            max_tokens=settings.max_tokens,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user",
+                       "content": _montar_mensagem(consulta, blocos, persona)}],
+        ) as stream:
+            yield from stream.text_stream
 
 
-def gerar_resposta_stream(
-    consulta: str,
-    recuperacao: Recuperacao | None = None,
-    persona: str | None = None,
-):
-    """Versão streaming: gera os tokens da resposta conforme são produzidos.
-
-    Para o fallback, emite a mensagem fixa de uma vez. Útil para a interface
-    responsiva exigida pelo PRD (campo, conexão móvel).
-    """
-    rec = recuperacao or buscar(consulta)
-    if not rec.acima_do_limiar:
-        yield FALLBACK_MSG
-        return
-
-    blocos = rec.relevantes
-    client = _client()
-    with client.messages.stream(
-        model=settings.claude_model,
-        max_tokens=settings.max_tokens,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": _montar_mensagem(consulta, blocos, persona)}],
-    ) as stream:
-        for texto in stream.text_stream:
-            yield texto
+# Registra a estratégia de nuvem (inerte até haver API key + seleção explícita).
+registrar_estrategia(ClaudeNuvem())
 
 
 def _main() -> None:
@@ -181,7 +176,7 @@ def _main() -> None:
 
     consulta = " ".join(sys.argv[1:]) or "HEAD MISSING no loop do 4100"
     resp = gerar_resposta(consulta)
-    print(f"Fallback: {resp.fallback}\n")
+    print(f"Estratégia: {resp.estrategia} | fallback: {resp.fallback}\n")
     print(resp.texto)
     if resp.fontes:
         print("\nFontes:")
