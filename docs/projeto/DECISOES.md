@@ -79,6 +79,18 @@ prefixos; `config` guarda modelo e prefixos.
 `python -m app.recuperacao --diagnostico` após reingestão). O limiar 0.78 do PRD é
 mantido até termos os dados; ajuste será justificado em D-015 se necessário.
 
+### D-017 ✅ Containerização (Docker) na Fase 7, com o frontend
+**2026-06-23.** Docker entra **na Fase 7** (junto do frontend), não antes. Motivo: hoje
+o backend é um único processo (Chroma e SQLite são **embarcados**, não serviços), então
+um container só agregaria pouco; o ganho do `docker compose up` ("subir tudo de uma
+vez") aparece quando há **backend + frontend** para orquestrar.
+- Compose **enxuto**: 2 serviços (`backend`, `frontend`). Chroma/SQLite seguem
+  embarcados (não viram container próprio); Postgres só se for multiusuário (Fase 11).
+- Modelo e5 **pré-cacheado** na imagem + **volumes** para `data/` → sem download em
+  runtime (contorna o SSL) e dados persistentes.
+- **Dev segue nativo** (venv + pip) pela agilidade no note fraco; o compose é para
+  integração "tudo junto" e deploy.
+
 ### D-016 ✅ Persistência com SQLAlchemy 2.0 (não SQLModel)
 **2026-06-23.** O `sqlmodel` não estava instalado, mas `SQLAlchemy 2.0` e
 `cryptography` já vinham com o Chroma. Optei por **SQLAlchemy 2.0 direto**: zero

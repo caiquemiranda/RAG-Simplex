@@ -40,8 +40,10 @@ python -m app.cripto              # gera RAG_SECRET_KEY (cole no .env)
 python -m app.db --init           # cria tabelas + semeia padrões
 ```
 
-## 🎯 Decisões abertas (confirmar na fase)
+## 🎯 Decisões
 
-- **D-015** — limiar de similaridade (calibrar com `--diagnostico`).
-- **D-006** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
-- **D-010** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.
+- **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
+  frontend). Dev segue nativo até lá.
+- **D-015 🔄** — limiar de similaridade (calibrar com `--diagnostico`).
+- **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
+- **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.

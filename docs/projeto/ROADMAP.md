@@ -19,7 +19,7 @@ administrativo e controle de acesso por usuário**.
 | 4 | Autenticação (JWT) | ❌ Não | ⬜ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ⬜ |
 | 6 | Painel ADM (API) | ❌ Não | ⬜ |
-| 7 | Frontend React — base + autenticação | ❌ Não | ⬜ |
+| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
 | 9 | Frontend — painel ADM | ❌ Não | ⬜ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
@@ -143,15 +143,24 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 7 — Frontend React: base + autenticação ⬜
+## Fase 7 — Frontend React: base + autenticação + **containerização** ⬜
 
 - [ ] Scaffold Vite + React + TypeScript + Tailwind (D-010)
 - [ ] Cliente HTTP + token; login; rotas protegidas; logout
 - [ ] Layout base (navegação por papel)
 
-**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token
+**Docker (D-017) — orquestrar backend + frontend juntos:**
+- [ ] `Dockerfile` do backend (FastAPI + Chroma embarcado + SQLite + e5); **modelo e5
+      pré-cacheado** na imagem (evita download em runtime/SSL)
+- [ ] `Dockerfile` do frontend (build + nginx servindo estático)
+- [ ] `docker-compose.yml`: serviços `backend` e `frontend`; **volumes** para cache do
+      modelo e `data/` (Chroma + SQLite persistentes)
+- [ ] `.dockerignore`; `docker compose up` sobe tudo de uma vez
+- [ ] Chroma/SQLite seguem **embarcados** (não viram serviço próprio agora)
 
-**DoD:** login real contra a API.
+**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token · [ ] `docker compose up` sobe backend+frontend e o login funciona
+
+**DoD:** login real contra a API; `docker compose up` levanta o app completo.
 
 ---
 
