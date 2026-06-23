@@ -3,15 +3,26 @@ fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
+# Exigido pelos modelos OpenAPI do FastAPI (Contact.email = EmailStr)
+email-validator==2.2.0
 
 # --- Banco vetorial ---
 chromadb==0.6.3
+
+# --- Banco relacional (persistência: usuários, papéis, config, auditoria) ---
+SQLAlchemy==2.0.23
+# Cifragem das chaves de provedor em repouso (Fernet)
+cryptography==45.0.4
 
 # --- Embeddings locais (multilíngue PT/EN) ---
 sentence-transformers==3.3.1
 
 # --- Geração com Claude (Anthropic) ---
 anthropic==0.42.0
+
+# --- Autenticação (JWT + hash de senha) ---
+PyJWT==2.10.1
+argon2-cffi==21.3.0
 
 # --- Utilidades ---
 python-dotenv==1.0.1

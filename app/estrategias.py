@@ -38,6 +38,9 @@ class Resposta:
     estrategia: str = ""
     latencia_ms: float | None = None
     custo_estimado: float = 0.0         # em USD; 0 para estratégias locais
+    # Seções da resposta, para filtragem por papel (RBAC). Chaves possíveis:
+    # "aviso", "titulo", "simples", "tecnica", "trecho", "relacionados".
+    camadas: dict = field(default_factory=dict)
 
 
 # Mensagem de fallback gracioso (PRD §6.1) — determinística, sem chamar LLM.
@@ -70,8 +73,40 @@ _RISCO_KW = (
 )
 
 
+# Seções sempre incluídas (segurança e título) e mapeamento camada→seções (RBAC).
+_SECOES_SEMPRE = ("aviso", "titulo")
+_CAMADA_PARA_SECOES = {
+    "simples": ("simples",),
+    "tecnica": ("tecnica", "trecho", "relacionados"),
+}
+
+
+def montar_texto(camadas: dict, incluir: set[str]) -> str:
+    """Monta o markdown da resposta apenas com as camadas permitidas.
+
+    `incluir` é um subconjunto de {"simples", "tecnica"}. As seções de segurança
+    e o título entram sempre. Se `camadas` estiver vazio (ex.: estratégia de nuvem
+    que não estrutura camadas), o chamador deve usar `Resposta.texto` direto.
+    """
+    chaves_ok = set(_SECOES_SEMPRE)
+    for camada in incluir:
+        chaves_ok.update(_CAMADA_PARA_SECOES.get(camada, ()))
+    return "\n\n".join(v for k, v in camadas.items() if k in chaves_ok and v)
+
+
+def trecho_integral(bloco: Resultado) -> str:
+    """Texto do bloco **na íntegra** (sugestão do fabricante), só removendo a
+    linha técnica ``[header_path]`` que a ingestão prepende. Mantém título + corpo.
+    """
+    texto = bloco.texto
+    if texto.startswith("["):
+        _, _, resto = texto.partition("\n")
+        texto = resto.lstrip("\n")
+    return texto.strip()
+
+
 def _formatar_fontes(blocos: list[Resultado]) -> list[dict]:
-    """Resumo das fontes para exibição/auditoria."""
+    """Resumo das fontes para exibição/auditoria, com o trecho original do guia."""
     return [
         {
             "id": b.id,
@@ -79,6 +114,8 @@ def _formatar_fontes(blocos: list[Resultado]) -> list[dict]:
             "sistema": b.metadados.get("sistema"),
             "severidade": b.metadados.get("severidade"),
             "similaridade": round(b.similaridade, 3),
+            "fonte": b.metadados.get("fonte"),
+            "trecho": trecho_integral(b),  # texto do guia na íntegra
         }
         for b in blocos
     ]
@@ -139,7 +176,8 @@ class LocalExtrativa(EstrategiaGeracao):
 
         relevantes = recuperacao.relevantes  # já ordenados por similaridade desc.
         principal = relevantes[0]
-        texto = self._renderizar(principal, relevantes[1:])
+        secoes = self._montar_secoes(principal, relevantes[1:])
+        texto = montar_texto(secoes, {"simples", "tecnica"})  # completo por padrão
 
         return Resposta(
             texto=texto,
@@ -148,27 +186,32 @@ class LocalExtrativa(EstrategiaGeracao):
             estrategia=self.nome,
             latencia_ms=(time.perf_counter() - inicio) * 1000,
             custo_estimado=0.0,
+            camadas=secoes,
         )
 
     # --- helpers de renderização ---
-    def _renderizar(self, bloco: Resultado, relacionados: list[Resultado]) -> str:
+    def _montar_secoes(self, bloco: Resultado, relacionados: list[Resultado]) -> dict:
+        """Monta as seções da resposta como dict ordenado (para filtragem RBAC)."""
         corpo = self._corpo_do_bloco(bloco)
         simples, tecnica = self._separar_camadas(corpo)
         header = bloco.metadados.get("header", "Falha")
 
-        partes: list[str] = []
+        secoes: dict[str, str] = {}
         if self._precisa_aviso(bloco):
-            partes.append(AVISO_SEGURANCA)
-
-        partes.append(f"**{header}**")
-        partes.append("## 🟢 Em linguagem simples\n\n" + (simples or "_(sem explicação simples no bloco)_"))
+            secoes["aviso"] = AVISO_SEGURANCA
+        secoes["titulo"] = f"**{header}**"
+        secoes["simples"] = "## 🟢 Em linguagem simples\n\n" + (
+            simples or "_(sem explicação simples no bloco)_"
+        )
         if tecnica:
-            partes.append("## 🔧 Resolução técnica\n\n" + tecnica)
+            secoes["tecnica"] = "## 🔧 Resolução técnica\n\n" + tecnica
 
-        partes.append(
-            f"---\n*Trecho extraído diretamente do guia oficial "
-            f"({bloco.metadados.get('fonte', 'guia')}, similaridade "
-            f"{bloco.similaridade:.2f}) — sem geração por IA.*"
+        # Trecho original do guia, na íntegra (sugestão do fabricante) — camada técnica.
+        secoes["trecho"] = (
+            "## 📄 Sugestão do fabricante (trecho do guia, na íntegra)\n\n"
+            + trecho_integral(bloco)
+            + f"\n\n*Fonte: {bloco.metadados.get('fonte', 'guia')} — similaridade "
+            f"{bloco.similaridade:.2f}. Conteúdo reproduzido sem geração por IA.*"
         )
 
         if relacionados:
@@ -178,9 +221,9 @@ class LocalExtrativa(EstrategiaGeracao):
                 f"(sistema {r.metadados.get('sistema')}, sim. {r.similaridade:.2f})"
                 for r in relacionados[:limite]
             )
-            partes.append("## 📎 Blocos relacionados\n\n" + itens)
+            secoes["relacionados"] = "## 📎 Blocos relacionados\n\n" + itens
 
-        return "\n\n".join(partes)
+        return secoes
 
     @staticmethod
     def _corpo_do_bloco(bloco: Resultado) -> str:

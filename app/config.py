@@ -54,6 +54,19 @@ class Settings(BaseSettings):
     chroma_dir: Path = BASE_DIR / "data" / "processed" / "chroma"
     collection_name: str = "simplex_falhas"
 
+    # --- Banco relacional (usuários, papéis, config, auditoria) ---
+    database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'processed' / 'ragsimplex.db').as_posix()}"
+    # Chave Fernet p/ cifrar chaves de provedor em repouso (uso na Fase 10).
+    # Gere uma com: python -m app.cripto
+    secret_key: str = ""
+
+    # --- Autenticação (JWT) ---
+    # Segredo HMAC dos tokens. Se vazio, usa `secret_key` como fallback.
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    access_token_expira_min: int = 60
+    refresh_token_expira_dias: int = 7
+
     # --- Recuperação (PRD §6.1) ---
     # Distância de cosseno; limiar mínimo de aceitação do score de similaridade.
     similarity_threshold: float = 0.78

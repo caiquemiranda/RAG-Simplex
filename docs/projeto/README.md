@@ -12,7 +12,8 @@ lendo poucos arquivos pequenos, **sem precisar recarregar todo o histórico**.
 | [`ROADMAP.md`](ROADMAP.md) | O plano: fases, objetivos, testes e status (✅/🔄/⬜). | Ao planejar a fase | Ao concluir objetivos/testes de uma fase |
 | [`LOG.md`](LOG.md) | Histórico append-only do que foi feito (datado). | Para entender o "porquê" recente | A cada entrega relevante (sempre adicionar, nunca reescrever) |
 | [`DECISOES.md`](DECISOES.md) | Registro de decisões técnicas (ADR-lite) e seu motivo. | Quando uma decisão for questionada | Quando uma nova decisão for tomada/revisada |
-| [`fases/`](fases/) | Spec detalhada de **uma** fase (criada sob demanda). | Só ao executar aquela fase | Durante a execução da fase |
+| [`specs/`](specs/) | Spec do que foi **implementado** em cada fase (o quê e como). | Ao revisar/retomar a fase | Ao concluir a fase |
+| [`fases/`](fases/) | Detalhe técnico de uma fase **futura** (criado sob demanda). | Só ao executar aquela fase | Durante a execução da fase |
 
 ## Protocolo de retomada (sessão nova / janela limpa)
 

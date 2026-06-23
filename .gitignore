@@ -13,6 +13,10 @@ env/
 # --- Banco vetorial persistido (ChromaDB) ---
 data/processed/chroma/
 
+# --- Banco relacional SQLite (gerado) ---
+data/processed/*.db
+data/processed/*.db-journal
+
 # --- Caches de modelos / SO ---
 .cache/
 .DS_Store

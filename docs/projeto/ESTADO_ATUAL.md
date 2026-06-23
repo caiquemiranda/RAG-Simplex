@@ -7,40 +7,45 @@
 
 ## 📍 Você está aqui
 
-- **Fase atual:** Fase 2 ✅ (extrativo funcionando) + **ajuste de recuperação em
-  andamento**. Próxima fase: **Fase 3 (Persistência SQLite)**.
-- **O que acabou de ser feito:** implementado `LOCAL_EXTRATIVO` (offline, grátis);
-  ingestão e testes rodando na máquina do usuário (73 blocos, 18/18 testes).
-- **e5 confirmado:** reingestão feita; ranking **corrigido** — bloco certo é o #1 em
-  todas as consultas reais (Head Missing 0.893, Warm Start 0.915, Short Circuit 0.900).
-- **Falta calibrar o limiar:** o e5 comprime os scores no alto (0.84–0.92), então
-  0.78 ficou baixo demais (deixa passar quase tudo). Diagnóstico melhorado para
-  medir também perguntas **fora da base** e recomendar o limiar.
+- **Branch:** `feat/fase-6-admin` (empilhada sobre a 5; push via `http.sslBackend schannel`).
+- **Fase 6 ✅ concluída:** Painel ADM (API) — router `/admin` com CRUD de usuários,
+  estratégia/camadas/permissão extra por usuário, config global, auditoria e
+  provedores (chave **cifrada**, nunca em claro). **44 testes passando**.
+- **Fases 0–5 ✅:** RAG + extrativo + persistência + auth JWT + RBAC.
+- **Próxima fase:** **Fase 7 — Frontend React (base + auth) + Docker** (D-017).
 
-## ⏭️ Próximo passo (AÇÃO DO USUÁRIO — só o diagnóstico, sem reingerir)
+## ⏭️ Próximos passos
 
-1. `python -m app.recuperacao --diagnostico`  (agora roda positivos + negativos e
-   imprime o **limiar recomendado**)
-2. Colar a seção "RESUMO / RECOMENDAÇÃO" → cravamos `RAG_SIMILARITY_THRESHOLD`
-   (registro em D-015). **Só então** seguimos para a Fase 3.
+1. **Fase 7 — Frontend React + Docker:** scaffold Vite+React+TS+Tailwind (D-010),
+   login + rotas protegidas; depois `Dockerfile` backend (e5 pré-cacheado) +
+   `Dockerfile` frontend + `docker-compose` (D-017). **Confirmar D-010 antes.**
+2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`.
 
-> Se houver sobreposição (negativo ≥ positivo), avaliamos reranker/híbrido antes.
+> ⚠️ Backend completo: `python -m app.db --init` + `python -m app.auth --criar-admin ...`
+> antes de subir a API. A partir da Fase 7 começa o frontend (Node/React).
+
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
 ## 🧱 Base já existente
 
-- **Fase 0:** pipeline RAG (`ingestao`/`recuperacao`/`geracao`/`main`), 73 blocos.
-- **Fase 2:** `app/estrategias.py` (`EstrategiaGeracao`, `LocalExtrativa`,
-  `obter_estrategia`); `geracao.py` virou orquestrador; `ClaudeNuvem` registrada
-  mas **inerte** até a Fase 10. Padrão = `local_extrativa`.
+- **Fases 0–2:** pipeline RAG; `local_extrativa`; `ClaudeNuvem` inerte até a Fase 10;
+  embeddings `e5-small` (D-014); trecho do guia em `fontes[].trecho`.
+- **Fase 3:** `app/{modelos,db,seed,cripto,preferencias}.py`.
+- **Fase 4:** `app/auth.py` + endpoints de auth no `main.py`.
 
-## ⚠️ Bloqueios / pendências de ambiente
+## 🔧 Para rodar na sua máquina (Fases 3–4)
+```bash
+pip install -r requirements.txt   # +SQLAlchemy +cryptography +PyJWT +argon2 +email-validator
+python -m app.cripto              # gera RAG_SECRET_KEY (serve p/ cifra E JWT; cole no .env)
+python -m app.db --init           # cria tabelas + semeia papéis/permissões
+python -m app.auth --criar-admin admin@exemplo.com "SuaSenhaForte"
+uvicorn app.main:app --reload     # /docs → POST /auth/login → use o Bearer token
+```
 
-- Dependências **não instaladas** → validações feitas offline (stub de `app.config`).
-  Para rodar de verdade: `pip install -r requirements.txt` + `python -m app.ingestao --reset`.
-- Hardware fraco → **não usar LLM local**; "local" = extrativo (CPU). API só na Fase 10.
+## 🎯 Decisões
 
-## 🎯 Decisões abertas (a confirmar quando chegar a fase)
-
-- **D-006** — provedor grátis de nuvem (Gemini Flash vs Groq): decidir na Fase 10.
-- **D-010** — stack do frontend (Vite + React + TS + Tailwind): confirmar na Fase 7.
+- **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
+  frontend). Dev segue nativo até lá.
+- **D-015 🔄** — limiar de similaridade (calibrar com `--diagnostico`).
+- **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
+- **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.

@@ -15,11 +15,11 @@ administrativo e controle de acesso por usuário**.
 | 0 | MVP RAG backend (pipeline + FastAPI) | — | ✅ |
 | 1 | Sistema de documentação & planejamento | — | ✅ |
 | 2 | Estratégia `LOCAL_EXTRATIVO` + interface plugável | ❌ Não | ✅ |
-| 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ⬜ |
-| 4 | Autenticação (JWT) | ❌ Não | ⬜ |
-| 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ⬜ |
-| 6 | Painel ADM (API) | ❌ Não | ⬜ |
-| 7 | Frontend React — base + autenticação | ❌ Não | ⬜ |
+| 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ✅ |
+| 4 | Autenticação (JWT) | ❌ Não | ✅ |
+| 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
+| 6 | Painel ADM (API) | ❌ Não | ✅ |
+| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
 | 9 | Frontend — painel ADM | ❌ Não | ⬜ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
@@ -52,7 +52,9 @@ administrativo e controle de acesso por usuário**.
 
 - [x] `docs/projeto/{README,ROADMAP,ESTADO_ATUAL,LOG,DECISOES}.md`
 - [x] `.claude/CLAUDE.md` com o protocolo de retomada
-- [ ] Validar: janela nova retoma lendo ≤ 3 arquivos
+- [x] Validar: janela nova retoma lendo ≤ 3 arquivos (confirmado nas Fases 2–4)
+
+📄 Spec: [`specs/spec-fase-1-documentacao.md`](specs/spec-fase-1-documentacao.md)
 
 ---
 
@@ -84,71 +86,102 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 3 — Persistência (SQLite) & configuração hierárquica ⬜
+## Fase 3 — Persistência (SQLite) & configuração hierárquica ✅
 
 **Objetivo:** tirar config/usuários do `.env`; permitir edição em runtime.
 
-- [ ] SQLite + modelos (SQLModel/SQLAlchemy)
-- [ ] Entidades: `Usuario`, `Papel`, `Permissao`, `Provedor` (key cifrada), `ConfigEstrategia`, `LogConsulta`
-- [ ] Resolução hierárquica: requisição → usuário → papel → global
-- [ ] Chaves de API **cifradas em repouso** (campo preparado; uso só na Fase 10)
+- [x] SQLite + modelos **SQLAlchemy 2.0** (sem SQLModel — D-016)
+- [x] Entidades: `Usuario`, `Papel`, `Permissao`, `Provedor` (key cifrada), `ConfigEstrategia`, `LogConsulta`
+- [x] Resolução hierárquica: override → usuário → papel → global (`preferencias.py`)
+- [x] Chaves de API **cifradas em repouso** (`cripto.py`, Fernet; uso só na Fase 10)
+- [x] Seed de papéis/permissões/config global (`seed.py`); CLI `python -m app.db --init`
 
-**Testes:**
-- [ ] Precedência de resolução de estratégia correta
-- [ ] Cifra/decifra de chave ida e volta
-- [ ] Migração cria o schema do zero
+**Testes (rodados — 25 passed):**
+- [x] Precedência de resolução de estratégia correta
+- [x] Cifra/decifra de chave ida e volta + máscara + erro sem chave
+- [x] Seed cria o schema/dados e é idempotente
 
-**DoD:** estratégia por usuário resolvida a partir do banco.
+**DoD:** ✅ estratégia por usuário resolvida a partir do banco.
 
----
-
-## Fase 4 — Autenticação (JWT) ⬜
-
-- [ ] Login usuário/senha com hash (argon2/bcrypt)
-- [ ] Emissão/validação de JWT (access + refresh)
-- [ ] Dependency `usuario_atual`; seed de admin inicial
-
-**Testes:** [ ] senha certa/errada · [ ] endpoint protegido nega sem token · [ ] token expirado rejeitado
-
-**DoD:** `/query` exige login.
+📄 Spec: [`specs/spec-fase-3-persistencia.md`](specs/spec-fase-3-persistencia.md)
 
 ---
 
-## Fase 5 — Autorização / RBAC ⬜
+## Fase 4 — Autenticação (JWT) ✅
 
-- [ ] Papéis: `Operador`, `Tecnico`, `Analista`, `Admin` (personas PRD §3)
-- [ ] Permissões granulares + dependency `requer(permissao)`
-- [ ] Camadas filtradas por papel (operador → só 🟢 linguagem simples)
+- [x] Login usuário/senha com hash **argon2** (`auth.py`)
+- [x] Emissão/validação de JWT (access + refresh, PyJWT HS256)
+- [x] Dependency `usuario_atual`; seed de admin (`--criar-admin`)
+- [x] `/auth/login`, `/auth/refresh`, `/auth/me`; `/query`,`/query/stream`,`/ingest` protegidos
+- [x] Integra Fase 3: estratégia por usuário + `LogConsulta` em `/query`
 
-**Testes:** [ ] operador bloqueado em endpoint admin · [ ] operador não recebe camada técnica · [ ] permissão extra sem trocar papel
+**Testes (rodados — 33 passed):**
+- [x] senha certa/errada (argon2)
+- [x] endpoint protegido nega sem token; aceita com token válido
+- [x] token expirado/malformado rejeitado; refresh ≠ access
 
-**DoD:** matriz papel×permissão aplicada em todos os endpoints.
+**DoD:** ✅ `/query` exige login.
 
----
-
-## Fase 6 — Painel ADM (API) ⬜
-
-- [ ] CRUD de usuários e atribuição de papel
-- [ ] Atribuir estratégia/persona/camadas por usuário
-- [ ] Ligar/desligar estratégias; definir padrão global
-- [ ] Consulta de auditoria (`LogConsulta`)
-- [ ] (Cadastro de provedores/chaves — campo pronto, ativado na Fase 10)
-
-**Testes:** [ ] admin troca estratégia de um técnico e vale na próxima consulta · [ ] não-admin barrado · [ ] chave nunca retorna em claro
-
-**DoD:** plataforma administrável via API.
+📄 Spec: [`specs/spec-fase-4-auth.md`](specs/spec-fase-4-auth.md)
 
 ---
 
-## Fase 7 — Frontend React: base + autenticação ⬜
+## Fase 5 — Autorização / RBAC ✅
+
+- [x] Papéis: `Operador`, `Tecnico`, `Analista`, `Admin` (personas PRD §3; seed da Fase 3)
+- [x] Permissões granulares + dependency `requer(permissao)` nos endpoints
+- [x] Permissão **extra por usuário** (sem trocar papel) — `usuario_permissao`
+- [x] Camadas filtradas por papel (operador → só 🟢 linguagem simples)
+
+**Testes (rodados — 39 passed):**
+- [x] operador bloqueado em endpoint privilegiado (`/ingest` 403); analista pode (200)
+- [x] operador não recebe camada técnica (`/query` só 🟢)
+- [x] permissão extra concede acesso sem trocar papel
+
+**DoD:** ✅ matriz papel×permissão aplicada nos endpoints; resposta adaptada ao papel.
+
+📄 Spec: [`specs/spec-fase-5-rbac.md`](specs/spec-fase-5-rbac.md)
+
+---
+
+## Fase 6 — Painel ADM (API) ✅
+
+- [x] CRUD de usuários e atribuição de papel (`/admin/usuarios`)
+- [x] Atribuir estratégia/persona/camadas por usuário (`/admin/usuarios/{id}/estrategia`)
+- [x] Listar estratégias; definir padrão global (`/admin/config-global`)
+- [x] Permissões extra por usuário (`/admin/usuarios/{id}/permissoes-extra`)
+- [x] Consulta de auditoria (`/admin/auditoria`)
+- [x] Cadastro de provedores/chaves **cifradas** (`/admin/provedores`, uso na Fase 10)
+
+**Testes (rodados — 44 passed):**
+- [x] admin troca estratégia de um técnico e vale na próxima consulta dele
+- [x] não-admin barrado (403)
+- [x] chave nunca retorna em claro (só máscara)
+
+**DoD:** ✅ plataforma administrável via API.
+
+📄 Spec: [`specs/spec-fase-6-admin.md`](specs/spec-fase-6-admin.md)
+
+---
+
+## Fase 7 — Frontend React: base + autenticação + **containerização** ⬜
 
 - [ ] Scaffold Vite + React + TypeScript + Tailwind (D-010)
 - [ ] Cliente HTTP + token; login; rotas protegidas; logout
 - [ ] Layout base (navegação por papel)
 
-**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token
+**Docker (D-017) — orquestrar backend + frontend juntos:**
+- [ ] `Dockerfile` do backend (FastAPI + Chroma embarcado + SQLite + e5); **modelo e5
+      pré-cacheado** na imagem (evita download em runtime/SSL)
+- [ ] `Dockerfile` do frontend (build + nginx servindo estático)
+- [ ] `docker-compose.yml`: serviços `backend` e `frontend`; **volumes** para cache do
+      modelo e `data/` (Chroma + SQLite persistentes)
+- [ ] `.dockerignore`; `docker compose up` sobe tudo de uma vez
+- [ ] Chroma/SQLite seguem **embarcados** (não viram serviço próprio agora)
 
-**DoD:** login real contra a API.
+**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token · [ ] `docker compose up` sobe backend+frontend e o login funciona
+
+**DoD:** login real contra a API; `docker compose up` levanta o app completo.
 
 ---
 

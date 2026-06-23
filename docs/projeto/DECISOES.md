@@ -79,6 +79,48 @@ prefixos; `config` guarda modelo e prefixos.
 `python -m app.recuperacao --diagnostico` após reingestão). O limiar 0.78 do PRD é
 mantido até termos os dados; ajuste será justificado em D-015 se necessário.
 
+### D-017 ✅ Containerização (Docker) na Fase 7, com o frontend
+**2026-06-23.** Docker entra **na Fase 7** (junto do frontend), não antes. Motivo: hoje
+o backend é um único processo (Chroma e SQLite são **embarcados**, não serviços), então
+um container só agregaria pouco; o ganho do `docker compose up` ("subir tudo de uma
+vez") aparece quando há **backend + frontend** para orquestrar.
+- Compose **enxuto**: 2 serviços (`backend`, `frontend`). Chroma/SQLite seguem
+  embarcados (não viram container próprio); Postgres só se for multiusuário (Fase 11).
+- Modelo e5 **pré-cacheado** na imagem + **volumes** para `data/` → sem download em
+  runtime (contorna o SSL) e dados persistentes.
+- **Dev segue nativo** (venv + pip) pela agilidade no note fraco; o compose é para
+  integração "tudo junto" e deploy.
+
+### D-019 ✅ RBAC: permissão extra por usuário + camadas por papel
+**2026-06-23.** Permissão efetiva = papel ∪ **permissões extra** do usuário
+(`usuario_permissao`), permitindo acesso pontual sem trocar de papel. Dependency
+`requer(permissao)` protege os endpoints (403). A **resposta é adaptada ao papel**
+(PRD §5.2): operador → só 🟢; técnico/analista → 🟢 + 🔧 (+ trecho). Para isso a
+`Resposta` passou a expor `camadas` estruturadas e o global deixou de fixar `camadas`
+(senão sobreporia o padrão por papel). `/query/stream` passou a transmitir o texto já
+filtrado (streaming de nuvem token a token fica para a Fase 10).
+
+### D-018 ✅ Auth: argon2 + PyJWT (HS256) + login JSON; +email-validator
+**2026-06-23.** Senha com **argon2** (argon2-cffi), tokens **PyJWT** HS256 (access +
+refresh). Login por **corpo JSON** em vez de OAuth2 form → evita a dependência
+`python-multipart`. O `OAuth2PasswordBearer` é usado só para ler o header `Bearer`.
+Segredo do JWT = `RAG_JWT_SECRET` (ou `RAG_SECRET_KEY` como fallback).
+**Dependência nova obrigatória:** `email-validator` — o FastAPI constrói modelos
+OpenAPI (`Contact.email = EmailStr`) ao importar `fastapi.security`; sem o pacote a
+API não sobe.
+
+### D-016 ✅ Persistência com SQLAlchemy 2.0 (não SQLModel)
+**2026-06-23.** O `sqlmodel` não estava instalado, mas `SQLAlchemy 2.0` e
+`cryptography` já vinham com o Chroma. Optei por **SQLAlchemy 2.0 direto**: zero
+dependência nova para o usuário baixar e permite **rodar os testes da Fase 3 offline**
+(SQLite em memória). Modelos tipados (`Mapped`/`mapped_column`) em `app/modelos.py`.
+
+### D-015 🔄 Limiar de similaridade — calibração pendente
+**2026-06-23.** Com o e5 (D-014), positivos top-1 ficam 0.848–0.915, mas os scores
+são comprimidos e blocos fracos passam de 0.78. Falta rodar `--diagnostico` com a
+bateria de negativos (outra marca/fora de domínio) para cravar o valor. Mantido 0.78
+até ter os dados. **Não conclama mudar antes de medir os negativos.**
+
 ### D-013 ✅ Separação de camadas no extrativo por marcadores do guia
 **2026-06-23.** Como o `local_extrativa` não usa LLM, a "dupla camada" é obtida
 parseando os marcadores consistentes do guia: `**Explicação simples.**` → camada 🟢;

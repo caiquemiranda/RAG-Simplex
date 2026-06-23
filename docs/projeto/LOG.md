@@ -9,6 +9,116 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 6 — Painel ADM (API)
+
+**Branch:** `feat/fase-6-admin` (sobre a 5).
+
+**Feito:**
+- `app/admin.py`: router `/admin` (incluído no `main`). Endpoints (todos com
+  `requer(...)`):
+  - Usuários: listar/criar/obter/atualizar + permissões extra (`gerir_usuarios`).
+  - Estratégia: listar disponíveis, definir por usuário e global (`gerir_estrategias`).
+  - Auditoria: `LogConsulta` recentes (`ver_auditoria`).
+  - Provedores: gravar chave **cifrada** + listar **mascarada** (`gerir_chaves`).
+- `main.py`: `app.include_router(admin_router)`.
+
+**Validação (rodada aqui):** `pytest` = **44 passed** (5 novos). Confirma: não-admin
+barrado; troca de estratégia vale na próxima consulta; auditoria registra; chave
+nunca em claro.
+
+**Próximo:** Fase 7 — Frontend React (base + auth) + Docker (D-017). Confirmar D-010.
+
+**Arquivos:** `app/admin.py`, `app/main.py`, `tests/test_admin.py`,
+`docs/projeto/specs/spec-fase-6-admin.md`.
+
+---
+
+## 2026-06-23 — Fase 5 — Autorização / RBAC
+
+**Branch:** `feat/fase-5-rbac` (sobre a 4).
+
+**Feito:**
+- `modelos.py`: tabela `usuario_permissao` + `Usuario.permissoes_extra` +
+  `Usuario.tem_permissao` (papel ∪ extra).
+- `auth.py`: dependency `requer(permissao)` (403 se faltar).
+- `estrategias.py`: `Resposta.camadas` (dict ordenado) + `montar_texto(camadas, incluir)`;
+  `LocalExtrativa` agora monta seções e o texto via elas.
+- `preferencias.py`: `resolver_camadas` (config explícita ou padrão por papel;
+  operador → só `simples`).
+- `main.py`: `/ingest`→`requer("ingerir")`, `/query`→`consultar`,
+  `/query/stream`→`consultar_stream`; filtra camadas por papel e devolve
+  `camadas_exibidas`. `/query/stream` agora transmite o texto já filtrado.
+- `seed.py`: global sem `camadas` fixo (deixa o padrão por papel valer).
+
+**Decisão:** D-019 (permissão extra por usuário + camadas por papel).
+
+**Validação (rodada aqui):** `pytest` = **39 passed** (6 novos de RBAC, RAG mockado
+nos endpoints). Sem warnings.
+
+**Próximo:** Fase 6 — Painel ADM (API). Schema novo → `python -m app.db --init`.
+
+**Arquivos:** `app/{modelos,auth,estrategias,preferencias,main,seed}.py`,
+`tests/test_rbac.py`, `docs/projeto/specs/spec-fase-5-rbac.md`.
+
+---
+
+## 2026-06-23 — Fase 4 — Autenticação (JWT)
+
+**Branch:** `feat/fase-4-auth` (sobre a 3).
+
+**Feito:**
+- `app/auth.py`: hash **argon2**, tokens **PyJWT HS256** (access+refresh),
+  `usuario_atual`, `criar_ou_atualizar_admin` + CLI `--criar-admin`.
+- `main.py`: `/auth/login` (JSON), `/auth/refresh`, `/auth/me`; `/query`,
+  `/query/stream`, `/ingest` protegidos. Em `/query`, estratégia resolvida por
+  usuário (Fase 3) + gravação de `LogConsulta` (auditoria).
+- `config.py`: `jwt_secret`, `jwt_algorithm`, expirações.
+- `requirements.txt`: +PyJWT, +argon2-cffi, **+email-validator** (D-018: FastAPI
+  carrega `Contact.email=EmailStr` ao importar `fastapi.security`).
+
+**Decisão:** D-018 (argon2 + PyJWT + login JSON; email-validator obrigatório).
+
+**Validação (rodada aqui):** `pytest` = **33 passed** (8 novos, inclui TestClient
+com SQLite em memória); `python -m app.auth --criar-admin` criou admin id=1.
+`email-validator` instalado no ambiente (pip funcionou; só HF/GitHub tinham SSL).
+
+**Próximo:** Fase 5 — Autorização / RBAC.
+
+**Arquivos:** `app/{auth,main,config}.py`, `tests/test_auth.py`, `requirements.txt`,
+`docs/projeto/specs/spec-fase-4-auth.md`.
+
+---
+
+## 2026-06-23 — Fase 3 — Persistência (SQLite) & config hierárquica
+
+**Branch:** `feat/fase-3-persistencia`.
+
+**Feito:**
+- Decisão D-016: usar **SQLAlchemy 2.0 direto** (já instalado; sem SQLModel) → testes
+  rodam offline.
+- `app/modelos.py`: `Usuario`, `Papel`, `Permissao` (N:N), `Provedor` (key cifrada),
+  `ConfigEstrategia` (escopo global/papel/usuario), `LogConsulta` (auditoria).
+- `app/db.py`: engine/sessão SQLite + `criar_tabelas` + `get_session` + CLI `--init`.
+- `app/seed.py`: 8 permissões, 4 papéis (personas PRD §3), config global = local; idempotente.
+- `app/cripto.py`: Fernet (`cifrar`/`decifrar`/`mascarar`/`gerar_chave_secreta`).
+- `app/preferencias.py`: resolução override→usuário→papel→global→settings.
+- `config.py`: `database_url`, `secret_key`. `requirements.txt`: +SQLAlchemy +cryptography.
+- `.gitignore`: ignora `data/processed/*.db`.
+
+**Validação (rodada aqui):** `pytest` = **25 passed** (7 novos de persistência);
+`python -m app.db --init` → 8 permissões, 4 papéis, 1 config global.
+
+**Também nesta sessão (Fase 2 +):** trecho do guia na íntegra na resposta e em
+`fontes[].trecho` (commit `773af51`).
+
+**Próximo:** Fase 4 — Autenticação (JWT). Pendência aberta: calibrar limiar (D-015).
+
+**Arquivos:** `app/{modelos,db,seed,cripto,preferencias,config}.py`,
+`tests/test_persistencia.py`, `requirements.txt`, `.gitignore`,
+`docs/projeto/specs/spec-fase-3-persistencia.md`.
+
+---
+
 ## 2026-06-23 — Fase 2 (calibração) — e5 confirmado; calibrando o limiar
 
 **Resultado do e5 (reingestão do usuário):** ranking **corrigido** — bloco certo é
