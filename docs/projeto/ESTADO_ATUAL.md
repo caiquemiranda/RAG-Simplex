@@ -7,22 +7,22 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-5-rbac` (empilhada sobre a 4; push via `http.sslBackend schannel`).
-- **Fase 5 ✅ concluída:** RBAC — `requer(permissao)` nos endpoints, permissão extra
-  por usuário (`usuario_permissao`), e **resposta adaptada ao papel** (operador → só 🟢;
-  técnico/analista → 🟢+🔧). **39 testes passando** (rodados aqui).
-- **Fases 0–4 ✅:** RAG + extrativo + persistência + auth JWT.
-- **Próxima fase:** **Fase 6 — Painel ADM (API)**.
+- **Branch:** `feat/fase-6-admin` (empilhada sobre a 5; push via `http.sslBackend schannel`).
+- **Fase 6 ✅ concluída:** Painel ADM (API) — router `/admin` com CRUD de usuários,
+  estratégia/camadas/permissão extra por usuário, config global, auditoria e
+  provedores (chave **cifrada**, nunca em claro). **44 testes passando**.
+- **Fases 0–5 ✅:** RAG + extrativo + persistência + auth JWT + RBAC.
+- **Próxima fase:** **Fase 7 — Frontend React (base + auth) + Docker** (D-017).
 
 ## ⏭️ Próximos passos
 
-1. **Fase 6 — Painel ADM (API):** CRUD de usuários/papéis, atribuir estratégia/
-   camadas/permissão extra por usuário, consultar auditoria (`LogConsulta`). Tudo
-   protegido por `requer("gerir_usuarios")` etc. (cadastro de chaves fica p/ Fase 10).
-2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`
-   (não bloqueia; top-1 já correto).
+1. **Fase 7 — Frontend React + Docker:** scaffold Vite+React+TS+Tailwind (D-010),
+   login + rotas protegidas; depois `Dockerfile` backend (e5 pré-cacheado) +
+   `Dockerfile` frontend + `docker-compose` (D-017). **Confirmar D-010 antes.**
+2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`.
 
-> ⚠️ Schema novo: rode `python -m app.db --init` (cria a tabela `usuario_permissao`).
+> ⚠️ Backend completo: `python -m app.db --init` + `python -m app.auth --criar-admin ...`
+> antes de subir a API. A partir da Fase 7 começa o frontend (Node/React).
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 

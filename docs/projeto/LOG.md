@@ -9,6 +9,30 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 6 — Painel ADM (API)
+
+**Branch:** `feat/fase-6-admin` (sobre a 5).
+
+**Feito:**
+- `app/admin.py`: router `/admin` (incluído no `main`). Endpoints (todos com
+  `requer(...)`):
+  - Usuários: listar/criar/obter/atualizar + permissões extra (`gerir_usuarios`).
+  - Estratégia: listar disponíveis, definir por usuário e global (`gerir_estrategias`).
+  - Auditoria: `LogConsulta` recentes (`ver_auditoria`).
+  - Provedores: gravar chave **cifrada** + listar **mascarada** (`gerir_chaves`).
+- `main.py`: `app.include_router(admin_router)`.
+
+**Validação (rodada aqui):** `pytest` = **44 passed** (5 novos). Confirma: não-admin
+barrado; troca de estratégia vale na próxima consulta; auditoria registra; chave
+nunca em claro.
+
+**Próximo:** Fase 7 — Frontend React (base + auth) + Docker (D-017). Confirmar D-010.
+
+**Arquivos:** `app/admin.py`, `app/main.py`, `tests/test_admin.py`,
+`docs/projeto/specs/spec-fase-6-admin.md`.
+
+---
+
 ## 2026-06-23 — Fase 5 — Autorização / RBAC
 
 **Branch:** `feat/fase-5-rbac` (sobre a 4).

@@ -22,6 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import __version__
+from app.admin import router as admin_router
 from app.auth import (
     TokenInvalido,
     criar_access_token,
@@ -45,6 +46,7 @@ app = FastAPI(
     description="Assistente de auxílio técnico para painéis de incêndio Simplex.",
     version=__version__,
 )
+app.include_router(admin_router)
 
 
 # --------------------------------------------------------------------------- #

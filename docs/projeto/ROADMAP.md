@@ -18,7 +18,7 @@ administrativo e controle de acesso por usuário**.
 | 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ✅ |
 | 4 | Autenticação (JWT) | ❌ Não | ✅ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
-| 6 | Painel ADM (API) | ❌ Não | ⬜ |
+| 6 | Painel ADM (API) | ❌ Não | ✅ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
 | 9 | Frontend — painel ADM | ❌ Não | ⬜ |
@@ -144,17 +144,23 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 6 — Painel ADM (API) ⬜
+## Fase 6 — Painel ADM (API) ✅
 
-- [ ] CRUD de usuários e atribuição de papel
-- [ ] Atribuir estratégia/persona/camadas por usuário
-- [ ] Ligar/desligar estratégias; definir padrão global
-- [ ] Consulta de auditoria (`LogConsulta`)
-- [ ] (Cadastro de provedores/chaves — campo pronto, ativado na Fase 10)
+- [x] CRUD de usuários e atribuição de papel (`/admin/usuarios`)
+- [x] Atribuir estratégia/persona/camadas por usuário (`/admin/usuarios/{id}/estrategia`)
+- [x] Listar estratégias; definir padrão global (`/admin/config-global`)
+- [x] Permissões extra por usuário (`/admin/usuarios/{id}/permissoes-extra`)
+- [x] Consulta de auditoria (`/admin/auditoria`)
+- [x] Cadastro de provedores/chaves **cifradas** (`/admin/provedores`, uso na Fase 10)
 
-**Testes:** [ ] admin troca estratégia de um técnico e vale na próxima consulta · [ ] não-admin barrado · [ ] chave nunca retorna em claro
+**Testes (rodados — 44 passed):**
+- [x] admin troca estratégia de um técnico e vale na próxima consulta dele
+- [x] não-admin barrado (403)
+- [x] chave nunca retorna em claro (só máscara)
 
-**DoD:** plataforma administrável via API.
+**DoD:** ✅ plataforma administrável via API.
+
+📄 Spec: [`specs/spec-fase-6-admin.md`](specs/spec-fase-6-admin.md)
 
 ---
 
