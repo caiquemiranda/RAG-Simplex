@@ -62,12 +62,12 @@ def semear_padroes(sessao: Session) -> dict[str, int]:
         select(ConfigEstrategia).where(ConfigEstrategia.escopo == "global")
     )
     if global_cfg is None:
+        # `camadas=None` → a resolução usa o padrão por papel (operador vê só 🟢).
         sessao.add(
             ConfigEstrategia(
                 escopo="global",
                 alvo=None,
                 estrategia=settings.estrategia_geracao,
-                camadas="simples,tecnica",
             )
         )
     sessao.flush()

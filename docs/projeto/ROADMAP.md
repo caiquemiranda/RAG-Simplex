@@ -17,7 +17,7 @@ administrativo e controle de acesso por usuário**.
 | 2 | Estratégia `LOCAL_EXTRATIVO` + interface plugável | ❌ Não | ✅ |
 | 3 | Persistência (SQLite) & configuração hierárquica | ❌ Não | ✅ |
 | 4 | Autenticação (JWT) | ❌ Não | ✅ |
-| 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ⬜ |
+| 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ⬜ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
@@ -126,15 +126,21 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 5 — Autorização / RBAC ⬜
+## Fase 5 — Autorização / RBAC ✅
 
-- [ ] Papéis: `Operador`, `Tecnico`, `Analista`, `Admin` (personas PRD §3)
-- [ ] Permissões granulares + dependency `requer(permissao)`
-- [ ] Camadas filtradas por papel (operador → só 🟢 linguagem simples)
+- [x] Papéis: `Operador`, `Tecnico`, `Analista`, `Admin` (personas PRD §3; seed da Fase 3)
+- [x] Permissões granulares + dependency `requer(permissao)` nos endpoints
+- [x] Permissão **extra por usuário** (sem trocar papel) — `usuario_permissao`
+- [x] Camadas filtradas por papel (operador → só 🟢 linguagem simples)
 
-**Testes:** [ ] operador bloqueado em endpoint admin · [ ] operador não recebe camada técnica · [ ] permissão extra sem trocar papel
+**Testes (rodados — 39 passed):**
+- [x] operador bloqueado em endpoint privilegiado (`/ingest` 403); analista pode (200)
+- [x] operador não recebe camada técnica (`/query` só 🟢)
+- [x] permissão extra concede acesso sem trocar papel
 
-**DoD:** matriz papel×permissão aplicada em todos os endpoints.
+**DoD:** ✅ matriz papel×permissão aplicada nos endpoints; resposta adaptada ao papel.
+
+📄 Spec: [`specs/spec-fase-5-rbac.md`](specs/spec-fase-5-rbac.md)
 
 ---
 

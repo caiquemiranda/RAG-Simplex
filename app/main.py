@@ -27,15 +27,17 @@ from app.auth import (
     criar_access_token,
     criar_refresh_token,
     decodificar_token,
+    requer,
     usuario_atual,
     verificar_senha,
 )
 from app.config import settings
 from app.db import get_session
-from app.geracao import gerar_resposta, gerar_resposta_stream
+from app.estrategias import montar_texto
+from app.geracao import gerar_resposta
 from app.ingestao import get_collection, indexar
 from app.modelos import LogConsulta, Usuario
-from app.preferencias import resolver_estrategia
+from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
 app = FastAPI(
@@ -73,6 +75,7 @@ class RespostaOut(BaseModel):
     resposta: str
     fallback: bool
     fontes: list[FonteOut]
+    camadas_exibidas: list[str] = []  # quais camadas o papel do usuário recebeu
 
 
 class IngestOut(BaseModel):
@@ -173,7 +176,7 @@ def health() -> dict:
 
 
 @app.post("/ingest", response_model=IngestOut)
-def ingest(usuario: Usuario = Depends(usuario_atual)) -> IngestOut:
+def ingest(usuario: Usuario = Depends(requer("ingerir"))) -> IngestOut:
     """(Re)indexa o guia padrão definido em ``settings.knowledge_base``."""
     try:
         total = indexar(reset=True)
@@ -187,12 +190,17 @@ def ingest(usuario: Usuario = Depends(usuario_atual)) -> IngestOut:
 @app.post("/query", response_model=RespostaOut)
 def query(
     consulta: ConsultaIn,
-    usuario: Usuario = Depends(usuario_atual),
+    usuario: Usuario = Depends(requer("consultar")),
     sessao: Session = Depends(get_session),
 ) -> RespostaOut:
-    """Recupera contexto e gera a resposta na estratégia configurada para o usuário."""
+    """Recupera contexto e gera a resposta na estratégia configurada para o usuário.
+
+    As camadas exibidas dependem do papel (RBAC): operador recebe só a camada de
+    linguagem simples; técnico/analista recebem também a resolução técnica.
+    """
     papel = usuario.papel.nome if usuario.papel else None
     estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
+    permitidas = resolver_camadas(sessao, usuario_id=usuario.id, papel_nome=papel)
     try:
         rec = buscar(consulta.pergunta, top_k=consulta.top_k, sistema=consulta.sistema)
         resp = gerar_resposta(
@@ -200,6 +208,10 @@ def query(
         )
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+
+    # Filtra as camadas conforme o papel. Fallback e estratégias sem camadas
+    # estruturadas usam o texto completo.
+    texto = montar_texto(resp.camadas, permitidas) if resp.camadas else resp.texto
 
     # Auditoria (PRD §6.2): registra a consulta sem expor a chave do provedor.
     sessao.add(LogConsulta(
@@ -214,27 +226,45 @@ def query(
 
     return RespostaOut(
         pergunta=consulta.pergunta,
-        resposta=resp.texto,
+        resposta=texto,
         fallback=resp.fallback,
         fontes=resp.fontes,
+        camadas_exibidas=sorted(permitidas),
     )
 
 
 @app.post("/query/stream")
 def query_stream(
     consulta: ConsultaIn,
-    usuario: Usuario = Depends(usuario_atual),
+    usuario: Usuario = Depends(requer("consultar_stream")),
     sessao: Session = Depends(get_session),
 ) -> StreamingResponse:
-    """Mesma resposta de ``/query``, porém em streaming (text/plain; charset=utf-8)."""
+    """Mesma resposta de ``/query``, porém em streaming (text/plain; charset=utf-8).
+
+    As camadas são filtradas por papel antes do envio (gera a resposta e transmite
+    o texto já filtrado). O streaming token a token de nuvem é tratado na Fase 10.
+    """
     papel = usuario.papel.nome if usuario.papel else None
     estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
+    permitidas = resolver_camadas(sessao, usuario_id=usuario.id, papel_nome=papel)
     try:
         rec = buscar(consulta.pergunta, top_k=consulta.top_k, sistema=consulta.sistema)
+        resp = gerar_resposta(
+            consulta.pergunta, recuperacao=rec, persona=consulta.persona, estrategia=estrategia
+        )
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 
-    gerador = gerar_resposta_stream(
-        consulta.pergunta, recuperacao=rec, persona=consulta.persona, estrategia=estrategia
-    )
-    return StreamingResponse(gerador, media_type="text/plain; charset=utf-8")
+    texto = montar_texto(resp.camadas, permitidas) if resp.camadas else resp.texto
+
+    sessao.add(LogConsulta(
+        usuario_id=usuario.id, pergunta=consulta.pergunta,
+        estrategia=resp.estrategia or estrategia, latencia_ms=resp.latencia_ms,
+        custo_estimado=resp.custo_estimado, fallback=resp.fallback,
+    ))
+    sessao.commit()
+
+    def _emitir():
+        yield texto
+
+    return StreamingResponse(_emitir(), media_type="text/plain; charset=utf-8")

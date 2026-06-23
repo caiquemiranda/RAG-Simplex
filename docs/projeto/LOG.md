@@ -9,6 +9,35 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 5 — Autorização / RBAC
+
+**Branch:** `feat/fase-5-rbac` (sobre a 4).
+
+**Feito:**
+- `modelos.py`: tabela `usuario_permissao` + `Usuario.permissoes_extra` +
+  `Usuario.tem_permissao` (papel ∪ extra).
+- `auth.py`: dependency `requer(permissao)` (403 se faltar).
+- `estrategias.py`: `Resposta.camadas` (dict ordenado) + `montar_texto(camadas, incluir)`;
+  `LocalExtrativa` agora monta seções e o texto via elas.
+- `preferencias.py`: `resolver_camadas` (config explícita ou padrão por papel;
+  operador → só `simples`).
+- `main.py`: `/ingest`→`requer("ingerir")`, `/query`→`consultar`,
+  `/query/stream`→`consultar_stream`; filtra camadas por papel e devolve
+  `camadas_exibidas`. `/query/stream` agora transmite o texto já filtrado.
+- `seed.py`: global sem `camadas` fixo (deixa o padrão por papel valer).
+
+**Decisão:** D-019 (permissão extra por usuário + camadas por papel).
+
+**Validação (rodada aqui):** `pytest` = **39 passed** (6 novos de RBAC, RAG mockado
+nos endpoints). Sem warnings.
+
+**Próximo:** Fase 6 — Painel ADM (API). Schema novo → `python -m app.db --init`.
+
+**Arquivos:** `app/{modelos,auth,estrategias,preferencias,main,seed}.py`,
+`tests/test_rbac.py`, `docs/projeto/specs/spec-fase-5-rbac.md`.
+
+---
+
 ## 2026-06-23 — Fase 4 — Autenticação (JWT)
 
 **Branch:** `feat/fase-4-auth` (sobre a 3).

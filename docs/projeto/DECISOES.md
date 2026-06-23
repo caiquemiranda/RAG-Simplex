@@ -91,6 +91,15 @@ vez") aparece quando há **backend + frontend** para orquestrar.
 - **Dev segue nativo** (venv + pip) pela agilidade no note fraco; o compose é para
   integração "tudo junto" e deploy.
 
+### D-019 ✅ RBAC: permissão extra por usuário + camadas por papel
+**2026-06-23.** Permissão efetiva = papel ∪ **permissões extra** do usuário
+(`usuario_permissao`), permitindo acesso pontual sem trocar de papel. Dependency
+`requer(permissao)` protege os endpoints (403). A **resposta é adaptada ao papel**
+(PRD §5.2): operador → só 🟢; técnico/analista → 🟢 + 🔧 (+ trecho). Para isso a
+`Resposta` passou a expor `camadas` estruturadas e o global deixou de fixar `camadas`
+(senão sobreporia o padrão por papel). `/query/stream` passou a transmitir o texto já
+filtrado (streaming de nuvem token a token fica para a Fase 10).
+
 ### D-018 ✅ Auth: argon2 + PyJWT (HS256) + login JSON; +email-validator
 **2026-06-23.** Senha com **argon2** (argon2-cffi), tokens **PyJWT** HS256 (access +
 refresh). Login por **corpo JSON** em vez de OAuth2 form → evita a dependência

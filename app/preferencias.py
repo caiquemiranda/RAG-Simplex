@@ -59,3 +59,27 @@ def resolver_estrategia(
         return override
     cfg = resolver_config(sessao, usuario_id=usuario_id, papel_nome=papel_nome)
     return cfg.estrategia if cfg else settings.estrategia_geracao
+
+
+# Camadas que cada papel vê por padrão (quando a config não define explicitamente).
+# Operador (não-técnico, PRD §3/§5.2) recebe só a camada de linguagem simples.
+_CAMADAS_PADRAO_POR_PAPEL = {
+    "Operador": {"simples"},
+}
+_CAMADAS_TODAS = {"simples", "tecnica"}
+
+
+def resolver_camadas(
+    sessao: Session,
+    usuario_id: int | None = None,
+    papel_nome: str | None = None,
+) -> set[str]:
+    """Camadas que o usuário pode ver. Config explícita > padrão por papel.
+
+    Retorna subconjunto de {"simples", "tecnica"}. A camada de segurança e o título
+    entram sempre (tratados na montagem do texto).
+    """
+    cfg = resolver_config(sessao, usuario_id=usuario_id, papel_nome=papel_nome)
+    if cfg is not None and cfg.camadas:
+        return {c.strip() for c in cfg.camadas.split(",") if c.strip()}
+    return set(_CAMADAS_PADRAO_POR_PAPEL.get(papel_nome, _CAMADAS_TODAS))

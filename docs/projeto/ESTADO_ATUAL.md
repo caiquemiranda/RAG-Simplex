@@ -7,20 +7,22 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-4-auth` (empilhada sobre `feat/fase-3-persistencia`; PRs
-  pendentes de abertura — push já funciona via `http.sslBackend schannel`).
-- **Fase 4 ✅ concluída:** autenticação JWT — `/auth/login|refresh|me`, hash argon2,
-  `usuario_atual`, rotas `/query`,`/query/stream`,`/ingest` protegidas, estratégia
-  por usuário + `LogConsulta`. **33 testes passando** (rodados aqui, inclui TestClient).
-- **Fases 0–3 ✅:** pipeline RAG + `local_extrativa` + trecho na íntegra + persistência.
-- **Próxima fase:** **Fase 5 — Autorização / RBAC**.
+- **Branch:** `feat/fase-5-rbac` (empilhada sobre a 4; push via `http.sslBackend schannel`).
+- **Fase 5 ✅ concluída:** RBAC — `requer(permissao)` nos endpoints, permissão extra
+  por usuário (`usuario_permissao`), e **resposta adaptada ao papel** (operador → só 🟢;
+  técnico/analista → 🟢+🔧). **39 testes passando** (rodados aqui).
+- **Fases 0–4 ✅:** RAG + extrativo + persistência + auth JWT.
+- **Próxima fase:** **Fase 6 — Painel ADM (API)**.
 
 ## ⏭️ Próximos passos
 
-1. **Fase 5 — RBAC:** dependency `requer(permissao)` por endpoint; **filtrar camadas
-   por papel** (operador → só 🟢 linguagem simples); testes de bloqueio por papel.
+1. **Fase 6 — Painel ADM (API):** CRUD de usuários/papéis, atribuir estratégia/
+   camadas/permissão extra por usuário, consultar auditoria (`LogConsulta`). Tudo
+   protegido por `requer("gerir_usuarios")` etc. (cadastro de chaves fica p/ Fase 10).
 2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`
    (não bloqueia; top-1 já correto).
+
+> ⚠️ Schema novo: rode `python -m app.db --init` (cria a tabela `usuario_permissao`).
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 

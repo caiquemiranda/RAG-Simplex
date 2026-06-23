@@ -40,6 +40,14 @@ papel_permissao = Table(
     Column("permissao_id", ForeignKey("permissao.id"), primary_key=True),
 )
 
+# Permissões EXTRA atribuídas diretamente a um usuário (sem trocar de papel).
+usuario_permissao = Table(
+    "usuario_permissao",
+    Base.metadata,
+    Column("usuario_id", ForeignKey("usuario.id"), primary_key=True),
+    Column("permissao_id", ForeignKey("permissao.id"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -80,6 +88,14 @@ class Usuario(Base):
 
     papel_id: Mapped[int | None] = mapped_column(ForeignKey("papel.id"), default=None)
     papel: Mapped[Papel | None] = relationship(back_populates="usuarios")
+    # Permissões concedidas diretamente a este usuário, além das do papel.
+    permissoes_extra: Mapped[list[Permissao]] = relationship(secondary=usuario_permissao)
+
+    def tem_permissao(self, chave: str) -> bool:
+        """Permissão efetiva = permissões do papel ∪ permissões extra do usuário."""
+        if self.papel is not None and self.papel.tem_permissao(chave):
+            return True
+        return any(p.chave == chave for p in self.permissoes_extra)
 
 
 class Provedor(Base):

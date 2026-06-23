@@ -125,6 +125,23 @@ def usuario_atual(
     return usuario
 
 
+def requer(permissao: str):
+    """Cria uma dependency que exige uma permissão específica (RBAC, Fase 5).
+
+    Uso: ``def endpoint(usuario = Depends(requer("ingerir"))): ...``
+    """
+
+    def _dependencia(usuario: Usuario = Depends(usuario_atual)) -> Usuario:
+        if not usuario.tem_permissao(permissao):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Acesso negado: requer a permissão '{permissao}'.",
+            )
+        return usuario
+
+    return _dependencia
+
+
 # --------------------------------------------------------------------------- #
 # Seed de administrador                                                        #
 # --------------------------------------------------------------------------- #
