@@ -181,16 +181,26 @@ def get_embedder():
     return SentenceTransformer(settings.embedding_model)
 
 
-def embed_textos(textos: list[str]) -> list[list[float]]:
-    """Gera embeddings normalizados (para distância de cosseno)."""
+def _embed(textos: list[str], prefixo: str) -> list[list[float]]:
+    """Gera embeddings normalizados (cosseno), aplicando o prefixo do modelo."""
     modelo = get_embedder()
     vetores = modelo.encode(
-        textos,
+        [f"{prefixo}{t}" for t in textos],
         normalize_embeddings=True,
         show_progress_bar=False,
         convert_to_numpy=True,
     )
     return vetores.tolist()
+
+
+def embed_documentos(textos: list[str]) -> list[list[float]]:
+    """Embeddings dos blocos a indexar (prefixo 'passage:' para o e5)."""
+    return _embed(textos, settings.embedding_passage_prefix)
+
+
+def embed_consulta(texto: str) -> list[float]:
+    """Embedding de uma consulta (prefixo 'query:' para o e5)."""
+    return _embed([texto], settings.embedding_query_prefix)[0]
 
 
 # --------------------------------------------------------------------------- #
@@ -199,9 +209,14 @@ def embed_textos(textos: list[str]) -> list[list[float]]:
 def get_client():
     """Cliente ChromaDB persistente (import preguiçoso para parsing sem o banco)."""
     import chromadb
+    from chromadb.config import Settings as ChromaSettings
 
     settings.chroma_dir.mkdir(parents=True, exist_ok=True)
-    return chromadb.PersistentClient(path=str(settings.chroma_dir))
+    # anonymized_telemetry=False evita os erros ruidosos de telemetria/protobuf.
+    return chromadb.PersistentClient(
+        path=str(settings.chroma_dir),
+        settings=ChromaSettings(anonymized_telemetry=False),
+    )
 
 
 def get_collection(reset: bool = False):
@@ -232,7 +247,7 @@ def indexar(caminho: Path | None = None, reset: bool = True) -> int:
         raise ValueError("Nenhum bloco foi extraído do documento.")
 
     colecao = get_collection(reset=reset)
-    embeddings = embed_textos([c.texto for c in chunks])
+    embeddings = embed_documentos([c.texto for c in chunks])
 
     colecao.upsert(
         ids=[c.id for c in chunks],

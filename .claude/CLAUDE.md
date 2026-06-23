@@ -50,8 +50,8 @@ e o roadmap em [`docs/projeto/`](../docs/projeto/).
 ## Decisões técnicas (confirmadas)
 
 - **Banco vetorial:** ChromaDB persistente, distância de **cosseno** (`hnsw:space`).
-- **Embeddings:** `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
-  (local, multilíngue PT/EN — exigência de busca bilíngue do PRD §5.1). Sem chave externa.
+- **Embeddings:** `intfloat/multilingual-e5-small` (local, multilíngue PT/EN,
+  otimizado para recuperação — prefixos `query:`/`passage:`; D-014). Sem chave externa.
 - **Geração:** API do Claude, modelo `claude-opus-4-8` (Anthropic SDK oficial).
 - **Interface:** FastAPI.
 

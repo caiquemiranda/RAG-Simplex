@@ -7,18 +7,20 @@
 
 ## 📍 Você está aqui
 
-- **Fase atual:** Fase 2 ✅ concluída → próxima é a **Fase 3 (Persistência SQLite)**.
-- **O que acabou de ser feito:** implementada a estratégia `LOCAL_EXTRATIVO`
-  (RAG respondendo **sem LLM, grátis, offline**) e a interface plugável de
-  estratégias. Roadmap reordenado para deixar **API key só na Fase 10** (D-012).
+- **Fase atual:** Fase 2 ✅ (extrativo funcionando) + **ajuste de recuperação em
+  andamento**. Próxima fase: **Fase 3 (Persistência SQLite)**.
+- **O que acabou de ser feito:** implementado `LOCAL_EXTRATIVO` (offline, grátis);
+  ingestão e testes rodando na máquina do usuário (73 blocos, 18/18 testes).
+- **Problema encontrado e tratado:** o modelo MiniLM dava scores baixos e ranking
+  invertido → trocado por **`intfloat/multilingual-e5-small`** (D-014). Falta o
+  usuário **reingerir** e **calibrar o limiar** com os scores reais do e5.
 
-## ⏭️ Próximo passo
+## ⏭️ Próximo passo (AÇÃO DO USUÁRIO — calibração)
 
-Iniciar a **Fase 3 — Persistência (SQLite) & configuração hierárquica**:
-1. Criar `docs/projeto/fases/fase-3-persistencia.md` (spec).
-2. Modelar `Usuario`, `Papel`, `Permissao`, `Provedor`, `ConfigEstrategia`, `LogConsulta`.
-3. Resolução de estratégia: requisição → usuário → papel → global.
-4. Campo de chave cifrada (uso só na Fase 10).
+1. `python -m app.ingestao --reset`  (baixa o e5 ~120 MB e re-embeda os 73 blocos)
+2. `python -m app.recuperacao --diagnostico`  (mostra os scores reais do e5)
+3. Reportar os números → decidimos o limiar final (mantém 0.78 ou ajusta com
+   justificativa em D-015). **Só então** seguimos para a Fase 3.
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 

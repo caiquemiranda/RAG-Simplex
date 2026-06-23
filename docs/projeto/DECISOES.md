@@ -12,10 +12,9 @@ Status: ✅ Vigente · 🔄 Proposta · ❌ Substituída
 **2026-06-23.** Persistente, simples, local. Distância de cosseno via `hnsw:space`
 (PRD §6.1). Alternativas (FAISS, in-memory) descartadas por menos ergonomia/persistência.
 
-### D-002 ✅ Embeddings locais multilíngues
-**2026-06-23.** `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
-Roda em CPU fraca, sem chave externa, e mapeia `HEAD MISSING` ≈ `CABEÇOTE AUSENTE`
-(PRD §5.1). **Embeddings nunca exigem hardware forte** — essa é a parte "local".
+### D-002 ❌ Embeddings: MiniLM (substituída por D-014)
+**2026-06-23.** `paraphrase-multilingual-MiniLM-L12-v2`. **Substituída** após testes
+reais mostrarem scores baixos e ranking invertido (ver D-014).
 
 ### D-003 ✅ Geração padrão via Claude `claude-opus-4-8`
 **2026-06-23.** Decisão do PRD/CLAUDE.md. A partir da Fase 2 vira **uma estratégia
@@ -63,6 +62,22 @@ servidor resolve a estratégia e chama o provedor. Requisito de segurança (PRD 
 que depende de API key foi reordenado para a **Fase 10**. Construímos primeiro a RAG
 100% local/grátis (`local_extrativa`) e todo o restante (persistência, auth, RBAC,
 painel, frontend) sem chave. Guia de chaves: `docs/CONFIGURAR_APIKEYS.md`.
+
+### D-014 ✅ Embeddings: `intfloat/multilingual-e5-small` (otimizado p/ recuperação)
+**2026-06-23.** Teste real com o MiniLM (D-002) na base indexada mostrou:
+- `"cabeçote ausente"` → bloco correto a apenas **0.390**;
+- `"HEAD MISSING no loop do 4100"` → bloco **errado** (No Answer 0.536) **acima** do
+  correto (Head Missing 0.515).
+
+Conclusão: o problema **não é o limiar 0.78** (baixá-lo não conserta ranking
+invertido e deixaria passar falsos positivos — perigoso). O elo fraco é o modelo.
+Trocado para **`intfloat/multilingual-e5-small`**, modelo assimétrico otimizado para
+busca (prefixos `query: ` / `passage: `), melhor em PT/EN e com scores mais altos e
+separados. Roda em CPU. Implementação: `embed_documentos`/`embed_consulta` aplicam os
+prefixos; `config` guarda modelo e prefixos.
+**Pendente:** recalibrar o limiar com os scores reais do e5 (rodar
+`python -m app.recuperacao --diagnostico` após reingestão). O limiar 0.78 do PRD é
+mantido até termos os dados; ajuste será justificado em D-015 se necessário.
 
 ### D-013 ✅ Separação de camadas no extrativo por marcadores do guia
 **2026-06-23.** Como o `local_extrativa` não usa LLM, a "dupla camada" é obtida

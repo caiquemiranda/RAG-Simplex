@@ -43,7 +43,12 @@ class Settings(BaseSettings):
     max_tokens: int = 4096
 
     # --- Embeddings locais (multilíngue PT/EN, sem chave externa) ---
-    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    # e5 é otimizado para RECUPERAÇÃO (assimétrico): exige prefixar a consulta com
+    # "query: " e os documentos com "passage: ". Dá scores mais altos e melhor
+    # separação que o MiniLM (ver decisão D-014). Roda em CPU.
+    embedding_model: str = "intfloat/multilingual-e5-small"
+    embedding_query_prefix: str = "query: "
+    embedding_passage_prefix: str = "passage: "
 
     # --- Banco vetorial ---
     chroma_dir: Path = BASE_DIR / "data" / "processed" / "chroma"

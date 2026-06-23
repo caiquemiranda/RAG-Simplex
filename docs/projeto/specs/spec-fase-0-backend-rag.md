@@ -30,8 +30,9 @@ resposta em dupla camada.
   da SEÇÃO), `severidade` (Alta/Média/Crítica, heurística por palavras-chave de
   risco), `idioma_erro` (EN-US), `termo_en` (extraído do título), `header`,
   `header_path`, `fonte`.
-- **Embeddings:** `sentence-transformers` multilíngue, normalizados (cosseno).
-  Import preguiçoso — parsing roda sem baixar o modelo.
+- **Embeddings:** `intfloat/multilingual-e5-small` (otimizado p/ recuperação;
+  prefixos `query:`/`passage:` — D-014), normalizados (cosseno). `embed_documentos`
+  (passage) na ingestão e `embed_consulta` (query) na recuperação. Import preguiçoso.
 - **ChromaDB:** coleção persistente com `hnsw:space=cosine`. Import preguiçoso.
 - **CLI:** `python -m app.ingestao --reset`.
 

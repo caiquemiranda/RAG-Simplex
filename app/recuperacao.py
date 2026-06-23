@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.config import settings
-from app.ingestao import embed_textos, get_collection
+from app.ingestao import embed_consulta, get_collection
 
 
 @dataclass
@@ -76,7 +76,7 @@ def buscar(
             "Coleção vazia. Rode a ingestão primeiro: python -m app.ingestao --reset"
         )
 
-    consulta_emb = embed_textos([consulta])[0]
+    consulta_emb = embed_consulta(consulta)
     resposta = colecao.query(
         query_embeddings=[consulta_emb],
         n_results=top_k,
@@ -100,17 +100,58 @@ def buscar(
     return Recuperacao(consulta=consulta, resultados=resultados, acima_do_limiar=acima)
 
 
+# Bateria de consultas representativas (código em EN, PT técnico, PT coloquial)
+# usada para calibrar o limiar de similaridade com o modelo de embeddings atual.
+_BATERIA_DIAGNOSTICO = [
+    "HEAD MISSING no loop do 4100",
+    "HEAD MISSING",
+    "cabeçote ausente",
+    "No Answer sem resposta do dispositivo",
+    "Short Circuit curto-circuito no loop",
+    "Earth Fault falha de aterramento",
+    "painel apitando luz vermelha piscando",
+    "como fazer warm start reinício de CPU",
+]
+
+
+def _imprimir(rec: Recuperacao) -> None:
+    limiar = settings.similarity_threshold
+    print(f"  acima do limiar ({limiar}): {rec.acima_do_limiar}")
+    for r in rec.resultados:
+        marca = "✓" if r.similaridade >= limiar else "·"
+        print(f"   {marca} [{r.similaridade:.3f}] {r.metadados.get('header', r.id)}"
+              f"  (sistema={r.metadados.get('sistema')})")
+
+
+def _diagnostico() -> None:
+    """Roda a bateria e ajuda a escolher o limiar com base nos scores reais."""
+    print(f"Modelo de embeddings: {settings.embedding_model}")
+    print(f"Limiar atual: {settings.similarity_threshold}\n")
+    topos = []
+    for consulta in _BATERIA_DIAGNOSTICO:
+        rec = buscar(consulta, top_k=3)
+        print(f">>> {consulta!r}")
+        _imprimir(rec)
+        if rec.resultados:
+            topos.append(rec.resultados[0].similaridade)
+        print()
+    if topos:
+        print(f"Melhor score por consulta — mín: {min(topos):.3f} | "
+              f"média: {sum(topos)/len(topos):.3f} | máx: {max(topos):.3f}")
+        print("Dica: defina RAG_SIMILARITY_THRESHOLD um pouco ABAIXO do menor score "
+              "de um match correto, mas ACIMA dos falsos positivos.")
+
+
 def _main() -> None:
     import sys
 
-    consulta = " ".join(sys.argv[1:]) or "painel apitando luz vermelha piscando"
-    rec = buscar(consulta)
+    args = sys.argv[1:]
+    if args and args[0] == "--diagnostico":
+        _diagnostico()
+        return
+    consulta = " ".join(args) or "painel apitando luz vermelha piscando"
     print(f"Consulta: {consulta!r}")
-    print(f"Acima do limiar ({settings.similarity_threshold}): {rec.acima_do_limiar}\n")
-    for r in rec.resultados:
-        marca = "✓" if r.similaridade >= settings.similarity_threshold else "·"
-        print(f" {marca} [{r.similaridade:.3f}] {r.metadados.get('header', r.id)}"
-              f"  (sistema={r.metadados.get('sistema')})")
+    _imprimir(buscar(consulta))
 
 
 if __name__ == "__main__":

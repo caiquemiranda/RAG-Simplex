@@ -9,6 +9,33 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 2 (ajuste) — Troca do modelo de embeddings (recuperação)
+
+**Contexto:** ao rodar de verdade (deps instaladas), a ingestão funcionou (73
+blocos, 18/18 testes), mas consultas óbvias caíam em fallback.
+
+**Diagnóstico (scores reais com MiniLM):** `"cabeçote ausente"` → bloco correto só
+0.390; `"HEAD MISSING no loop do 4100"` → bloco errado (No Answer 0.536) acima do
+correto (Head Missing 0.515). Logo: problema é o **modelo**, não o limiar.
+
+**Feito:**
+- Trocado o embedding para **`intfloat/multilingual-e5-small`** com prefixos
+  `query:`/`passage:` (`embed_documentos`/`embed_consulta` em `ingestao.py`; `config`).
+- `recuperacao.py` usa `embed_consulta`; adicionado `--diagnostico` (bateria de
+  consultas + estatísticas para calibrar o limiar).
+- Telemetria do Chroma desligada (`anonymized_telemetry=False`) → fim dos erros de
+  protobuf/telemetry.
+- Decisão D-014 registrada; D-002 (MiniLM) marcada como substituída.
+
+**Validação:** sintaxe OK; 18/18 testes offline passam. Scores do e5 **pendentes**
+(meu ambiente não baixa modelos por SSL) → usuário reingere e roda `--diagnostico`.
+
+**Próximo:** calibrar o limiar com os números do e5; depois Fase 3.
+
+**Arquivos:** `app/{config,ingestao,recuperacao}.py`.
+
+---
+
 ## 2026-06-23 — Fase 2 — Estratégia LOCAL_EXTRATIVO + interface plugável
 
 **Feito:**
