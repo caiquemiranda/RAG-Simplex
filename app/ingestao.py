@@ -208,6 +208,13 @@ def embed_consulta(texto: str) -> list[float]:
 # --------------------------------------------------------------------------- #
 def get_client():
     """Cliente ChromaDB persistente (import preguiçoso para parsing sem o banco)."""
+    import os
+
+    # Desliga a telemetria antes de importar o Chroma (silencia erros de
+    # protobuf/posthog que aparecem por incompatibilidade de versão).
+    os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+    os.environ.setdefault("CHROMA_TELEMETRY_IMPL", "none")
+
     import chromadb
     from chromadb.config import Settings as ChromaSettings
 

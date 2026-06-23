@@ -9,6 +9,29 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 2 (calibração) — e5 confirmado; calibrando o limiar
+
+**Resultado do e5 (reingestão do usuário):** ranking **corrigido** — bloco certo é
+o #1 em todas as consultas reais (Head Missing 0.893; Warm Start 0.915; Short
+Circuit 0.900; No Answer/Bad Answer cluster 0.88–0.90). Positivos top-1: mín 0.848,
+média 0.887.
+
+**Novo achado:** o e5 comprime os scores no alto (tudo 0.84–0.92), inclusive blocos
+fracos → 0.78 ficou **baixo demais** como porteiro de "fora da base".
+
+**Feito:**
+- `--diagnostico` reescrito: grupos `_CONSULTAS_NA_BASE` (positivos) e
+  `_CONSULTAS_FORA_DA_BASE` (negativos: outra marca, fora de domínio); calcula
+  min(pos)/max(neg) e **recomenda** o limiar (ou avisa sobreposição).
+- Telemetria do Chroma: env vars `ANONYMIZED_TELEMETRY`/`CHROMA_TELEMETRY_IMPL`
+  setadas antes do import (tentativa de silenciar os erros de protobuf/posthog).
+
+**Pendente:** usuário roda `--diagnostico` (sem reingerir) → cravar o limiar (D-015).
+
+**Arquivos:** `app/recuperacao.py`, `app/ingestao.py`.
+
+---
+
 ## 2026-06-23 — Fase 2 (ajuste) — Troca do modelo de embeddings (recuperação)
 
 **Contexto:** ao rodar de verdade (deps instaladas), a ingestão funcionou (73

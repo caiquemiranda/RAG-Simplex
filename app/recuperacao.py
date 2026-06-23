@@ -100,17 +100,23 @@ def buscar(
     return Recuperacao(consulta=consulta, resultados=resultados, acima_do_limiar=acima)
 
 
-# Bateria de consultas representativas (código em EN, PT técnico, PT coloquial)
-# usada para calibrar o limiar de similaridade com o modelo de embeddings atual.
-_BATERIA_DIAGNOSTICO = [
+# Consultas que DEVEM achar um bloco (código em EN, PT técnico, PT coloquial).
+_CONSULTAS_NA_BASE = [
     "HEAD MISSING no loop do 4100",
-    "HEAD MISSING",
     "cabeçote ausente",
     "No Answer sem resposta do dispositivo",
     "Short Circuit curto-circuito no loop",
-    "Earth Fault falha de aterramento",
-    "painel apitando luz vermelha piscando",
     "como fazer warm start reinício de CPU",
+    "Bad Answer endereço duplicado",
+]
+
+# Consultas FORA da base (outra marca / fora de domínio) — devem cair em fallback.
+_CONSULTAS_FORA_DA_BASE = [
+    "como trocar o pneu do carro",
+    "receita de bolo de chocolate",
+    "previsão do tempo para amanhã",
+    "como resetar um painel Notifier",   # outra marca: não pode "casar" com Simplex
+    "preço do bitcoin hoje",
 ]
 
 
@@ -123,23 +129,42 @@ def _imprimir(rec: Recuperacao) -> None:
               f"  (sistema={r.metadados.get('sistema')})")
 
 
-def _diagnostico() -> None:
-    """Roda a bateria e ajuda a escolher o limiar com base nos scores reais."""
-    print(f"Modelo de embeddings: {settings.embedding_model}")
-    print(f"Limiar atual: {settings.similarity_threshold}\n")
+def _rodar_grupo(titulo: str, consultas: list[str]) -> list[float]:
+    print(f"\n===== {titulo} =====")
     topos = []
-    for consulta in _BATERIA_DIAGNOSTICO:
+    for consulta in consultas:
         rec = buscar(consulta, top_k=3)
         print(f">>> {consulta!r}")
         _imprimir(rec)
         if rec.resultados:
             topos.append(rec.resultados[0].similaridade)
-        print()
-    if topos:
-        print(f"Melhor score por consulta — mín: {min(topos):.3f} | "
-              f"média: {sum(topos)/len(topos):.3f} | máx: {max(topos):.3f}")
-        print("Dica: defina RAG_SIMILARITY_THRESHOLD um pouco ABAIXO do menor score "
-              "de um match correto, mas ACIMA dos falsos positivos.")
+    return topos
+
+
+def _diagnostico() -> None:
+    """Roda positivos e negativos e RECOMENDA um limiar com base nos scores."""
+    print(f"Modelo de embeddings: {settings.embedding_model}")
+    print(f"Limiar atual: {settings.similarity_threshold}")
+
+    pos = _rodar_grupo("NA BASE (esperado: encontrar)", _CONSULTAS_NA_BASE)
+    neg = _rodar_grupo("FORA DA BASE (esperado: fallback)", _CONSULTAS_FORA_DA_BASE)
+
+    print("\n===== RESUMO / RECOMENDAÇÃO =====")
+    if pos:
+        print(f"Positivos (top-1) — mín: {min(pos):.3f} | média: {sum(pos)/len(pos):.3f}")
+    if neg:
+        print(f"Negativos (top-1) — máx: {max(neg):.3f} | média: {sum(neg)/len(neg):.3f}")
+    if pos and neg:
+        min_pos, max_neg = min(pos), max(neg)
+        if min_pos > max_neg:
+            rec = round((min_pos + max_neg) / 2, 2)
+            print(f"\n✅ Há separação (gap = {min_pos - max_neg:.3f}).")
+            print(f"   Limiar recomendado: RAG_SIMILARITY_THRESHOLD={rec}")
+            print(f"   (acima do maior negativo {max_neg:.3f}, abaixo do menor positivo {min_pos:.3f})")
+        else:
+            print(f"\n⚠️ Sobreposição: menor positivo ({min_pos:.3f}) ≤ maior negativo "
+                  f"({max_neg:.3f}). Um limiar simples não separa — considerar reranker "
+                  "(cross-encoder) ou filtro híbrido por termo. Discutir antes de cravar.")
 
 
 def _main() -> None:

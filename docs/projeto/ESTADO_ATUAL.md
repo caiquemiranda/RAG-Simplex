@@ -11,17 +11,20 @@
   andamento**. Próxima fase: **Fase 3 (Persistência SQLite)**.
 - **O que acabou de ser feito:** implementado `LOCAL_EXTRATIVO` (offline, grátis);
   ingestão e testes rodando na máquina do usuário (73 blocos, 18/18 testes).
-- **Problema encontrado e tratado:** o modelo MiniLM dava scores baixos e ranking
-  invertido → trocado por **`intfloat/multilingual-e5-small`** (D-014). Falta o
-  usuário **reingerir** e **calibrar o limiar** com os scores reais do e5.
+- **e5 confirmado:** reingestão feita; ranking **corrigido** — bloco certo é o #1 em
+  todas as consultas reais (Head Missing 0.893, Warm Start 0.915, Short Circuit 0.900).
+- **Falta calibrar o limiar:** o e5 comprime os scores no alto (0.84–0.92), então
+  0.78 ficou baixo demais (deixa passar quase tudo). Diagnóstico melhorado para
+  medir também perguntas **fora da base** e recomendar o limiar.
 
-## ⏭️ Próximo passo (AÇÃO DO USUÁRIO — calibração)
+## ⏭️ Próximo passo (AÇÃO DO USUÁRIO — só o diagnóstico, sem reingerir)
 
-1. `python -m app.ingestao --reset`  (baixa o e5 ~120 MB e re-embeda os 73 blocos)
-2. `python -m app.recuperacao --diagnostico`  (mostra os scores reais do e5)
-3. Reportar os números → decidimos o limiar final (mantém 0.78 ou ajusta com
-   justificativa em D-015). **Só então** seguimos para a Fase 3.
+1. `python -m app.recuperacao --diagnostico`  (agora roda positivos + negativos e
+   imprime o **limiar recomendado**)
+2. Colar a seção "RESUMO / RECOMENDAÇÃO" → cravamos `RAG_SIMILARITY_THRESHOLD`
+   (registro em D-015). **Só então** seguimos para a Fase 3.
 
+> Se houver sobreposição (negativo ≥ positivo), avaliamos reranker/híbrido antes.
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
 ## 🧱 Base já existente
