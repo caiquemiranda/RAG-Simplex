@@ -9,7 +9,7 @@ import { DocumentoPanel } from '../components/DocumentoPanel'
 type DocAberto = { nome: string; header: string }
 
 export default function Consulta() {
-  const { mensagens, carregando, enviar, votar, limpar } = useChat()
+  const { mensagens, carregando, enviar, votar } = useChat()
 
   const [pergunta, setPergunta] = useState('')
   const [doc, setDoc] = useState<DocAberto | null>(null)
@@ -37,14 +37,16 @@ export default function Consulta() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-4 p-4">
             {mensagens.length === 0 && (
-              <div className="mt-16 text-center text-muted-foreground">
-                <p className="text-lg font-medium text-foreground">Assistente técnico Simplex</p>
-                <p className="mt-2 text-sm">
+              <div className="mt-24 text-center text-muted-foreground">
+                <p className="text-2xl font-semibold text-foreground">
+                  Qual falha vamos diagnosticar?
+                </p>
+                <p className="mt-3 text-sm">
                   Descreva a falha do painel ou cole o código exibido no display.
                 </p>
                 <p className="mt-4 text-xs">
                   Clique em uma <span className="font-medium">fonte</span> para abrir o guia ao
-                  lado, no trecho exato. O histórico fica salvo mesmo se você trocar de aba.
+                  lado, no trecho exato. Cada consulta fica salva em “Consultas recentes”.
                 </p>
               </div>
             )}
@@ -126,11 +128,6 @@ export default function Consulta() {
             <Button type="submit" disabled={carregando || !pergunta.trim()}>
               Enviar
             </Button>
-            {mensagens.length > 0 && (
-              <Button type="button" variant="outline" onClick={limpar} disabled={carregando} title="Apagar o histórico">
-                Limpar
-              </Button>
-            )}
           </form>
         </div>
       </div>

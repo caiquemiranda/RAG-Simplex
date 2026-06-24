@@ -12,40 +12,65 @@ export type Mensagem = {
   voto?: number
 }
 
-type EstadoChat = {
+export type Conversa = {
+  id: string
+  titulo: string
   mensagens: Mensagem[]
+  criadoEm: number
+  atualizadoEm: number
+}
+
+type EstadoChat = {
+  conversas: Conversa[]
+  conversaAtivaId: string | null
+  mensagens: Mensagem[] // mensagens da conversa ativa (derivado)
   carregando: boolean
+  novaConsulta: () => void
+  selecionar: (id: string) => void
+  excluir: (id: string) => void
   enviar: (texto: string) => Promise<void>
   votar: (indice: number, voto: number) => Promise<void>
-  limpar: () => void
 }
 
 const ChatContext = createContext<EstadoChat | undefined>(undefined)
 
+const uid = () =>
+  (globalThis.crypto?.randomUUID?.() ?? `c-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+
+function tituloDe(texto: string): string {
+  const t = texto.trim().replace(/\s+/g, ' ')
+  return t.length > 42 ? `${t.slice(0, 42)}…` : t || 'Nova consulta'
+}
+
 /**
- * Mantém o histórico do chat e executa as buscas **acima das rotas**, para que
- * navegar entre abas não perca o histórico nem aborte uma busca em andamento.
- * O histórico é persistido no localStorage por usuário (sobrevive a reload).
+ * Mantém o histórico de **consultas** (várias conversas) e executa as buscas
+ * acima das rotas — navegar entre abas não perde nada nem aborta o streaming.
+ * Persiste por usuário no localStorage (`rag-consultas-<id>`).
  */
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { usuario } = useAuth()
   const podeStream = usuario?.permissoes.includes('consultar_stream') ?? false
-  const chave = usuario ? `rag-historico-${usuario.id}` : null
+  const chave = usuario ? `rag-consultas-${usuario.id}` : null
 
-  const [mensagens, setMensagens] = useState<Mensagem[]>([])
+  const [conversas, setConversas] = useState<Conversa[]>([])
+  const [conversaAtivaId, setConversaAtivaId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
 
-  // Carrega o histórico do usuário ao entrar / trocar de usuário.
+  // Carrega ao entrar / trocar de usuário.
   useEffect(() => {
     if (!chave) {
-      setMensagens([])
+      setConversas([])
+      setConversaAtivaId(null)
       return
     }
     try {
       const bruto = localStorage.getItem(chave)
-      setMensagens(bruto ? (JSON.parse(bruto) as Mensagem[]) : [])
+      const dados = bruto ? (JSON.parse(bruto) as { conversas: Conversa[]; ativa: string | null }) : null
+      setConversas(dados?.conversas ?? [])
+      setConversaAtivaId(dados?.ativa ?? null)
     } catch {
-      setMensagens([])
+      setConversas([])
+      setConversaAtivaId(null)
     }
   }, [chave])
 
@@ -53,88 +78,117 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!chave) return
     try {
-      localStorage.setItem(chave, JSON.stringify(mensagens))
+      localStorage.setItem(chave, JSON.stringify({ conversas, ativa: conversaAtivaId }))
     } catch {
       /* localStorage cheio/indisponível: ignora */
     }
-  }, [chave, mensagens])
+  }, [chave, conversas, conversaAtivaId])
 
-  // Atualiza a última mensagem (a do assistente em curso).
-  function patchUltima(patch: Partial<Mensagem>) {
-    setMensagens((prev) => {
-      const copia = [...prev]
-      copia[copia.length - 1] = { ...copia[copia.length - 1], ...patch }
-      return copia
-    })
+  const mensagens = conversas.find((c) => c.id === conversaAtivaId)?.mensagens ?? []
+
+  // --- Atualizações endereçadas por id da conversa (não pelo "ativo"), para o
+  //     streaming não se perder se o usuário trocar de conversa no meio. ---
+  function mapUltima(convId: string, fn: (m: Mensagem) => Mensagem) {
+    setConversas((prev) =>
+      prev.map((c) => {
+        if (c.id !== convId || c.mensagens.length === 0) return c
+        const ms = [...c.mensagens]
+        ms[ms.length - 1] = fn(ms[ms.length - 1])
+        return { ...c, mensagens: ms, atualizadoEm: Date.now() }
+      }),
+    )
   }
-  function appendUltima(delta: string) {
-    setMensagens((prev) => {
-      const copia = [...prev]
-      const i = copia.length - 1
-      copia[i] = { ...copia[i], texto: copia[i].texto + delta }
-      return copia
-    })
+
+  function novaConsulta() {
+    setConversaAtivaId(null)
+  }
+
+  function selecionar(id: string) {
+    setConversaAtivaId(id)
+  }
+
+  function excluir(id: string) {
+    setConversas((prev) => prev.filter((c) => c.id !== id))
+    setConversaAtivaId((atual) => (atual === id ? null : atual))
   }
 
   async function enviar(texto: string) {
     const t = texto.trim()
     if (!t || carregando) return
-    setMensagens((m) => [
-      ...m,
-      { autor: 'usuario', texto: t },
-      { autor: 'assistente', texto: '', fontes: [], camadas: [], fallback: false, logId: null, voto: 0 },
-    ])
+
+    // Garante uma conversa alvo (cria uma nova se nenhuma estiver ativa).
+    const alvoId = conversaAtivaId ?? uid()
+    const ehNova = conversaAtivaId === null
+    const userMsg: Mensagem = { autor: 'usuario', texto: t }
+    const placeholder: Mensagem = {
+      autor: 'assistente', texto: '', fontes: [], camadas: [], fallback: false, logId: null, voto: 0,
+    }
+
+    setConversas((prev) => {
+      const base = ehNova
+        ? [{ id: alvoId, titulo: tituloDe(t), mensagens: [], criadoEm: Date.now(), atualizadoEm: Date.now() }, ...prev]
+        : prev
+      return base.map((c) =>
+        c.id === alvoId
+          ? { ...c, mensagens: [...c.mensagens, userMsg, placeholder], atualizadoEm: Date.now() }
+          : c,
+      )
+    })
+    setConversaAtivaId(alvoId)
     setCarregando(true)
+
     try {
       if (podeStream) {
         await queryStream(
           t,
           (meta) =>
-            patchUltima({
-              fontes: meta.fontes,
-              camadas: meta.camadas_exibidas,
-              fallback: meta.fallback,
-              logId: meta.log_id,
-            }),
-          (delta) => appendUltima(delta),
+            mapUltima(alvoId, (m) => ({
+              ...m, fontes: meta.fontes, camadas: meta.camadas_exibidas,
+              fallback: meta.fallback, logId: meta.log_id,
+            })),
+          (delta) => mapUltima(alvoId, (m) => ({ ...m, texto: m.texto + delta })),
         )
       } else {
         const r = await api.query(t)
-        patchUltima({
-          texto: r.resposta,
-          fontes: r.fontes,
-          camadas: r.camadas_exibidas,
-          fallback: r.fallback,
-          logId: r.log_id,
-        })
+        mapUltima(alvoId, (m) => ({
+          ...m, texto: r.resposta, fontes: r.fontes, camadas: r.camadas_exibidas,
+          fallback: r.fallback, logId: r.log_id,
+        }))
       }
     } catch (err) {
-      patchUltima({
-        texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`,
-        fallback: true,
-      })
+      mapUltima(alvoId, (m) => ({
+        ...m, texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`, fallback: true,
+      }))
     } finally {
       setCarregando(false)
     }
   }
 
   async function votar(indice: number, voto: number) {
-    const m = mensagens[indice]
+    const ativa = conversas.find((c) => c.id === conversaAtivaId)
+    const m = ativa?.mensagens[indice]
     if (!m?.logId) return
     try {
       await api.feedback(m.logId, voto)
-      setMensagens((prev) => prev.map((x, i) => (i === indice ? { ...x, voto } : x)))
+      setConversas((prev) =>
+        prev.map((c) =>
+          c.id === conversaAtivaId
+            ? { ...c, mensagens: c.mensagens.map((x, i) => (i === indice ? { ...x, voto } : x)) }
+            : c,
+        ),
+      )
     } catch {
       /* feedback é best-effort */
     }
   }
 
-  function limpar() {
-    setMensagens([])
-  }
-
   return (
-    <ChatContext.Provider value={{ mensagens, carregando, enviar, votar, limpar }}>
+    <ChatContext.Provider
+      value={{
+        conversas, conversaAtivaId, mensagens, carregando,
+        novaConsulta, selecionar, excluir, enviar, votar,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   )

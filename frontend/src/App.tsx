@@ -12,12 +12,13 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/consulta" replace />} />
           <Route path="/consulta" element={<Consulta />} />
+          <Route path="/inicio" element={<Home />} />
           <Route path="/admin" element={<Admin />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/consulta" replace />} />
     </Routes>
   )
 }

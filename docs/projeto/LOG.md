@@ -9,6 +9,27 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 5) — Layout estilo ChatGPT (sidebar + multi-consulta)
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (frontend, typecheck OK):**
+- `ChatContext`: passa de **uma** conversa para **várias** (`Conversa[]` com título/
+  timestamps). `novaConsulta`, `selecionar`, `excluir`; streaming endereçado por id
+  da conversa (trocar de consulta no meio não embaralha). Persiste `rag-consultas-<id>`.
+- `components/Sidebar.tsx` (novo): barra colapsável (rail de ícones). Topo: **Nova
+  consulta** e **Buscar consulta** (filtra por título/conteúdo). Lista **Consultas
+  recentes** (clicar abre; lixeira exclui). Rodapé: usuário com menu (Início, Painel
+  ADM, Sair). Ícones SVG inline (sem libs).
+- `Layout`: vira sidebar + outlet (sem header). `App`: `/` e `*` → `/consulta`;
+  Home movido p/ `/inicio`.
+- `Consulta`: usa o ativo; estado vazio “Qual falha vamos diagnosticar?”.
+
+**Arquivos:** `frontend/src/{chat/ChatContext,components/Sidebar,components/Layout,
+pages/Consulta,App}.tsx`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 4) — Histórico persistente + buscas fora da página
 
 **Branch:** `feat/fase-7-frontend`.
