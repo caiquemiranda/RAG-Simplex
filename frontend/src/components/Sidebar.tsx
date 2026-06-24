@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
 import { useTema } from '../theme/ThemeContext'
 import { Logo } from './Logo'
+import { Avatar } from './Avatar'
 
 /* ---- Ícones (SVG inline) ---- */
 const ic = 'h-[18px] w-[18px] shrink-0'
@@ -20,11 +21,6 @@ const IconLixeira = () => (<svg className="h-4 w-4" viewBox="0 0 24 24" {...svg}
 const Chevron = ({ aberto }: { aberto: boolean }) => (
   <svg className={`h-4 w-4 shrink-0 transition-transform ${aberto ? 'rotate-90' : ''}`} viewBox="0 0 24 24" {...svg}><path d="m9 18 6-6-6-6" /></svg>
 )
-
-function iniciais(texto: string): string {
-  const p = texto.replace(/@.*/, '').split(/[.\s_-]+/).filter(Boolean)
-  return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || texto[0]?.toUpperCase() || '?'
-}
 
 const itemBase = 'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-accent'
 
@@ -80,8 +76,8 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
         <NavLink to="/equipamentos" className={railLink} title="Buscar Equipamento" onClick={navegou}><IconEquipamento /></NavLink>
         <NavLink to="/documentos" className={railLink} title="Documentos" onClick={navegou}><IconDocumentos /></NavLink>
         <NavLink to="/cronograma" className={railLink} title="Cronograma" onClick={navegou}><IconCronograma /></NavLink>
-        <button className="mt-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground" title={usuario?.email} onClick={onAbrir}>
-          {iniciais(usuario?.nome || usuario?.email || '?')}
+        <button className="mt-auto" title={usuario?.email} onClick={onAbrir}>
+          <Avatar nome={usuario?.nome || usuario?.email || '?'} />
         </button>
       </aside>
     )
@@ -167,9 +163,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
           </>
         )}
         <button className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-accent" onClick={() => setMenu((v) => !v)}>
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-            {iniciais(usuario?.nome || usuario?.email || '?')}
-          </span>
+          <Avatar nome={usuario?.nome || usuario?.email || '?'} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{usuario?.nome || usuario?.email}</span>
             <span className="block truncate text-xs text-muted-foreground">{usuario?.papel ?? '—'}</span>

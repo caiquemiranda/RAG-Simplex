@@ -9,6 +9,26 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Cronograma: #CR1/#CR2/#CR5 + fim de semana (#CR3 parcial)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **`components/Avatar.tsx`** (novo): foto (`foto_url`) ou **iniciais** (Caíque
+  Miranda → CM). Sidebar refatorada para usá-lo (DRY).
+- **#CR1:** calendário renderiza só as semanas do mês vigente; dias de outros meses
+  ficam vazios (sem número).
+- **#CR2/#CR5:** cada dia mostra **avatar do técnico** + atividade (cor por status);
+  card do dia mostra avatar + “onde está” (cliente/unidade). Backend: `VisitaResumo`
+  ganhou `tecnico_foto`.
+- **#CR3 (parcial):** sábado/domingo com tom verde da logo (`--brand-2`, via CSS var
+  inline). Falta o **feriado** (tabela) — e o **#CR4 notificações** (próximo).
+- `tsc` OK; cronograma 4 testes ok.
+
+**Arquivos:** `app/cronograma.py`, `frontend/src/{components/{Avatar,Sidebar}.tsx,
+pages/Cronograma.tsx,lib/api.ts}`.
+
+---
+
 ## 2026-06-24 — Backlog: otimizações do cronograma (#CR1–#CR5)
 
 Registradas no [`BACKLOG.md`](BACKLOG.md) §C como atividades em andamento:

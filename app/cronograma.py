@@ -42,6 +42,7 @@ class VisitaResumo(BaseModel):
     id: int
     usuario_id: int
     tecnico_nome: str
+    tecnico_foto: str | None = None
     cliente_id: int | None = None
     cliente_nome: str | None = None
     unidade: str | None = None
@@ -55,6 +56,7 @@ def _resumo(v: Visita) -> VisitaResumo:
     return VisitaResumo(
         id=v.id, usuario_id=v.usuario_id,
         tecnico_nome=v.usuario.nome or v.usuario.email,
+        tecnico_foto=v.usuario.foto_url,
         cliente_id=v.cliente_id,
         cliente_nome=v.cliente.nome if v.cliente else None,
         unidade=v.cliente.unidade if v.cliente else None,

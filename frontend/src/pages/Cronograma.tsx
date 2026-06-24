@@ -3,6 +3,7 @@ import { api, type AdminCliente, type AdminUsuario, type Visita } from '../lib/a
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Avatar } from '../components/Avatar'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STATUS_COR: Record<string, string> = {
@@ -67,11 +68,15 @@ export default function Cronograma() {
     })
   }
 
-  const celulas = Array.from({ length: 42 }, (_, i) => {
+  // #CR1: renderiza só as semanas que contêm dias do mês vigente (nenhum do mês seguinte).
+  const diasNoMes = new Date(ref.ano, ref.mes + 1, 0).getDate()
+  const totalCelulas = Math.ceil((inicioSemana + diasNoMes) / 7) * 7
+  const celulas = Array.from({ length: totalCelulas }, (_, i) => {
     const data = new Date(ref.ano, ref.mes, i - inicioSemana + 1)
     const iso = fmt(data)
-    const ehHoje = iso === fmt(hoje)
-    return { data, iso, doMes: data.getMonth() === ref.mes, ehHoje, evs: porDia[iso] ?? [] }
+    const doMes = data.getMonth() === ref.mes
+    const fds = data.getDay() === 0 || data.getDay() === 6 // domingo/sábado
+    return { data, iso, doMes, fds, ehHoje: iso === fmt(hoje), evs: doMes ? porDia[iso] ?? [] : [] }
   })
 
   async function adicionar() {
@@ -120,27 +125,37 @@ export default function Cronograma() {
             {DIAS_SEMANA.map((d) => <div key={d} className="py-2">{d}</div>)}
           </div>
           <div className="grid grid-cols-7">
-            {celulas.map((c, i) => (
-              <button
-                key={i}
-                onClick={() => setDiaSel(c.iso)}
-                className={`min-h-[92px] border-b border-r p-1.5 text-left hover:bg-accent ${c.doMes ? '' : 'bg-muted/30 text-muted-foreground'}`}
-              >
-                <div className="flex justify-end">
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${c.ehHoje ? 'bg-primary font-semibold text-primary-foreground' : ''}`}>
-                    {c.data.getDate()}
-                  </span>
-                </div>
-                <div className="mt-1 space-y-1">
-                  {c.evs.slice(0, 3).map((v) => (
-                    <div key={v.id} className={`truncate rounded px-1.5 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`} title={`${v.tecnico_nome} — ${v.titulo}`}>
-                      {podeGerir ? `${v.tecnico_nome}: ` : ''}{v.titulo}
-                    </div>
-                  ))}
-                  {c.evs.length > 3 && <div className="px-1 text-[11px] text-muted-foreground">+{c.evs.length - 3}</div>}
-                </div>
-              </button>
-            ))}
+            {celulas.map((c, i) =>
+              c.doMes ? (
+                <button
+                  key={i}
+                  onClick={() => setDiaSel(c.iso)}
+                  style={c.fds ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' } : undefined}
+                  className="min-h-[92px] border-b border-r p-1.5 text-left hover:bg-accent"
+                >
+                  <div className="flex justify-end">
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${c.ehHoje ? 'bg-primary font-semibold text-primary-foreground' : c.fds ? 'font-medium text-brand-2' : ''}`}>
+                      {c.data.getDate()}
+                    </span>
+                  </div>
+                  <div className="mt-1 space-y-1">
+                    {c.evs.slice(0, 3).map((v) => (
+                      <div
+                        key={v.id}
+                        className={`flex items-center gap-1 rounded px-1 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}
+                        title={`${v.tecnico_nome} — ${v.titulo}${v.cliente_nome ? ' @ ' + v.cliente_nome : ''}`}
+                      >
+                        {podeGerir && <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-5 w-5" />}
+                        <span className="truncate">{v.titulo}</span>
+                      </div>
+                    ))}
+                    {c.evs.length > 3 && <div className="px-1 text-[11px] text-muted-foreground">+{c.evs.length - 3}</div>}
+                  </div>
+                </button>
+              ) : (
+                <div key={i} className="min-h-[92px] border-b border-r bg-muted/20" />
+              ),
+            )}
           </div>
         </div>
 
@@ -164,18 +179,21 @@ export default function Cronograma() {
             <div className="max-h-72 space-y-2 overflow-y-auto">
               {visitasDoDia.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}
               {visitasDoDia.map((v) => (
-                <div key={v.id} className="rounded-lg border p-2 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">{v.titulo}</span>
-                    <span className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                <div key={v.id} className="flex gap-2 rounded-lg border p-2 text-sm">
+                  <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{v.titulo}</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {podeGerir && <>{v.tecnico_nome} · </>}
+                      📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
+                    </div>
+                    {podeGerir && (
+                      <button className="mt-1 text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover</button>
+                    )}
                   </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    {podeGerir && <>👷 {v.tecnico_nome} · </>}
-                    📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
-                  </div>
-                  {podeGerir && (
-                    <button className="mt-1 text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover</button>
-                  )}
                 </div>
               ))}
             </div>
