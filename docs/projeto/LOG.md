@@ -9,6 +9,23 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Documentação de portabilidade + backlog/planejamento
+
+**Branch:** `feat/fase-7-frontend`.
+
+A pedido do usuário (documentação exaustiva p/ recriar em outra linguagem):
+- **`docs/projeto/BACKLOG.md`**: tarefas pendentes (checklist) + **plano sequenciado
+  sem retrabalho** (fundação `Cliente` antes das telas dependentes) + DoD.
+- **`docs/MODELO_DADOS.md`**: ER (Mermaid) + entidades/campos/invariantes.
+- **`docs/FLUXOS.md`**: diagramas de sequência (auth, /query, streaming, feedback,
+  ingestão) + flowchart de precedência de estratégia/camadas.
+- **`docs/TECNOLOGIAS.md`**: stack, **parâmetros exatos** (0.78, e5, JWT…) e
+  **equivalentes** por ecossistema (Node/Java/.NET/Go) para portar.
+- Interligado em `ARQUITETURA.md` e `README.md`. Memória do projeto registrada
+  (documentação exaustiva como diretriz permanente).
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 9) — #2 Card de usuário: perfil + documentos com validade
 
 **Branch:** `feat/fase-7-frontend`.

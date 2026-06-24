@@ -5,6 +5,12 @@ governança por fase ver [`projeto/ROADMAP.md`](projeto/ROADMAP.md),
 [`projeto/LOG.md`](projeto/LOG.md) e os specs em [`projeto/specs/`](projeto/specs/).
 Requisitos de produto: [`prd_sistema_rag_simplex.md`](prd_sistema_rag_simplex.md).
 
+> **Documentação para reconstruir o projeto (qualquer linguagem):**
+> [`MODELO_DADOS.md`](MODELO_DADOS.md) (ER + entidades) ·
+> [`FLUXOS.md`](FLUXOS.md) (diagramas de sequência) ·
+> [`TECNOLOGIAS.md`](TECNOLOGIAS.md) (stack, parâmetros exatos, equivalentes) ·
+> [`TESTES.md`](TESTES.md) · [`projeto/BACKLOG.md`](projeto/BACKLOG.md) (tarefas + plano).
+
 ## 1. O que é
 
 Assistente RAG para auxílio técnico a painéis de detecção e alarme de incêndio

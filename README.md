@@ -9,7 +9,10 @@ correção **ancorado na documentação oficial**, em duas camadas: linguagem si
 para operadores e resolução técnica para campo/engenharia.
 
 > **Por dentro:** [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) (módulos, endpoints,
-> RBAC, frontend) · [`docs/TESTES.md`](docs/TESTES.md) (59 testes) ·
+> RBAC, frontend) · [`docs/MODELO_DADOS.md`](docs/MODELO_DADOS.md) (ER) ·
+> [`docs/FLUXOS.md`](docs/FLUXOS.md) (diagramas) · [`docs/TECNOLOGIAS.md`](docs/TECNOLOGIAS.md)
+> (stack + equivalentes p/ portar) · [`docs/TESTES.md`](docs/TESTES.md) ·
+> [`docs/projeto/BACKLOG.md`](docs/projeto/BACKLOG.md) (tarefas + plano) ·
 > [`docs/prd_sistema_rag_simplex.md`](docs/prd_sistema_rag_simplex.md) (requisitos) ·
 > [`docs/projeto/`](docs/projeto/) (governança por fase).
 
