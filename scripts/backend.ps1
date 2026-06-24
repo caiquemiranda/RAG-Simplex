@@ -32,9 +32,23 @@ if ($Reinstalar -and (Test-Path $venv)) {
     Remove-Item $venv -Recurse -Force
 }
 
+# Remove um .venv incompleto (pasta existe mas sem Activate.ps1) de tentativa anterior.
+if ((Test-Path $venv) -and -not (Test-Path $activate)) {
+    Write-Host '== Removendo .venv incompleto ==' -ForegroundColor Yellow
+    Remove-Item $venv -Recurse -Force
+}
+
 if (-not (Test-Path $activate)) {
     Write-Host '== Criando ambiente virtual (.venv) ==' -ForegroundColor Cyan
-    python -m venv $venv
+    # O venv cria um atalho para o Python base. Se o Python estiver instalado sob um
+    # caminho com acento (ex.: C:\Users\Caique...), o atalho quebra ("Unable to create
+    # process"). Criamos o venv pelo nome curto 8.3 do python.exe (sem acento).
+    $pyExe   = (Get-Command python -ErrorAction Stop).Source
+    $pyShort = (New-Object -ComObject Scripting.FileSystemObject).GetFile($pyExe).ShortPath
+    & $pyShort -m venv $venv
+    if (-not (Test-Path $activate)) {
+        throw "Falha ao criar o .venv. Tente instalar o Python num caminho sem acento (ex.: C:\Python310)."
+    }
     & $activate
     python -m pip install --upgrade pip
     Write-Host '== Instalando PyTorch (CPU-only) ==' -ForegroundColor Cyan
