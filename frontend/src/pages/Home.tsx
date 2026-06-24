@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Visita } from '../lib/api'
+import { api, type DocumentoTecnico, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { useNotificacoes } from '../notificacoes/NotificacoesContext'
 import { Avatar } from '../components/Avatar'
@@ -19,16 +19,26 @@ function saudacao(): string {
   return 'Boa noite'
 }
 
+function statusDoc(validade: string | null): { label: string; cls: string } | null {
+  if (!validade) return null
+  const dias = Math.ceil((new Date(validade + 'T00:00:00').getTime() - Date.now()) / 86400000)
+  if (dias < 0) return { label: `vencido há ${-dias}d`, cls: 'bg-red-100 text-red-700' }
+  if (dias <= 30) return { label: `vence em ${dias}d`, cls: 'bg-amber-100 text-amber-700' }
+  return { label: 'válido', cls: 'bg-emerald-100 text-emerald-700' }
+}
+
 export default function Home() {
   const { usuario } = useAuth()
   const { naoLidas } = useNotificacoes()
   const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
   const [hojeVisitas, setHojeVisitas] = useState<Visita[]>([])
+  const [docs, setDocs] = useState<DocumentoTecnico[]>([])
 
   useEffect(() => {
     const hoje = new Date()
     const iso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
     api.cronograma.listar(iso, iso).then(setHojeVisitas).catch(() => {})
+    api.meusDocumentos().then(setDocs).catch(() => {})
   }, [])
 
   const locais = Array.from(
@@ -102,6 +112,25 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Seus documentos */}
+        {docs.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Seus documentos</CardTitle></CardHeader>
+            <CardContent className="space-y-1.5 text-sm">
+              {docs.map((d) => {
+                const s = statusDoc(d.validade)
+                return (
+                  <div key={d.id} className="flex items-center gap-2">
+                    <span className="flex-1 truncate">{d.nome}</span>
+                    <span className="text-xs text-muted-foreground">{d.validade ?? '—'}</span>
+                    {s && <span className={`rounded px-1.5 py-0.5 text-[11px] ${s.cls}`}>{s.label}</span>}
+                  </div>
+                )
+              })}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

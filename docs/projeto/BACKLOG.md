@@ -83,7 +83,7 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [x] **#HOME — Home/Dashboard ao clicar no logo**: logo **clicável** → `/inicio`.
       Dashboard com **atividades de hoje** (técnico: as próprias + “onde estará”; ADM:
       todas), **notificações** não lidas e **atalhos**. Reusa cronograma/notificações.
-      *Futuro:* documentos vencendo do próprio técnico (precisa de `GET /me/documentos`).
+      Documentos do próprio técnico no dashboard via `GET /me/documentos` ✅.
 - [x] **#U1 — Lista "Gerenciar usuários" moderna**: linha com **avatar** (foto/iniciais)
       + **email · nome · Cargo** (no lugar de "Papel"); inativo sinalizado. `UsuarioResumo`
       ganhou `cargo`/`foto_url`.

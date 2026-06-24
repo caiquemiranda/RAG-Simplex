@@ -9,6 +9,19 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Etapa 0d: GET /me/documentos + bloco no dashboard
+
+**Branch:** `feat/fase-7-frontend`. Fecha a **Etapa 0**.
+
+- **Backend:** `GET /me/documentos` (documentos do próprio usuário; `usuario_atual`).
+  Teste `test_me_documentos`. **70 testes**.
+- **Frontend:** dashboard (#HOME) ganhou card **"Seus documentos"** com status de
+  validade (válido/vence em Nd/vencido); `api.meusDocumentos()`.
+
+**Arquivos:** `app/main.py`, `tests/test_admin.py`, `frontend/src/{lib/api.ts,pages/Home}.tsx`.
+
+---
+
 ## 2026-06-24 — Etapa 0b/0c: alerta de documentos + input centralizado
 
 **Branch:** `feat/fase-7-frontend`.

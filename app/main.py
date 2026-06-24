@@ -185,6 +185,21 @@ def me(usuario: Usuario = Depends(usuario_atual)) -> UsuarioOut:
     )
 
 
+class MeuDocumento(BaseModel):
+    id: int
+    nome: str
+    validade: str | None = None
+
+
+@app.get("/me/documentos", response_model=list[MeuDocumento])
+def meus_documentos(usuario: Usuario = Depends(usuario_atual)) -> list[MeuDocumento]:
+    """Documentos (com validade) do próprio usuário — para o dashboard."""
+    return [
+        MeuDocumento(id=d.id, nome=d.nome, validade=d.validade.isoformat() if d.validade else None)
+        for d in usuario.documentos
+    ]
+
+
 # --------------------------------------------------------------------------- #
 # Endpoints                                                                    #
 # --------------------------------------------------------------------------- #

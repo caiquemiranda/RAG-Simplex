@@ -161,6 +161,16 @@ def test_perfil_e_documentos_do_usuario(ctx):
     assert client.delete(f"/admin/usuarios/{uid}/documentos/9999", headers=admin).status_code == 404
 
 
+def test_me_documentos(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    client.post(f"/admin/usuarios/{ids['tec']}/documentos", headers=admin, json={"nome": "ASO", "validade": "2030-01-01"})
+    # O técnico vê os próprios documentos; o admin vê os dele (nenhum).
+    docs = client.get("/me/documentos", headers=_login(client, "tec@x.com")).json()
+    assert len(docs) == 1 and docs[0]["nome"] == "ASO"
+    assert client.get("/me/documentos", headers=admin).json() == []
+
+
 def test_lista_marca_documento_vencendo(ctx):
     from datetime import date, timedelta
 

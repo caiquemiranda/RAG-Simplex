@@ -240,6 +240,7 @@ export const api = {
       body: JSON.stringify({ email, senha }),
     }),
   me: () => request<Usuario>('/auth/me'),
+  meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
