@@ -9,6 +9,30 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 8) — Painel ADM em cards + aba Cronograma; fixes
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix #4 (Failed to fetch):** backend caíra + banco antigo sem coluna `feedback`.
+  `db.criar_tabelas` aplica **micro-migração** (ALTER ADD para colunas nullable
+  faltantes); `backend.ps1` roda `db --init` sempre. Teste novo (60 no total).
+- **Fix #1:** sidebar `bg-muted/30` (transparente) vazava no drawer → `bg-muted`.
+- **#5 Painel ADM em cards:** hub com cards **Gerenciar usuários** (real),
+  **API keys**, **Banco de dados**, **Clientes** (placeholders) e **Auditoria**
+  (real). Voltar com `← Voltar`.
+- **#3 Cronograma:** nova aba lateral + página com **calendário mensal** (navegação
+  de mês, "Hoje", seletor de técnico/local, eventos de exemplo). Placeholder p/
+  integração futura.
+
+**Pendente:** #2 (mais campos no card de edição de usuário — aguardando definição
+dos campos) e #1 "exatidão/modelagem" dos docs.
+
+**Arquivos:** `app/db.py`, `scripts/backend.ps1`, `tests/test_persistencia.py`,
+`frontend/src/pages/{Admin,Cronograma}.tsx`, `frontend/src/components/Sidebar.tsx`,
+`frontend/src/App.tsx`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 7) — Sidebar responsiva + specs (frontend/arquitetura)
 
 **Branch:** `feat/fase-7-frontend`.

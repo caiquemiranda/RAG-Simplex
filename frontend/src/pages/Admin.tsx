@@ -21,14 +21,23 @@ type FormEdicao = {
 }
 
 type EstrForm = { estrategia: string; persona: string; camadas: Set<string> }
+type Secao = null | 'usuarios' | 'auditoria' | 'apikeys' | 'banco' | 'clientes'
 
 const CAMADAS = ['simples', 'tecnica']
+
+const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone: string }[] = [
+  { chave: 'usuarios', titulo: 'Gerenciar usuários', desc: 'Criar/editar usuários, papéis e permissões.', icone: '👤' },
+  { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: '🔑' },
+  { chave: 'banco', titulo: 'Banco de dados', desc: 'Gerenciar bancos de dados do sistema.', icone: '🗄️' },
+  { chave: 'clientes', titulo: 'Clientes', desc: 'Clientes e quais técnicos têm acesso a cada um.', icone: '🏢' },
+  { chave: 'auditoria', titulo: 'Auditoria', desc: 'Histórico de consultas e feedback.', icone: '📋' },
+]
 
 export default function Admin() {
   const { usuario } = useAuth()
   const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
 
-  const [aba, setAba] = useState<'usuarios' | 'auditoria'>('usuarios')
+  const [secao, setSecao] = useState<Secao>(null)
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([])
   const [papeis, setPapeis] = useState<AdminPapel[]>([])
   const [permissoes, setPermissoes] = useState<AdminPermissao[]>([])
@@ -163,27 +172,61 @@ export default function Admin() {
   const rolePerms = form ? permsDoPapel(form.papel) : new Set<string>()
   const emailPorId = Object.fromEntries(usuarios.map((u) => [u.id, u.email]))
 
+  const tituloSecao = CARDS.find((c) => c.chave === secao)?.titulo ?? 'Painel ADM'
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-4xl space-y-4 p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Painel ADM</h1>
-          <div className="flex gap-2">
-            <Button variant={aba === 'usuarios' ? 'default' : 'outline'} size="sm" onClick={() => setAba('usuarios')}>
-              Usuários
+        <div className="flex items-center gap-3">
+          {secao && (
+            <Button variant="outline" size="sm" onClick={() => setSecao(null)}>
+              ← Voltar
             </Button>
-            <Button variant={aba === 'auditoria' ? 'default' : 'outline'} size="sm" onClick={() => setAba('auditoria')}>
-              Auditoria
-            </Button>
-          </div>
+          )}
+          <h1 className="text-lg font-semibold">{tituloSecao}</h1>
         </div>
 
         {erro && <p className="text-sm text-destructive">{erro}</p>}
         {msg && <p className="text-sm text-green-700">{msg}</p>}
 
-        {aba === 'auditoria' && <AuditoriaView emailPorId={emailPorId} />}
+        {/* Hub de cards */}
+        {secao === null && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CARDS.map((c) => (
+              <button
+                key={c.chave}
+                onClick={() => { setSecao(c.chave); setMsg(null); setErro(null) }}
+                className="flex flex-col items-start rounded-xl border bg-card p-5 text-left shadow-sm transition hover:border-primary hover:shadow-md"
+              >
+                <span className="text-3xl">{c.icone}</span>
+                <span className="mt-3 font-semibold">{c.titulo}</span>
+                <span className="mt-1 text-sm text-muted-foreground">{c.desc}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        {aba === 'usuarios' && (
+        {/* Seções em construção */}
+        {secao === 'apikeys' && (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">
+            🚧 Em construção: cadastro/rotação de <strong>API keys</strong> de provedores
+            (já há suporte no backend em <code>/admin/provedores</code>, com a chave cifrada).
+          </CardContent></Card>
+        )}
+        {secao === 'banco' && (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">
+            🚧 Em construção: gestão de <strong>bancos de dados</strong> (status, backup, reindexação).
+          </CardContent></Card>
+        )}
+        {secao === 'clientes' && (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">
+            🚧 Em construção: <strong>clientes</strong> e quais técnicos têm acesso a cada um.
+          </CardContent></Card>
+        )}
+
+        {secao === 'auditoria' && <AuditoriaView emailPorId={emailPorId} />}
+
+        {secao === 'usuarios' && (
           <>
             <div className="flex justify-end">
               <Button size="sm" onClick={() => setCriando((v) => !v)}>
