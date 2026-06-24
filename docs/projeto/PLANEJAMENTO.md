@@ -4,7 +4,7 @@ Visão única de **onde estamos** e **para onde vamos**. Consolida o status das 
 ([`ROADMAP.md`](ROADMAP.md)) e o backlog/sequência ([`BACKLOG.md`](BACKLOG.md)).
 Para o que já existe, ver [`../ARQUITETURA.md`](../ARQUITETURA.md).
 
-**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 61 testes ✅
+**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 70 testes ✅
 
 ---
 
@@ -23,11 +23,11 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | **Cronograma real (visitas) + card do dia por papel** | ✅ (Etapa 3 / #C1) |
 | **Cronograma — otimizações (#CR1–#CR5)** | ✅ (grade do mês, avatares, fim de semana, feriados, notificações) |
 | **Entidade Cliente (N:N técnico↔cliente) + card Clientes CRUD** | ✅ (Etapa 1) |
-| Cards ADM: API keys / Banco de dados | ⬜ placeholder |
-| **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo) |
-| **Logo natural (SVG/sem fundo/maior) + Home ao clicar no logo** | ✅ (#D3 SVG embutido · #HOME dashboard) |
-| **Redesign: lista de usuários (foto+cargo) e edição como tela própria** | ✅ (#U1/#U2) |
-| **Cronograma: card do dia (visão ADM/técnico)** | ⬜ |
+| **Card ADM: API keys** (cadastrar/rotacionar, chave cifrada) | ✅ (Etapa 0a) |
+| Card ADM: Banco de dados | ⬜ placeholder |
+| **Identidade visual (IBSystems) + tema claro/escuro + logo SVG + #HOME** | ✅ |
+| **Redesign: lista de usuários (avatar+cargo) e edição como tela própria** | ✅ (#U1/#U2) |
+| **Etapa 0: alerta de docs · input centralizado · /me/documentos** | ✅ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |
 | Fase 11 (reranker, RAGAS-lite, Alembic) | ⬜ |
 

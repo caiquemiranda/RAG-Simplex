@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**68 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**70 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
 perfil, documentos, **clientes**), **cronograma** (visitas, **feriados**,
 **notificações**), streaming e feedback.
@@ -77,11 +77,15 @@ pytest
 - `test_montar_texto_filtra_camadas` — filtragem do texto por papel.
 - `test_operador_bloqueado_em_ingest` / `test_analista_pode_ingerir` — gating de `/ingest`.
 
-### `test_admin.py` (7) — painel ADM
+### `test_admin.py` (11) — painel ADM
 - `test_nao_admin_barrado` — sem `gerir_usuarios` → 403.
 - `test_admin_lista_e_cria_usuario` — CRUD de usuário.
 - `test_admin_troca_estrategia_vale_na_consulta` — estratégia aplicada na consulta.
 - `test_estrategia_por_usuario_get_e_put` — GET nulo → PUT → GET com valor.
+- `test_perfil_e_documentos_do_usuario` — perfil + documentos (add/list/remove).
+- `test_clientes_crud_e_associacao` — clientes CRUD + associação por `cliente_ids`.
+- `test_me_documentos` — `/me/documentos` devolve os documentos do próprio usuário.
+- `test_lista_marca_documento_vencendo` — `docs_alerta` no resumo da lista.
 - `test_auditoria_registra_consulta` — consulta aparece na auditoria.
 - `test_catalogos_papeis_e_permissoes` — catálogos para os seletores.
 - `test_provedor_chave_nunca_em_claro` — chave cifrada/mascarada.

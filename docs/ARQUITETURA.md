@@ -50,10 +50,12 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `modelos.py` | ORM: `Usuario`, `Papel`, `Permissao`, `ConfigEstrategia`, `LogConsulta`, `ProvedorChave`. |
 | `auth.py` | Hash de senha (bcrypt), JWT (access/refresh), dependência `requer(permissao)`. |
 | `seed.py` | Semeia permissões e papéis padrão (idempotente). |
-| `admin.py` | Router `/admin`: usuários, permissões, estratégias, auditoria, provedores. |
+| `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
+| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados globais. |
+| `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
-| `db.py` | Engine/Session; `python -m app.db --init`. |
-| `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG. |
+| `db.py` | Engine/Session; `criar_tabelas` (create_all + micro-migração); `python -m app.db --init`. |
+| `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
 
 ### Endpoints
 
