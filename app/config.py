@@ -76,6 +76,12 @@ class Settings(BaseSettings):
     similarity_threshold: float = 0.78
     top_k: int = 5
 
+    # Busca híbrida (D-015): bônus aditivo ao score vetorial quando a consulta casa
+    # com o termo do display (header/termo_en). Corrige ranking de termos parecidos
+    # (ex.: "Head Missing" vs "Node Missing") sem prejudicar consultas coloquiais.
+    lexical_boost: float = 0.12
+    rerank_pool: int = 10  # candidatos recuperados por vetor antes de reordenar
+
     # --- Fontes de conhecimento ---
     knowledge_base: Path = BASE_DIR / "docs" / "guia_falhas_simplex_ptbr.md"
 

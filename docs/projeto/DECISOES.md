@@ -115,11 +115,24 @@ API não sobe.
 dependência nova para o usuário baixar e permite **rodar os testes da Fase 3 offline**
 (SQLite em memória). Modelos tipados (`Mapped`/`mapped_column`) em `app/modelos.py`.
 
-### D-015 🔄 Limiar de similaridade — calibração pendente
-**2026-06-23.** Com o e5 (D-014), positivos top-1 ficam 0.848–0.915, mas os scores
-são comprimidos e blocos fracos passam de 0.78. Falta rodar `--diagnostico` com a
-bateria de negativos (outra marca/fora de domínio) para cravar o valor. Mantido 0.78
-até ter os dados. **Não conclama mudar antes de medir os negativos.**
+### D-015 ✅ Busca híbrida (bônus léxico) + limiar mantido em 0.78
+**2026-06-23.** O e5 confundia termos parecidos ("Head Missing" vs "Node Missing/
+Failed") no ranking. **Resolvido** com **busca híbrida**: recupera um pool por vetor
+e soma um **bônus aditivo** (`lexical_boost=0.12`) proporcional à cobertura dos termos
+do display (`termo_en`/`header`). Medido na base real: o bloco correto passa a #1 com
+folga ("head missing", "cabeçote ausente", "no answer", "warm start").
+
+**Limiar mantido em 0.78** (não 0.94): o `--diagnostico` recomendou 0.94, mas seus
+positivos continham o termo do display (todos ~0.96+). Uma consulta **coloquial**
+sem termo em inglês fica ~0.88 e seria rejeitada por engano. Separar "fora da base"
+de coloquial-válido com o e5 (scores comprimidos) exige um **cross-encoder reranker**
+→ ver D-020 (Fase 11).
+
+### D-020 🔄 Cross-encoder reranker (Fase 11)
+**2026-06-23.** Para discriminar melhor *fora-da-base* × consulta válida (o limiar
+sozinho não separa com o e5), avaliar um cross-encoder multilíngue (ex.:
+`mmarco-mMiniLMv2`) reordenando o pool. Local/grátis, porém adiciona download e
+latência → planejado para a Fase 11 (qualidade/hardening), não bloqueia.
 
 ### D-013 ✅ Separação de camadas no extrativo por marcadores do guia
 **2026-06-23.** Como o `local_extrativa` não usa LLM, a "dupla camada" é obtida

@@ -240,6 +240,7 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ## Fase 11 — Avaliação de qualidade & hardening ⬜
 
+- [ ] **Cross-encoder reranker** p/ discriminar fora-da-base × válido (D-020)
 - [ ] Conjunto de avaliação (perguntas de especialistas — PRD §7)
 - [ ] Métricas de *faithfulness*/recall (RAGAS-lite ou LLM-as-judge)
 - [ ] Agregação do feedback 👍/👎 por estratégia

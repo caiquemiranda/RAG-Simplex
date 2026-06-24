@@ -9,6 +9,32 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — D-015 — Busca híbrida (bônus léxico) p/ otimizar respostas
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Problema (medido na base real):** "falha head missing" trazia "Node Missing/Failed"
+em #1 (0.882) e "Head Missing" só em #3 (0.868) — e5 confunde termos parecidos.
+
+**Feito:**
+- `recuperacao.py`: busca **híbrida**. Recupera um pool (`rerank_pool=10`) por vetor,
+  soma **bônus aditivo** `lexical_boost*cobertura` dos termos do display
+  (`termo_en`/`header`) e reordena. `Resultado` agora expõe `sim_vetorial`/`sim_lexical`.
+- `config.py`: `lexical_boost=0.12`, `rerank_pool=10`.
+- Testes: `_tokens`/`_score_lexical` + reordenação (3 novos) → `pytest` = **53 passed**.
+
+**Resultado (medido):** bloco correto vira #1 com folga — "head missing" (0.943 vs
+0.881), "cabeçote ausente" (0.995), "no answer" (0.973), "warm start" (1.000).
+
+**Limiar:** mantido **0.78** (o `--diagnostico` sugeriu 0.94, mas seus positivos
+tinham o termo do display; coloquial ~0.88 seria rejeitado). Discriminar
+fora-da-base × válido exige reranker → **D-020 (Fase 11)**.
+
+**Arquivos:** `app/{recuperacao,config}.py`, `tests/test_recuperacao.py`,
+`docs/projeto/DECISOES.md`.
+
+---
+
 ## 2026-06-23 — Fase 9 (parte 1) — Painel ADM: CRUD de usuários + permissões
 
 **Branch:** `feat/fase-7-frontend`.

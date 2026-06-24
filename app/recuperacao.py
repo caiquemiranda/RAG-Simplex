@@ -8,20 +8,54 @@ isso). Suporta filtragem híbrida por metadados (ex.: ``sistema="4100"``).
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from dataclasses import dataclass
 
 from app.config import settings
 from app.ingestao import embed_consulta, get_collection
 
+# Palavras genéricas ignoradas no casamento léxico (não identificam a falha).
+_STOPWORDS = {
+    "falha", "de", "da", "do", "no", "na", "em", "para", "com", "que", "uma",
+    "um", "os", "as", "the", "of", "and", "ou", "por", "ao",
+}
+
 
 @dataclass
 class Resultado:
-    """Um bloco recuperado com seu score de similaridade."""
+    """Um bloco recuperado com seu score (vetorial + bônus léxico)."""
 
     id: str
     texto: str
     metadados: dict
-    similaridade: float  # 0..1 (cosseno). Quanto maior, mais relevante.
+    similaridade: float  # 0..1; score final usado para ranking/limiar.
+    sim_vetorial: float | None = None  # cosseno puro (transparência/diagnóstico)
+    sim_lexical: float | None = None   # cobertura léxica 0..1
+
+
+def _normalizar(texto: str) -> str:
+    texto = unicodedata.normalize("NFD", (texto or "").lower())
+    return "".join(c for c in texto if unicodedata.category(c) != "Mn")
+
+
+def _tokens(texto: str) -> set[str]:
+    return {
+        t for t in re.findall(r"[a-z0-9]+", _normalizar(texto))
+        if len(t) > 2 and t not in _STOPWORDS
+    }
+
+
+def _score_lexical(consulta: str, meta: dict) -> float:
+    """Fração dos termos da consulta cobertos pelo termo do display do bloco."""
+    q = _tokens(consulta)
+    if not q:
+        return 0.0
+    alvo = _tokens(f"{meta.get('termo_en', '')} {meta.get('header', '')} "
+                   f"{meta.get('sistema', '')}")
+    if not alvo:
+        return 0.0
+    return len(q & alvo) / len(q)
 
 
 @dataclass
@@ -76,25 +110,34 @@ def buscar(
             "Coleção vazia. Rode a ingestão primeiro: python -m app.ingestao --reset"
         )
 
+    # Recupera um POOL maior por vetor e reordena com o bônus léxico (D-015).
+    pool = max(top_k, settings.rerank_pool)
     consulta_emb = embed_consulta(consulta)
     resposta = colecao.query(
         query_embeddings=[consulta_emb],
-        n_results=top_k,
+        n_results=pool,
         where=_filtro_metadados(sistema, severidade),
         include=["documents", "metadatas", "distances"],
     )
 
     resultados: list[Resultado] = []
-    ids = resposta["ids"][0]
-    docs = resposta["documents"][0]
-    metas = resposta["metadatas"][0]
-    dists = resposta["distances"][0]
-    for _id, doc, meta, dist in zip(ids, docs, metas, dists):
-        # Chroma devolve distância de cosseno = 1 - similaridade.
-        similaridade = 1.0 - float(dist)
-        resultados.append(
-            Resultado(id=_id, texto=doc, metadados=meta or {}, similaridade=similaridade)
-        )
+    for _id, doc, meta, dist in zip(
+        resposta["ids"][0], resposta["documents"][0],
+        resposta["metadatas"][0], resposta["distances"][0],
+    ):
+        meta = meta or {}
+        sim_vec = 1.0 - float(dist)  # Chroma: distância de cosseno = 1 - similaridade
+        lex = _score_lexical(consulta, meta)
+        # Bônus aditivo: mantém o caso coloquial (lex=0) e promove o termo exato.
+        final = min(1.0, sim_vec + settings.lexical_boost * lex)
+        resultados.append(Resultado(
+            id=_id, texto=doc, metadados=meta, similaridade=final,
+            sim_vetorial=sim_vec, sim_lexical=lex,
+        ))
+
+    # Reordena pelo score final e mantém os top_k.
+    resultados.sort(key=lambda r: r.similaridade, reverse=True)
+    resultados = resultados[:top_k]
 
     acima = any(r.similaridade >= settings.similarity_threshold for r in resultados)
     return Recuperacao(consulta=consulta, resultados=resultados, acima_do_limiar=acima)

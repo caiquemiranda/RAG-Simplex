@@ -21,7 +21,8 @@
 2. **Docker (D-017):** `Dockerfile` backend (e5 pré-cacheado) + `Dockerfile` frontend
    (nginx) + `docker-compose` (volumes p/ `data/` e cache do modelo).
 3. **Fase 8:** chat do técnico (markdown da dupla camada, aviso em destaque, streaming).
-4. **Pendência (D-015):** calibrar limiar (`python -m app.recuperacao --diagnostico`).
+4. ~~D-015 limiar~~ ✅ **resolvido**: busca híbrida (bônus léxico) corrigiu o ranking;
+   limiar mantido 0.78. Discriminar fora-da-base exige reranker (D-020, Fase 11).
 
 > Para rodar tudo: backend (`uvicorn app.main:app --reload`) + frontend (`npm run dev`).
 
@@ -47,6 +48,7 @@ uvicorn app.main:app --reload     # /docs → POST /auth/login → use o Bearer 
 
 - **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
   frontend). Dev segue nativo até lá.
-- **D-015 🔄** — limiar de similaridade (calibrar com `--diagnostico`).
+- **D-015 ✅** — busca híbrida (bônus léxico) corrigiu o ranking; limiar 0.78.
+- **D-020 🔄** — cross-encoder reranker p/ fallback robusto (Fase 11).
 - **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
 - **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.
