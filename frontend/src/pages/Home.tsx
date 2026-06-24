@@ -5,26 +5,13 @@ import { useAuth } from '../auth/AuthContext'
 import { useNotificacoes } from '../notificacoes/NotificacoesContext'
 import { Avatar } from '../components/Avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-
-const STATUS_COR: Record<string, string> = {
-  agendada: 'bg-blue-100 text-blue-700',
-  concluida: 'bg-emerald-100 text-emerald-700',
-  cancelada: 'bg-rose-100 text-rose-700',
-}
+import { STATUS_VISITA, isoData, statusDoc } from '../lib/format'
 
 function saudacao(): string {
   const h = new Date().getHours()
   if (h < 12) return 'Bom dia'
   if (h < 18) return 'Boa tarde'
   return 'Boa noite'
-}
-
-function statusDoc(validade: string | null): { label: string; cls: string } | null {
-  if (!validade) return null
-  const dias = Math.ceil((new Date(validade + 'T00:00:00').getTime() - Date.now()) / 86400000)
-  if (dias < 0) return { label: `vencido há ${-dias}d`, cls: 'bg-red-100 text-red-700' }
-  if (dias <= 30) return { label: `vence em ${dias}d`, cls: 'bg-amber-100 text-amber-700' }
-  return { label: 'válido', cls: 'bg-emerald-100 text-emerald-700' }
 }
 
 export default function Home() {
@@ -35,8 +22,7 @@ export default function Home() {
   const [docs, setDocs] = useState<DocumentoTecnico[]>([])
 
   useEffect(() => {
-    const hoje = new Date()
-    const iso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
+    const iso = isoData(new Date())
     api.cronograma.listar(iso, iso).then(setHojeVisitas).catch(() => {})
     api.meusDocumentos().then(setDocs).catch(() => {})
   }, [])
@@ -76,7 +62,7 @@ export default function Home() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{v.titulo}</span>
-                    <span className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                    <span className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_VISITA[v.status] ?? 'bg-muted'}`}>{v.status}</span>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {podeGerir && <>{v.tecnico_nome} · </>}
@@ -124,7 +110,7 @@ export default function Home() {
                   <div key={d.id} className="flex items-center gap-2">
                     <span className="flex-1 truncate">{d.nome}</span>
                     <span className="text-xs text-muted-foreground">{d.validade ?? '—'}</span>
-                    {s && <span className={`rounded px-1.5 py-0.5 text-[11px] ${s.cls}`}>{s.label}</span>}
+                    <span className={`rounded px-1.5 py-0.5 text-[11px] ${s.cls}`}>{s.label}</span>
                   </div>
                 )
               })}

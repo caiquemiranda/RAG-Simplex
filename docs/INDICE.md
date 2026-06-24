@@ -61,6 +61,7 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
   [Fase 8 — chat](projeto/specs/spec-fase-8-frontend-chat.md) ·
   [Fase 9 — painel ADM](projeto/specs/spec-fase-9-painel-adm-frontend.md)
 - [Arquitetura (consolidado)](projeto/specs/spec-arquitetura.md) ·
+  [Etapa 0 — API keys/perfil](projeto/specs/spec-etapa0-apikeys-perfil.md) ·
   [Etapa 1 — Clientes](projeto/specs/spec-etapa1-clientes.md) ·
   [Etapa 3 — Cronograma](projeto/specs/spec-etapa3-cronograma.md)
 

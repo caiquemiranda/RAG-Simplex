@@ -36,6 +36,23 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Refino: helpers DRY + spec da Etapa 0
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **DRY:** helpers de UI duplicados (cores de status, validade de documento, data ISO)
+  centralizados em `frontend/src/lib/format.ts` (`isoData`, `STATUS_VISITA`, `statusDoc`);
+  `Cronograma`, `Home` e `Admin` passam a importar (sem duplicação/drift).
+- **Doc:** novo [`spec-etapa0-apikeys-perfil.md`](specs/spec-etapa0-apikeys-perfil.md)
+  (API keys, alerta `docs_alerta`, `/me/documentos`, input centralizado) + INDICE.
+  Backlog §F: specs de módulos novos = ✅ (falta só Banco de dados).
+- `tsc` OK; **70 passed**.
+
+**Arquivos:** `frontend/src/{lib/format.ts,pages/{Admin,Cronograma,Home}.tsx}`,
+`docs/projeto/specs/spec-etapa0-apikeys-perfil.md`, `docs/INDICE.md`.
+
+---
+
 ## 2026-06-24 — Plano das pendentes + Etapa 0a: UI de API keys
 
 **Branch:** `feat/fase-7-frontend`.

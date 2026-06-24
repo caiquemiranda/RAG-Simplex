@@ -69,7 +69,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### F. Documentação contínua (sempre junto da feature)
 - [ ] Manter `ARQUITETURA.md`, `MODELO_DADOS.md`, `FLUXOS.md`, `TECNOLOGIAS.md`,
       `TESTES.md` e os **specs** atualizados a cada entrega.
-- [ ] Spec de cada novo módulo (Clientes, Cronograma, API keys).
+- [x] Spec de cada novo módulo: Clientes (etapa1), Cronograma (etapa3), **Etapa 0**
+      (API keys/perfil). Falta: spec de **Banco de dados** (quando existir).
 
 ### G. Design, tema e telas (solicitações 2026-06-24)
 - [x] **#D1 — Identidade visual (IBSystems)**: paleta ciano→teal nos tokens (`index.css` +

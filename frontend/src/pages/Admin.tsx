@@ -15,6 +15,7 @@ import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { AuditoriaView } from '../components/AuditoriaView'
 import { Avatar } from '../components/Avatar'
+import { statusDoc } from '../lib/format'
 
 type FormEdicao = {
   nome: string
@@ -35,15 +36,6 @@ type PerfilForm = {
   acesso_expira_em: string
 }
 type Secao = null | 'usuarios' | 'auditoria' | 'apikeys' | 'banco' | 'clientes'
-
-/** Classifica a validade de um documento para o alerta visual. */
-function statusDoc(validade: string | null): { label: string; cls: string } {
-  if (!validade) return { label: 'sem validade', cls: 'bg-muted text-muted-foreground' }
-  const dias = Math.ceil((new Date(validade + 'T00:00:00').getTime() - Date.now()) / 86400000)
-  if (dias < 0) return { label: `vencido há ${-dias}d`, cls: 'bg-red-100 text-red-700' }
-  if (dias <= 30) return { label: `vence em ${dias}d`, cls: 'bg-amber-100 text-amber-700' }
-  return { label: 'válido', cls: 'bg-emerald-100 text-emerald-700' }
-}
 
 const CAMADAS = ['simples', 'tecnica']
 

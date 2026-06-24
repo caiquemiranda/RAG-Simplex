@@ -4,15 +4,10 @@ import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar } from '../components/Avatar'
+import { STATUS_VISITA, isoData as fmt } from '../lib/format'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const STATUS_COR: Record<string, string> = {
-  agendada: 'bg-blue-100 text-blue-700',
-  concluida: 'bg-emerald-100 text-emerald-700',
-  cancelada: 'bg-rose-100 text-rose-700',
-}
-const fmt = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const STATUS_COR = STATUS_VISITA
 
 export default function Cronograma() {
   const { usuario } = useAuth()
