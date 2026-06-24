@@ -134,6 +134,9 @@ class Cliente(Base):
     nome: Mapped[str] = mapped_column(String(120), unique=True)
     unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local/cidade
     ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Identidade visual do cliente (usada onde ele aparecer) — #CLIV.
+    cor: Mapped[str | None] = mapped_column(String(9), default=None)        # hex #RRGGBB
+    logo_url: Mapped[str | None] = mapped_column(Text, default=None)        # /arquivos/...
 
     tecnicos: Mapped[list[Usuario]] = relationship(
         secondary=usuario_cliente, back_populates="clientes_rel"

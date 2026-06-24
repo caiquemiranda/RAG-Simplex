@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import {
   api,
+  uploadArquivo,
   type AdminCliente,
   type AdminPapel,
   type AdminPermissao,
@@ -58,9 +59,10 @@ export default function Admin() {
   const [permissoes, setPermissoes] = useState<AdminPermissao[]>([])
   const [estrategias, setEstrategias] = useState<string[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
-  const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '' })
+  const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '', cor: '#16C0CC' })
   const [provedores, setProvedores] = useState<AdminProvedor[]>([])
   const [novoProv, setNovoProv] = useState({ nome: '', api_key: '', ativo: true })
+  const corDefault = '#16C0CC'
   const [erro, setErro] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
 
@@ -245,20 +247,30 @@ export default function Admin() {
     if (!novoCliente.nome.trim()) return
     setErro(null)
     try {
-      await api.admin.criarCliente({ nome: novoCliente.nome.trim(), unidade: novoCliente.unidade || null })
-      setNovoCliente({ nome: '', unidade: '' })
+      await api.admin.criarCliente({ nome: novoCliente.nome.trim(), unidade: novoCliente.unidade || null, cor: novoCliente.cor })
+      setNovoCliente({ nome: '', unidade: '', cor: corDefault })
       setClientes(await api.admin.clientes())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao criar cliente')
     }
   }
 
-  async function alternarClienteAtivo(c: AdminCliente) {
+  async function patchCliente(c: AdminCliente, dados: { ativo?: boolean; cor?: string; logo_url?: string }) {
     try {
-      await api.admin.atualizarCliente(c.id, { ativo: !c.ativo })
+      await api.admin.atualizarCliente(c.id, dados)
       setClientes(await api.admin.clientes())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao atualizar cliente')
+    }
+  }
+
+  async function uploadLogoCliente(c: AdminCliente, file: File) {
+    setErro(null)
+    try {
+      const { url } = await uploadArquivo(file, 'clientes')
+      await patchCliente(c, { logo_url: url })
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao enviar o logo')
     }
   }
 
@@ -407,31 +419,37 @@ export default function Admin() {
               <CardContent className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1"><Label>Nome</Label><Input value={novoCliente.nome} onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })} /></div>
                 <div className="space-y-1"><Label>Unidade / local</Label><Input value={novoCliente.unidade} onChange={(e) => setNovoCliente({ ...novoCliente, unidade: e.target.value })} /></div>
+                <div className="space-y-1">
+                  <Label>Cor</Label>
+                  <input type="color" value={novoCliente.cor} onChange={(e) => setNovoCliente({ ...novoCliente, cor: e.target.value })} className="h-10 w-12 cursor-pointer rounded border" />
+                </div>
                 <Button size="sm" onClick={criarCliente} disabled={!novoCliente.nome.trim()}>Adicionar</Button>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-0">
-                <table className="w-full text-sm">
-                  <thead className="border-b text-left text-muted-foreground">
-                    <tr><th className="p-3">Cliente</th><th className="p-3">Unidade</th><th className="p-3">Ativo</th><th className="p-3"></th></tr>
-                  </thead>
-                  <tbody>
-                    {clientes.map((c) => (
-                      <tr key={c.id} className="border-b last:border-0">
-                        <td className="p-3">{c.nome}</td>
-                        <td className="p-3">{c.unidade ?? '—'}</td>
-                        <td className="p-3"><button className="text-xs underline" onClick={() => alternarClienteAtivo(c)}>{c.ativo ? 'sim' : 'não'}</button></td>
-                        <td className="p-3 text-right"><Button variant="outline" size="sm" onClick={() => removerCliente(c)}>Remover</Button></td>
-                      </tr>
-                    ))}
-                    {clientes.length === 0 && <tr><td className="p-3 text-muted-foreground" colSpan={4}>Nenhum cliente cadastrado.</td></tr>}
-                  </tbody>
-                </table>
+              <CardContent className="divide-y p-2">
+                {clientes.map((c) => (
+                  <div key={c.id} className="flex items-center gap-3 py-2">
+                    <Avatar nome={c.nome} fotoUrl={c.logo_url} cor={c.cor} className="h-10 w-10" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{c.nome}</div>
+                      <div className="truncate text-xs text-muted-foreground">{c.unidade ?? '—'}{!c.ativo && ' · inativo'}</div>
+                    </div>
+                    <input type="color" value={c.cor ?? corDefault} onChange={(e) => patchCliente(c, { cor: e.target.value })} title="Cor do cliente" className="h-8 w-8 cursor-pointer rounded border" />
+                    <label className="cursor-pointer text-xs text-primary hover:underline" title="Enviar logo">
+                      logo
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogoCliente(c, f) }} />
+                    </label>
+                    <button className="text-xs text-muted-foreground hover:underline" onClick={() => patchCliente(c, { ativo: !c.ativo })}>{c.ativo ? 'ativo' : 'inativo'}</button>
+                    <Button variant="outline" size="sm" onClick={() => removerCliente(c)}>Remover</Button>
+                  </div>
+                ))}
+                {clientes.length === 0 && <p className="py-3 text-sm text-muted-foreground">Nenhum cliente cadastrado.</p>}
               </CardContent>
             </Card>
             <p className="text-xs text-muted-foreground">
-              Os <strong>técnicos com acesso</strong> a cada cliente são definidos na
+              A <strong>cor</strong> e o <strong>logo</strong> do cliente são usados onde ele aparece
+              (relatórios, calendário). Os <strong>técnicos com acesso</strong> são definidos na
               edição do usuário (Perfil e gestão → Clientes atendidos).
             </p>
           </div>

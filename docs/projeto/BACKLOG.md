@@ -110,9 +110,9 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       (multipart, só admin) + estáticos em `/arquivos`; `salvar_upload`/`remover_arquivo`
       (sanitização, 10 MB, guarda de path traversal). Dep nova: `python-multipart`. Spec
       [`specs/spec-files-arquivos.md`](specs/spec-files-arquivos.md). **Keystone pronto.**
-- [ ] **#CLIV ⚑ — Cor + logo por cliente** (item 4): `Cliente` ganha `cor` e `logo_url`;
-      configurados no card Clientes. O logo/cor passam a ser **usados sempre** que o
-      cliente aparece. dep: **#FILES** (logo). **Fundação** de #R1 e #CR6.
+- [x] **#CLIV ⚑ — Cor + logo por cliente** (item 4): `Cliente.cor` + `Cliente.logo_url`;
+      card Clientes com **seletor de cor** e **upload de logo** (via `/upload`). `Avatar`
+      ganhou prop `cor`. **Fundação pronta** para #R1 e #CR6.
 - [ ] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): cada cliente vira um
       **card em Relatórios** e um item no **grupo "Relatórios" da sidebar** (como
       Consulta→Nova consulta). Criar cliente → aparece nos dois. dep: Cliente ✅ + **#CLIV**.

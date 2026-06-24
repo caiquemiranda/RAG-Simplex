@@ -187,10 +187,13 @@ def test_clientes_crud_e_associacao(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
 
-    # Cria cliente.
-    r = client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X", "unidade": "SP"})
+    # Cria cliente (com identidade visual #CLIV).
+    r = client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X", "unidade": "SP", "cor": "#16C0CC"})
     assert r.status_code == 201
     cid = r.json()["id"]
+    assert r.json()["cor"] == "#16C0CC"
+    # Atualiza o logo (URL vinda do /upload).
+    assert client.patch(f"/admin/clientes/{cid}", headers=admin, json={"logo_url": "/arquivos/clientes/x.png"}).json()["logo_url"] == "/arquivos/clientes/x.png"
     # Nome duplicado → 409.
     assert client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X"}).status_code == 409
 

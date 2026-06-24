@@ -4,17 +4,19 @@ export function iniciais(texto: string): string {
   return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || texto[0]?.toUpperCase() || '?'
 }
 
-/** Avatar: foto (se houver) ou iniciais sobre o teal da marca. */
+/** Avatar: foto (se houver) ou iniciais. Cor de fundo: `cor` (ex.: do cliente) ou o teal da marca. */
 export function Avatar({
   nome,
   fotoUrl,
   className = 'h-8 w-8',
   title,
+  cor,
 }: {
   nome: string
   fotoUrl?: string | null
   className?: string
   title?: string
+  cor?: string | null
 }) {
   const titulo = title ?? nome
   if (fotoUrl) {
@@ -30,6 +32,7 @@ export function Avatar({
   return (
     <span
       title={titulo}
+      style={cor ? { backgroundColor: cor } : undefined}
       className={`flex shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground ${className}`}
     >
       {iniciais(nome)}

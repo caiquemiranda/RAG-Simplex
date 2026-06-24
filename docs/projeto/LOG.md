@@ -36,6 +36,23 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #CLIV: cor + logo por cliente (fundação visual)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `Cliente` ganha `cor` (hex) e `logo_url` (`/arquivos/...`). Migração
+  automática. API ADM (`ClienteIn/Atualizar/Resumo` + `_resumo_cliente`) expõe/aceita.
+- **Frontend:** card Clientes com **seletor de cor** (`<input type=color>`) e **upload
+  de logo** (via `uploadArquivo` → `/upload`); lista mostra **avatar** (logo ou iniciais
+  na cor do cliente). `Avatar` ganhou prop `cor`. `api.ts`: `uploadArquivo` + tipos.
+- **Reuso:** fundação de **#R1** (cards de cliente) e **#CR6** (miniatura no calendário).
+- `tsc` OK; **74 passed** (test_clientes cobre cor/logo).
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,components/Avatar.tsx,pages/Admin.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #FILES: infra de upload/arquivos (keystone)
 
 **Branch:** `feat/fase-7-frontend`.

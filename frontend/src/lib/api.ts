@@ -56,7 +56,15 @@ export type AdminUsuario = {
 }
 
 export type DocumentoTecnico = { id: number; nome: string; validade: string | null }
-export type AdminCliente = { id: number; nome: string; unidade: string | null; ativo: boolean }
+export type AdminCliente = {
+  id: number
+  nome: string
+  unidade: string | null
+  ativo: boolean
+  cor: string | null
+  logo_url: string | null
+}
+export type ClienteEntrada = { nome?: string; unidade?: string | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
 
 export type Visita = {
   id: number
@@ -233,6 +241,29 @@ export async function queryStream(
   processar(buffer)
 }
 
+/** Sobe um arquivo (multipart) e devolve a URL pública `/arquivos/…`. Só admin. */
+export async function uploadArquivo(file: File, subpasta = ''): Promise<{ url: string; nome_original: string }> {
+  const token = getToken()
+  const fd = new FormData()
+  fd.append('arquivo', file)
+  if (subpasta) fd.append('subpasta', subpasta)
+  const res = await fetch(`${BASE}/upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  })
+  if (!res.ok) {
+    let detalhe = res.statusText
+    try {
+      detalhe = (await res.json()).detail ?? detalhe
+    } catch {
+      /* sem JSON */
+    }
+    throw new Error(detalhe)
+  }
+  return res.json()
+}
+
 export const api = {
   login: (email: string, senha: string) =>
     request<{ access_token: string; refresh_token?: string }>('/auth/login', {
@@ -296,9 +327,9 @@ export const api = {
       }),
     auditoria: (limite = 50) => request<AdminAuditoria[]>(`/admin/auditoria?limite=${limite}`),
     clientes: () => request<AdminCliente[]>('/admin/clientes'),
-    criarCliente: (dados: { nome: string; unidade?: string | null; ativo?: boolean }) =>
+    criarCliente: (dados: ClienteEntrada & { nome: string }) =>
       request<AdminCliente>('/admin/clientes', { method: 'POST', body: JSON.stringify(dados) }),
-    atualizarCliente: (id: number, dados: { nome?: string; unidade?: string | null; ativo?: boolean }) =>
+    atualizarCliente: (id: number, dados: ClienteEntrada) =>
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),

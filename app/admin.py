@@ -50,12 +50,16 @@ class ClienteIn(BaseModel):
     nome: str
     unidade: str | None = None
     ativo: bool = True
+    cor: str | None = None
+    logo_url: str | None = None
 
 
 class ClienteAtualizar(BaseModel):
     nome: str | None = None
     unidade: str | None = None
     ativo: bool | None = None
+    cor: str | None = None
+    logo_url: str | None = None
 
 
 class ClienteResumo(BaseModel):
@@ -63,6 +67,8 @@ class ClienteResumo(BaseModel):
     nome: str
     unidade: str | None = None
     ativo: bool
+    cor: str | None = None
+    logo_url: str | None = None
 
 
 class UsuarioAtualizar(BaseModel):
@@ -302,11 +308,15 @@ def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
 # --------------------------------------------------------------------------- #
 # Clientes                                                                     #
 # --------------------------------------------------------------------------- #
+def _resumo_cliente(c: Cliente) -> ClienteResumo:
+    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo,
+                         cor=c.cor, logo_url=c.logo_url)
+
+
 @router.get("/clientes", response_model=list[ClienteResumo])
 def listar_clientes(_: Usuario = Depends(requer("gerir_usuarios")),
                     sessao: Session = Depends(get_session)) -> list[ClienteResumo]:
-    rows = sessao.scalars(select(Cliente).order_by(Cliente.nome)).all()
-    return [ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo) for c in rows]
+    return [_resumo_cliente(c) for c in sessao.scalars(select(Cliente).order_by(Cliente.nome))]
 
 
 @router.post("/clientes", response_model=ClienteResumo, status_code=status.HTTP_201_CREATED)
@@ -317,11 +327,12 @@ def criar_cliente(dados: ClienteIn,
         raise HTTPException(status_code=400, detail="Nome do cliente é obrigatório.")
     if sessao.scalar(select(Cliente).where(Cliente.nome == dados.nome.strip())):
         raise HTTPException(status_code=409, detail="Já existe um cliente com esse nome.")
-    c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None, ativo=dados.ativo)
+    c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None, ativo=dados.ativo,
+                cor=dados.cor or None, logo_url=dados.logo_url or None)
     sessao.add(c)
     sessao.commit()
     sessao.refresh(c)
-    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+    return _resumo_cliente(c)
 
 
 @router.patch("/clientes/{cliente_id}", response_model=ClienteResumo)
@@ -337,9 +348,13 @@ def atualizar_cliente(cliente_id: int, dados: ClienteAtualizar,
         c.unidade = dados.unidade or None
     if dados.ativo is not None:
         c.ativo = dados.ativo
+    if dados.cor is not None:
+        c.cor = dados.cor or None
+    if dados.logo_url is not None:
+        c.logo_url = dados.logo_url or None
     sessao.commit()
     sessao.refresh(c)
-    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+    return _resumo_cliente(c)
 
 
 @router.delete("/clientes/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)

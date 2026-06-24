@@ -49,6 +49,8 @@ erDiagram
     string nome UK
     string unidade "local/cidade"
     bool ativo
+    string cor "hex (identidade visual)"
+    text logo_url "/arquivos/..."
   }
   VISITA {
     int id PK
