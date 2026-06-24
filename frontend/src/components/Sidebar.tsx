@@ -1,95 +1,81 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
 
-/* ---- Ícones (SVG inline, 18px, stroke currentColor) ---- */
-const ic = 'h-[18px] w-[18px]'
-const IconPainel = () => (
-  <svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>
-)
-const IconNova = () => (
-  <svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-)
-const IconBuscar = () => (
-  <svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-)
-const IconLixeira = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+/* ---- Ícones (SVG inline) ---- */
+const ic = 'h-[18px] w-[18px] shrink-0'
+const svg = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+const IconPainel = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /></svg>)
+const IconConsulta = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>)
+const IconNova = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>)
+const IconBuscar = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>)
+const IconRelatorios = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>)
+const IconEquipamento = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></svg>)
+const IconDocumentos = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>)
+const IconLixeira = () => (<svg className="h-4 w-4" viewBox="0 0 24 24" {...svg}><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>)
+const Chevron = ({ aberto }: { aberto: boolean }) => (
+  <svg className={`h-4 w-4 shrink-0 transition-transform ${aberto ? 'rotate-90' : ''}`} viewBox="0 0 24 24" {...svg}><path d="m9 18 6-6-6-6" /></svg>
 )
 
 function iniciais(texto: string): string {
-  const partes = texto.replace(/@.*/, '').split(/[.\s_-]+/).filter(Boolean)
-  return ((partes[0]?.[0] ?? '') + (partes[1]?.[0] ?? '')).toUpperCase() || texto[0]?.toUpperCase() || '?'
+  const p = texto.replace(/@.*/, '').split(/[.\s_-]+/).filter(Boolean)
+  return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || texto[0]?.toUpperCase() || '?'
 }
+
+const itemBase = 'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-accent'
 
 export default function Sidebar() {
   const { usuario, sair } = useAuth()
   const { conversas, conversaAtivaId, novaConsulta, selecionar, excluir } = useChat()
   const navegar = useNavigate()
+  const local = useLocation()
   const pode = (p: string) => usuario?.permissoes.includes(p) ?? false
 
   const [aberta, setAberta] = useState(() => localStorage.getItem('rag-sidebar') !== '0')
+  const [grupo, setGrupo] = useState(true) // grupo "Consulta" expandido
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
   const [menu, setMenu] = useState(false)
   const buscaRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    localStorage.setItem('rag-sidebar', aberta ? '1' : '0')
-  }, [aberta])
+  useEffect(() => { localStorage.setItem('rag-sidebar', aberta ? '1' : '0') }, [aberta])
 
+  const naConsulta = local.pathname === '/consulta'
   const recentes = [...conversas]
     .sort((a, b) => b.atualizadoEm - a.atualizadoEm)
     .filter((c) => {
       const q = busca.trim().toLowerCase()
       if (!q) return true
-      return (
-        c.titulo.toLowerCase().includes(q) ||
-        c.mensagens.some((m) => m.texto.toLowerCase().includes(q))
-      )
+      return c.titulo.toLowerCase().includes(q) || c.mensagens.some((m) => m.texto.toLowerCase().includes(q))
     })
 
-  function abrirNova() {
-    novaConsulta()
-    navegar('/consulta')
-  }
-  function abrirConsulta(id: string) {
-    selecionar(id)
-    navegar('/consulta')
-  }
-  function logout() {
-    sair()
-    navegar('/login')
-  }
+  function abrirNova() { novaConsulta(); navegar('/consulta') }
+  function abrirConsulta(id: string) { selecionar(id); navegar('/consulta') }
   function toggleBusca() {
     if (!aberta) setAberta(true)
+    setGrupo(true)
     setBuscando((v) => !v)
     setTimeout(() => buscaRef.current?.focus(), 0)
   }
+  function logout() { sair(); navegar('/login') }
 
-  /* ---- Rail recolhido: só ícones ---- */
+  const linkCls = ({ isActive }: { isActive: boolean }) =>
+    `${itemBase} ${isActive ? 'bg-accent font-medium' : ''}`
+
+  /* ---- Rail recolhido (só ícones) ---- */
   if (!aberta) {
+    const railBtn = 'rounded-lg p-2 hover:bg-accent'
     return (
       <aside className="flex h-full w-[56px] flex-col items-center gap-1 border-r bg-muted/30 py-2">
-        <button className="rounded p-2 hover:bg-accent" title="Abrir barra" onClick={() => setAberta(true)}>
-          <IconPainel />
+        <button className={railBtn} title="Abrir barra" onClick={() => setAberta(true)}><IconPainel /></button>
+        <NavLink to="/consulta" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Consulta"><IconConsulta /></NavLink>
+        <NavLink to="/relatorios" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Relatórios"><IconRelatorios /></NavLink>
+        <NavLink to="/equipamentos" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Buscar Equipamento"><IconEquipamento /></NavLink>
+        <NavLink to="/documentos" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Documentos"><IconDocumentos /></NavLink>
+        <button className="mt-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground" title={usuario?.email} onClick={() => setAberta(true)}>
+          {iniciais(usuario?.nome || usuario?.email || '?')}
         </button>
-        <button className="rounded p-2 hover:bg-accent" title="Nova consulta" onClick={abrirNova}>
-          <IconNova />
-        </button>
-        <button className="rounded p-2 hover:bg-accent" title="Buscar consulta" onClick={toggleBusca}>
-          <IconBuscar />
-        </button>
-        <div className="mt-auto">
-          <button
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
-            title={usuario?.email}
-            onClick={() => setAberta(true)}
-          >
-            {iniciais(usuario?.nome || usuario?.email || '?')}
-          </button>
-        </div>
       </aside>
     )
   }
@@ -97,98 +83,78 @@ export default function Sidebar() {
   /* ---- Sidebar aberta ---- */
   return (
     <aside className="flex h-full w-[260px] flex-col border-r bg-muted/30">
-      {/* Topo: logo + recolher */}
       <div className="flex items-center justify-between p-2">
         <span className="px-2 text-sm font-semibold">RAG-Simplex</span>
-        <button className="rounded p-2 hover:bg-accent" title="Recolher barra" onClick={() => setAberta(false)}>
-          <IconPainel />
-        </button>
+        <button className="rounded-lg p-2 hover:bg-accent" title="Recolher barra" onClick={() => setAberta(false)}><IconPainel /></button>
       </div>
 
-      {/* Ações */}
-      <div className="space-y-0.5 px-2">
-        <button
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium hover:bg-accent"
-          onClick={abrirNova}
-        >
-          <IconNova /> Nova consulta
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+        {/* Grupo Consulta */}
+        <button className={`${itemBase} ${naConsulta ? 'font-medium' : ''}`} onClick={() => setGrupo((v) => !v)}>
+          <Chevron aberto={grupo} />
+          <IconConsulta />
+          <span className="flex-1 text-left">Consulta</span>
         </button>
-        <button
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium hover:bg-accent"
-          onClick={toggleBusca}
-        >
-          <IconBuscar /> Buscar consulta
-        </button>
-        {buscando && (
-          <input
-            ref={buscaRef}
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Filtrar pelo título ou conteúdo…"
-            className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-        )}
-      </div>
 
-      {/* Recentes */}
-      <div className="px-3 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Consultas recentes
-      </div>
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2">
-        {recentes.length === 0 && (
-          <p className="px-2 py-2 text-xs text-muted-foreground">
-            {busca ? 'Nada encontrado.' : 'Nenhuma consulta ainda.'}
-          </p>
-        )}
-        {recentes.map((c) => (
-          <div
-            key={c.id}
-            className={`group flex items-center gap-1 rounded-lg pr-1 text-sm hover:bg-accent ${
-              c.id === conversaAtivaId ? 'bg-accent' : ''
-            }`}
-          >
-            <button
-              className="min-w-0 flex-1 truncate px-2 py-2 text-left"
-              title={c.titulo}
-              onClick={() => abrirConsulta(c.id)}
-            >
-              {c.titulo}
-            </button>
-            <button
-              className="shrink-0 rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
-              title="Excluir consulta"
-              onClick={(e) => {
-                e.stopPropagation()
-                excluir(c.id)
-              }}
-            >
-              <IconLixeira />
-            </button>
+        {grupo && (
+          <div className="ml-3 space-y-0.5 border-l pl-2">
+            <button className={itemBase} onClick={abrirNova}><IconNova /> Nova consulta</button>
+            <button className={itemBase} onClick={toggleBusca}><IconBuscar /> Buscar consulta</button>
+            {buscando && (
+              <input
+                ref={buscaRef}
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Filtrar consultas…"
+                className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+            )}
+            <div className="px-2 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Consultas recentes
+            </div>
+            {recentes.length === 0 && (
+              <p className="px-2 py-1 text-xs text-muted-foreground">{busca ? 'Nada encontrado.' : 'Nenhuma ainda.'}</p>
+            )}
+            {recentes.map((c) => (
+              <div key={c.id} className={`group flex items-center gap-1 rounded-lg pr-1 text-sm hover:bg-accent ${c.id === conversaAtivaId ? 'bg-accent' : ''}`}>
+                <button className="min-w-0 flex-1 truncate px-2 py-1.5 text-left" title={c.titulo} onClick={() => abrirConsulta(c.id)}>
+                  {c.titulo}
+                </button>
+                <button
+                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
+                  title="Excluir consulta"
+                  onClick={(e) => { e.stopPropagation(); excluir(c.id) }}
+                >
+                  <IconLixeira />
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Usuário (rodapé) com menu */}
+        {/* Outras abas */}
+        <div className="pt-2">
+          <NavLink to="/relatorios" className={linkCls}><IconRelatorios /> Relatórios</NavLink>
+          <NavLink to="/equipamentos" className={linkCls}><IconEquipamento /> Buscar Equipamento</NavLink>
+          <NavLink to="/documentos" className={linkCls}><IconDocumentos /> Documentos</NavLink>
+        </div>
+      </nav>
+
+      {/* Usuário (rodapé) */}
       <div className="relative border-t p-2">
         {menu && (
-          <div className="absolute bottom-14 left-2 right-2 z-10 overflow-hidden rounded-lg border bg-popover shadow-md">
-            <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/inicio') }}>
-              Início
-            </button>
-            {pode('gerir_usuarios') && (
-              <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/admin') }}>
-                Painel ADM
-              </button>
-            )}
-            <button className="block w-full border-t px-3 py-2 text-left text-sm text-destructive hover:bg-accent" onClick={logout}>
-              Sair
-            </button>
-          </div>
+          <>
+            <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar menu" onClick={() => setMenu(false)} />
+            <div className="absolute bottom-14 left-2 right-2 z-50 overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg">
+              <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/inicio') }}>Início</button>
+              {pode('gerir_usuarios') && (
+                <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/admin') }}>Painel ADM</button>
+              )}
+              <button className="block w-full border-t px-3 py-2 text-left text-sm text-destructive hover:bg-accent" onClick={logout}>Sair</button>
+            </div>
+          </>
         )}
-        <button
-          className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-accent"
-          onClick={() => setMenu((v) => !v)}
-        >
+        <button className="flex w-full items-center gap-2 rounded-lg p-2 text-left hover:bg-accent" onClick={() => setMenu((v) => !v)}>
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
             {iniciais(usuario?.nome || usuario?.email || '?')}
           </span>

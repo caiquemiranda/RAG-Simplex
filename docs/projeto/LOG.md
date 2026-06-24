@@ -9,6 +9,24 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 6) — Sidebar em grupos + abas novas; fix do menu
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix:** menu do usuário usava `bg-popover` (token inexistente no tema) → sem
+  fundo, "quebrado". Trocado por `bg-card` + overlay de clique-fora.
+- **Sidebar em grupos** (estilo plataforma de cursos): **Consulta** vira grupo
+  colapsável com sub-itens **Nova consulta** / **Buscar consulta** + a lista de
+  **Consultas recentes**. Novas abas de topo: **Relatórios**, **Buscar Equipamento**,
+  **Documentos** (placeholders `components/Placeholder.tsx`).
+- Rotas `/relatorios`, `/equipamentos`, `/documentos`; rail recolhido com os ícones.
+- `tsc --noEmit` OK.
+
+**Arquivos:** `frontend/src/components/{Sidebar,Placeholder}.tsx`,
+`frontend/src/pages/{Relatorios,Equipamentos,Documentos}.tsx`, `App.tsx`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 5) — Layout estilo ChatGPT (sidebar + multi-consulta)
 
 **Branch:** `feat/fase-7-frontend`.
