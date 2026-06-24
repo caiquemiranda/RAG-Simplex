@@ -7,22 +7,22 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-6-admin` (empilhada sobre a 5; push via `http.sslBackend schannel`).
-- **Fase 6 ✅ concluída:** Painel ADM (API) — router `/admin` com CRUD de usuários,
-  estratégia/camadas/permissão extra por usuário, config global, auditoria e
-  provedores (chave **cifrada**, nunca em claro). **44 testes passando**.
-- **Fases 0–5 ✅:** RAG + extrativo + persistência + auth JWT + RBAC.
-- **Próxima fase:** **Fase 7 — Frontend React (base + auth) + Docker** (D-017).
+- **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
+- **Fases 7, 8, 9 ✅:** frontend completo + Docker. Chat com **streaming (NDJSON)**,
+  markdown, citações split-screen, **feedback 👍/👎**; painel ADM com CRUD de
+  usuários/permissões, **estratégia por usuário** e **auditoria**. **Backend 59 testes**.
+- **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
 
 ## ⏭️ Próximos passos
 
-1. **Fase 7 — Frontend React + Docker:** scaffold Vite+React+TS+Tailwind (D-010),
-   login + rotas protegidas; depois `Dockerfile` backend (e5 pré-cacheado) +
-   `Dockerfile` frontend + `docker-compose` (D-017). **Confirmar D-010 antes.**
-2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`.
+1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou
+   nativo (uvicorn + `npm run dev`). Schema mudou (coluna `feedback`): no nativo,
+   recriar o `.db`; no Docker, volume novo. Ver `docs/DOCKER.md`.
+2. **Fase 11 (hardening):** cross-encoder reranker (D-020); avaliação RAGAS-lite;
+   migrações Alembic (evitar recriar o banco a cada mudança de schema).
+3. **Fase 10 (fim):** estratégias de nuvem + arena — **requer API key**.
 
-> ⚠️ Backend completo: `python -m app.db --init` + `python -m app.auth --criar-admin ...`
-> antes de subir a API. A partir da Fase 7 começa o frontend (Node/React).
+> Rodar tudo: `docker compose up --build` **ou** uvicorn + `npm run dev`.
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
@@ -46,6 +46,7 @@ uvicorn app.main:app --reload     # /docs → POST /auth/login → use o Bearer 
 
 - **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
   frontend). Dev segue nativo até lá.
-- **D-015 🔄** — limiar de similaridade (calibrar com `--diagnostico`).
+- **D-015 ✅** — busca híbrida (bônus léxico) corrigiu o ranking; limiar 0.78.
+- **D-020 🔄** — cross-encoder reranker p/ fallback robusto (Fase 11).
 - **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
 - **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.

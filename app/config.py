@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # Gere uma com: python -m app.cripto
     secret_key: str = ""
 
+    # --- CORS (frontend React) ---
+    # Origens permitidas (separadas por vírgula). O front de dev roda em :5173.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
     # --- Autenticação (JWT) ---
     # Segredo HMAC dos tokens. Se vazio, usa `secret_key` como fallback.
     jwt_secret: str = ""
@@ -71,6 +75,12 @@ class Settings(BaseSettings):
     # Distância de cosseno; limiar mínimo de aceitação do score de similaridade.
     similarity_threshold: float = 0.78
     top_k: int = 5
+
+    # Busca híbrida (D-015): bônus aditivo ao score vetorial quando a consulta casa
+    # com o termo do display (header/termo_en). Corrige ranking de termos parecidos
+    # (ex.: "Head Missing" vs "Node Missing") sem prejudicar consultas coloquiais.
+    lexical_boost: float = 0.12
+    rerank_pool: int = 10  # candidatos recuperados por vetor antes de reordenar
 
     # --- Fontes de conhecimento ---
     knowledge_base: Path = BASE_DIR / "docs" / "guia_falhas_simplex_ptbr.md"

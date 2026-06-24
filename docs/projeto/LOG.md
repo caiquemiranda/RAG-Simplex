@@ -9,6 +9,227 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 9 (parte 2) — Estratégia por usuário + auditoria na UI
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (backend, testado):**
+- `admin.py`: `GET /admin/usuarios/{id}/estrategia` (config do usuário ou null);
+  `feedback` exposto em `AuditoriaItem`. (`PUT estrategia`, `/auditoria`,
+  `/estrategias` já existiam.)
+- `tests/test_admin.py`: GET/PUT da estratégia por usuário → `pytest` = **59 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `pages/Admin.tsx`: **abas Usuários/Auditoria**. No editar usuário, nova seção
+  **Estratégia/persona/camadas** (carrega config atual, select de estratégias,
+  checkboxes de camadas → PUT). 
+- `components/AuditoriaView.tsx`: tabela das consultas (quando, usuário→email,
+  pergunta, estratégia, fallback, feedback 👍/👎).
+- `lib/api.ts`: `estrategias`, `estrategiaUsuario`, `definirEstrategiaUsuario`, `auditoria`.
+
+**Fase 9 ✅ concluída.** Próximo: Fase 11 (reranker D-020 / hardening) — Fase 10
+(nuvem) depende de API key, fica para o fim.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{pages/Admin,components/AuditoriaView,lib/api}.tsx`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 3) — Streaming (NDJSON) + feedback 👍/👎
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (backend, testado):**
+- `modelos.py`: coluna `LogConsulta.feedback` (1/-1/None).
+- `main.py`: `_executar_consulta()` (helper compartilhado, devolve `log_id`);
+  `/query` agora retorna `log_id`; `/query/stream` reescrito como **NDJSON**
+  (`{tipo:meta,...}` + `{tipo:delta,texto}`); novo `POST /feedback` (só no próprio log).
+- `tests/test_consulta.py` (6 casos: log_id, feedback ok/400/404, stream NDJSON,
+  stream negado sem permissão) → `pytest` = **58 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `lib/api.ts`: `queryStream()` (lê NDJSON via ReadableStream), `api.feedback()`.
+- `pages/Consulta.tsx`: usa streaming (efeito de digitação) p/ quem tem
+  `consultar_stream` (operador cai p/ `/query`); botões **👍/👎** por resposta.
+
+**⚠️ Schema:** coluna nova em `log_consulta`. Em banco existente, recriar
+(`rm data/processed/ragsimplex.db && python -m app.db --init`); no Docker o volume é novo.
+
+**Próximo:** resto da Fase 9 (estratégia/auditoria na UI), Fase 11 (reranker D-020).
+
+**Arquivos:** `app/{main,modelos}.py`, `tests/test_consulta.py`,
+`frontend/src/{lib/api,pages/Consulta}.tsx`.
+
+---
+
+## 2026-06-23 — Fase 7 (parte 2 / D-017) — Docker: subir tudo com um comando
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito:**
+- `Dockerfile` (backend): Python 3.11, deps, **e5 pré-cacheado** na imagem, depois
+  `HF_HUB_OFFLINE=1`. `docker/entrypoint.sh` inicializa segredo (gera/persiste),
+  banco+seed, admin (env) e ingestão (se vazia), then `uvicorn`.
+- `frontend/Dockerfile`: build Vite (multi-stage) → **nginx**; `docker/nginx.conf`
+  serve o SPA e faz **proxy** das rotas de API p/ `backend` (origem única, sem CORS;
+  `VITE_API_URL=""`).
+- `docker-compose.yml`: `backend` (8000) + `frontend` (8080) + volume `ragdata`.
+- `.dockerignore`, `.gitattributes` (LF p/ `*.sh`), `docs/DOCKER.md`.
+
+**Validação:** `docker compose config` OK; `pytest` = **53 passed**. **Build completo
+não rodado aqui** (sem rede p/ torch/modelo) — instruções e troubleshooting de SSL
+em `docs/DOCKER.md`.
+
+**Uso:** `docker compose up --build` → front http://localhost:8080, API :8000/docs;
+admin padrão admin@simplex.local / admin123.
+
+**Próximo:** validar o build na máquina do dev; resto da Fase 9 (estratégia/auditoria
+na UI), Fase 8 (streaming/feedback), Fase 11 (reranker D-020).
+
+**Arquivos:** `Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`,
+`docker/{entrypoint.sh,nginx.conf}`, `.dockerignore`, `.gitattributes`, `docs/DOCKER.md`.
+
+---
+
+## 2026-06-23 — D-015 — Busca híbrida (bônus léxico) p/ otimizar respostas
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Problema (medido na base real):** "falha head missing" trazia "Node Missing/Failed"
+em #1 (0.882) e "Head Missing" só em #3 (0.868) — e5 confunde termos parecidos.
+
+**Feito:**
+- `recuperacao.py`: busca **híbrida**. Recupera um pool (`rerank_pool=10`) por vetor,
+  soma **bônus aditivo** `lexical_boost*cobertura` dos termos do display
+  (`termo_en`/`header`) e reordena. `Resultado` agora expõe `sim_vetorial`/`sim_lexical`.
+- `config.py`: `lexical_boost=0.12`, `rerank_pool=10`.
+- Testes: `_tokens`/`_score_lexical` + reordenação (3 novos) → `pytest` = **53 passed**.
+
+**Resultado (medido):** bloco correto vira #1 com folga — "head missing" (0.943 vs
+0.881), "cabeçote ausente" (0.995), "no answer" (0.973), "warm start" (1.000).
+
+**Limiar:** mantido **0.78** (o `--diagnostico` sugeriu 0.94, mas seus positivos
+tinham o termo do display; coloquial ~0.88 seria rejeitado). Discriminar
+fora-da-base × válido exige reranker → **D-020 (Fase 11)**.
+
+**Arquivos:** `app/{recuperacao,config}.py`, `tests/test_recuperacao.py`,
+`docs/projeto/DECISOES.md`.
+
+---
+
+## 2026-06-23 — Fase 9 (parte 1) — Painel ADM: CRUD de usuários + permissões
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Pedido:** como admin, gerenciar usuários (CRUD) e setar suas permissões.
+
+**Feito (backend, testado):**
+- `admin.py`: `GET /admin/papeis` (com permissões de cada papel) e `GET /admin/permissoes`
+  (catálogo) — `requer("gerir_usuarios")`, para alimentar os seletores da UI.
+- `tests/test_admin.py`: catálogos + bloqueio de não-admin → `pytest` = **50 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `pages/Admin.tsx`: lista de usuários (tabela), criar usuário, editar (nome, papel,
+  ativo, reset de senha) e **gerir permissões** — checkboxes; as do papel vêm
+  marcadas/“(papel)” e as demais são **extra** (PUT `/permissoes-extra`).
+- `lib/api.ts`: bloco `admin` (usuarios/criar/atualizar/permissoes-extra/papeis/permissoes).
+- Rota `/admin` + link "Admin" no `Layout` (só com `gerir_usuarios`); guarda na página.
+
+**Próximo:** validar UI no browser; atribuição de estratégia/persona e auditoria
+pela UI (resto da Fase 9). Depois: streaming/feedback (Fase 8), D-015, Docker.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{pages/Admin,lib/api,App,components/Layout}.tsx`.
+
+---
+
+## 2026-06-23 — Fase 8 (parte 2) — Citações clicáveis + split-screen
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Pedido:** links no texto que, ao clicar, abrem o **documento ao lado** (metade
+chat, metade guia), rolado e **destacado** no trecho exato; pronto p/ multi-documento.
+
+**Feito (backend, testado):**
+- `ingestao.documentos_indexados()` — fontes distintas na coleção (docs que o
+  assistente pesquisa), sem usar o modelo.
+- `main`: `GET /documentos` (lista) e `GET /documentos/{nome}` (markdown do guia),
+  ambos `requer("consultar")`, com guarda contra path traversal (só `.md` indexado).
+- `tests/test_documentos.py` (5 casos) → `pytest` = **49 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `lib/api.ts`: `documentos()` / `documento(nome)`.
+- `components/DocumentoPanel.tsx`: carrega o guia, divide em seções por cabeçalho,
+  rola e **destaca** (amarelo) a seção cujo slug casa com a fonte clicada.
+- `pages/Consulta.tsx`: layout **split** (chat 1/2 + documento 1/2); fontes viram
+  **chips clicáveis** que abrem o documento no trecho.
+
+**Matching fonte↔seção:** `slug(header)` aplicado igualmente nos dois lados
+(consistente; acentos viram '-' — sem regex de combinantes).
+
+**Próximo:** validar no browser; depois streaming/feedback (resto da Fase 8); D-015.
+
+**Arquivos:** `app/{main,ingestao}.py`, `tests/test_documentos.py`,
+`frontend/src/{lib/api,components/DocumentoPanel,pages/Consulta}.tsx`.
+
+---
+
+## 2026-06-23 — Fase 8 (parte 1) — Chat + markdown na resposta
+
+**Branch:** `feat/fase-7-frontend` (continuação).
+
+**Contexto:** frontend já subiu e funciona (login + consulta). Usuário pediu layout
+de **chat** (estilo ChatGPT/Claude) e **renderização do markdown**.
+
+**Feito:**
+- `Consulta.tsx` reescrita como **chat**: histórico rolável (bolhas usuário/assistente)
+  + input fixo no rodapé + auto-scroll + estado "Consultando…".
+- `components/Markdown.tsx`: `react-markdown` + `remark-gfm` + tipografia Tailwind;
+  blockquote com **AVISO DE SEGURANÇA** vira caixa de alerta vermelha em destaque.
+- `Layout.tsx` em altura cheia (`h-screen` flex-col) p/ o input fixar embaixo;
+  `Home.tsx` ajustado p/ rolagem própria.
+- Deps: `react-markdown`, `remark-gfm`, `@tailwindcss/typography` (plugin no tailwind).
+
+**Validação:** **não testado aqui** (npm bloqueado). Requer `npm install` (deps novas)
++ `npm run dev`. Revisão por leitura.
+
+**Observação:** a busca trouxe "Node Missing" como #1 para "head missing" — é a
+calibração de recuperação (**D-015**, pendente), independente do layout.
+
+**Próximo:** validar build; depois streaming + feedback (resto da Fase 8) e Docker.
+
+**Arquivos:** `frontend/src/{pages/Consulta,pages/Home,components/Layout,components/Markdown}.tsx`,
+`frontend/package.json`, `frontend/tailwind.config.js`.
+
+---
+
+## 2026-06-23 — Fase 7 (parte 1) — Frontend React: base + auth
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito:**
+- Scaffold `frontend/` — Vite + React + TS + Tailwind, pronto p/ shadcn/ui (alias
+  `@/`, `cn()`, variáveis CSS de tema). Componentes UI base: button/input/label/card.
+- Auth: `AuthContext` (entrar/sair, valida sessão via `/auth/me`, token no
+  localStorage), `ProtectedRoute`, `Layout` com navegação por papel.
+- Páginas: `Login`, `Home` (usuário/permissões), `Consulta` (consulta básica a `/query`).
+- Cliente HTTP `lib/api.ts` com tipos da API.
+- Backend: **CORS** (`CORSMiddleware`) + `settings.cors_origins` (`RAG_CORS_ORIGINS`).
+- `.gitignore` raiz ignora `frontend/node_modules` e `frontend/dist`.
+
+**Decisões aplicadas:** D-010 (Vite+React+TS+Tailwind+shadcn).
+
+**Validação:** backend `pytest` = **44 passed** (com CORS). Frontend **não testado
+aqui** (npm bloqueado por SSL corporativo) — revisão por leitura; build roda na
+máquina do dev.
+
+**Próximo:** validar build do frontend; depois Docker (D-017); Fase 8 (chat).
+
+**Arquivos:** `frontend/**`, `app/{main,config}.py`, `.gitignore`,
+`docs/projeto/specs/spec-fase-7-frontend.md`.
+
+---
+
 ## 2026-06-23 — Fase 6 — Painel ADM (API)
 
 **Branch:** `feat/fase-6-admin` (sobre a 5).

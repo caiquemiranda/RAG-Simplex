@@ -17,6 +17,10 @@ data/processed/chroma/
 data/processed/*.db
 data/processed/*.db-journal
 
+# --- Frontend (Node) ---
+frontend/node_modules/
+frontend/dist/
+
 # --- Caches de modelos / SO ---
 .cache/
 .DS_Store

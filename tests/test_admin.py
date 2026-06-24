@@ -107,6 +107,27 @@ def test_admin_troca_estrategia_vale_na_consulta(ctx, monkeypatch):
     assert capturado["estrategia"] == "claude_nuvem"
 
 
+def test_estrategia_por_usuario_get_e_put(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Sem config própria → null.
+    r0 = client.get(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin)
+    assert r0.status_code == 200 and r0.json() is None
+
+    # Define estratégia + persona + camadas.
+    r1 = client.put(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin,
+                    json={"estrategia": "local_extrativa", "persona": "técnico de campo",
+                          "camadas": ["simples", "tecnica"]})
+    assert r1.status_code == 200
+
+    # Agora o GET retorna o que foi salvo.
+    r2 = client.get(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin)
+    assert r2.json()["estrategia"] == "local_extrativa"
+    assert r2.json()["persona"] == "técnico de campo"
+    assert r2.json()["camadas"] == "simples,tecnica"
+
+
 def test_auditoria_registra_consulta(ctx, monkeypatch):
     client, _ = ctx
     monkeypatch.setattr("app.main.buscar", lambda *a, **k: Recuperacao("q", [], True))
@@ -120,6 +141,26 @@ def test_auditoria_registra_consulta(ctx, monkeypatch):
     assert r.status_code == 200
     assert len(r.json()) >= 1
     assert r.json()[0]["pergunta"] == "painel apitando"
+
+
+def test_catalogos_papeis_e_permissoes(ctx):
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+
+    papeis = client.get("/admin/papeis", headers=admin)
+    assert papeis.status_code == 200
+    nomes = {p["nome"] for p in papeis.json()}
+    assert {"Operador", "Tecnico", "Analista", "Admin"} <= nomes
+    admin_papel = next(p for p in papeis.json() if p["nome"] == "Admin")
+    assert "gerir_usuarios" in admin_papel["permissoes"]
+
+    perms = client.get("/admin/permissoes", headers=admin)
+    assert perms.status_code == 200
+    chaves = {p["chave"] for p in perms.json()}
+    assert "consultar" in chaves and "gerir_chaves" in chaves
+
+    # Não-admin é barrado.
+    assert client.get("/admin/papeis", headers=_login(client, "op@x.com")).status_code == 403
 
 
 def test_provedor_chave_nunca_em_claro(ctx):

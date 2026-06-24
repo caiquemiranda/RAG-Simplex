@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+
+# Artefatos de build do TypeScript/Vite
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

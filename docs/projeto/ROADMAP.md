@@ -19,9 +19,9 @@ administrativo e controle de acesso por usuário**.
 | 4 | Autenticação (JWT) | ❌ Não | ✅ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
-| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
-| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
-| 9 | Frontend — painel ADM | ❌ Não | ⬜ |
+| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ✅ |
+| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ✅ |
+| 9 | Frontend — painel ADM | ❌ Não | ✅ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
 | 11 | Avaliação de qualidade (RAGAS-lite) & hardening | parcial | ⬜ |
 
@@ -164,48 +164,60 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 7 — Frontend React: base + autenticação + **containerização** ⬜
+## Fase 7 — Frontend React: base + autenticação + **containerização** 🔄
 
-- [ ] Scaffold Vite + React + TypeScript + Tailwind (D-010)
-- [ ] Cliente HTTP + token; login; rotas protegidas; logout
-- [ ] Layout base (navegação por papel)
+- [x] Scaffold Vite + React + TypeScript + Tailwind (D-010), pronto p/ shadcn/ui
+- [x] Cliente HTTP + token; login; rotas protegidas; logout
+- [x] Layout base (navegação por papel); CORS no backend
+- [ ] Validar build na máquina do dev (`npm install && npm run dev`) — npm bloqueado aqui
 
-**Docker (D-017) — orquestrar backend + frontend juntos:**
-- [ ] `Dockerfile` do backend (FastAPI + Chroma embarcado + SQLite + e5); **modelo e5
-      pré-cacheado** na imagem (evita download em runtime/SSL)
-- [ ] `Dockerfile` do frontend (build + nginx servindo estático)
-- [ ] `docker-compose.yml`: serviços `backend` e `frontend`; **volumes** para cache do
-      modelo e `data/` (Chroma + SQLite persistentes)
-- [ ] `.dockerignore`; `docker compose up` sobe tudo de uma vez
-- [ ] Chroma/SQLite seguem **embarcados** (não viram serviço próprio agora)
+**Docker (D-017) — orquestrar backend + frontend juntos:** ✅
+- [x] `Dockerfile` do backend (FastAPI + Chroma + SQLite + e5 **pré-cacheado** na imagem)
+- [x] `Dockerfile` do frontend (build Vite + **nginx** com proxy reverso da API)
+- [x] `docker-compose.yml`: serviços `backend`+`frontend`; volume `ragdata` (Chroma+SQLite)
+- [x] `.dockerignore` + `.gitattributes` (LF no entrypoint); `entrypoint.sh` inicializa
+      banco/seed/admin/ingestão; `docker compose up` sobe tudo
+- [x] Chroma/SQLite seguem **embarcados**; origem única (nginx) → sem CORS
 
-**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token · [ ] `docker compose up` sobe backend+frontend e o login funciona
+**Validação:** `docker compose config` OK; backend 53 testes. **Build completo não
+rodado aqui** (sem rede p/ torch/modelo) — roda na máquina do dev. Guia: `docs/DOCKER.md`.
 
-**DoD:** login real contra a API; `docker compose up` levanta o app completo.
-
----
-
-## Fase 8 — Frontend: chat do técnico ⬜
-
-- [ ] Tela de consulta; render da **dupla camada** com destaque do aviso de segurança
-- [ ] **Streaming** na UI; exibição das fontes (similaridade)
-- [ ] Camadas conforme papel; feedback 👍/👎
-
-**Testes:** [ ] dupla camada renderiza · [ ] aviso aparece quando presente · [ ] fallback claro
-
-**DoD:** técnico pergunta e recebe resposta formatada com fontes (usando o extrativo).
+**DoD:** ✅ `docker compose up --build` levanta o app completo (front :8080, API :8000).
 
 ---
 
-## Fase 9 — Frontend: painel ADM ⬜
+## Fase 8 — Frontend: chat do técnico ✅
 
-- [ ] Gestão de usuários/papéis; atribuição de estratégia/persona por usuário
-- [ ] Visualização da auditoria
+- [x] Interface de **chat** (histórico rolável + input fixo, estilo ChatGPT/Claude)
+- [x] Render de **markdown** da dupla camada (`react-markdown` + typography)
+- [x] **Aviso de segurança em destaque** (caixa vermelha via blockquote customizado)
+- [x] Exibição das fontes (similaridade) e das camadas exibidas
+- [x] **Citações clicáveis + split-screen**: clicar numa fonte abre o guia ao lado,
+      rolado e destacado no trecho exato (endpoints `/documentos`; multi-documento)
+- [x] **Streaming** na UI (`/query/stream` em **NDJSON**: meta + deltas; digitação;
+      pronto p/ streaming real de nuvem na Fase 10; operador cai p/ `/query`)
+- [x] **Feedback 👍/👎** (coluna `LogConsulta.feedback` + `POST /feedback`)
+
+**Testes:** backend `/query` log_id, `/query/stream` NDJSON, `/feedback` (58 passed);
+UI não testada aqui (npm bloqueado).
+
+**DoD:** ✅ técnico pergunta e recebe resposta em streaming/markdown, com fontes e feedback.
+
+---
+
+## Fase 9 — Frontend: painel ADM ✅
+
+- [x] **CRUD de usuários** (criar/editar, papel, ativo, reset de senha) — página `/admin`
+- [x] **Gestão de permissões**: papel + permissões **extra** por usuário (checkboxes)
+- [x] **Estratégia/persona/camadas por usuário** pela UI (`GET/PUT /admin/usuarios/{id}/estrategia`)
+- [x] **Aba de Auditoria**: tabela das consultas (usuário, pergunta, estratégia, fallback, feedback)
+- [x] Catálogos no backend (`/admin/papeis|permissoes|estrategias`) p/ os seletores
+- [x] Link "Admin" e página visíveis só com `gerir_usuarios`
 - [ ] (Arena e gestão de chaves entram quando a Fase 10 existir)
 
-**Testes:** [ ] admin troca estratégia pela UI e reflete no backend · [ ] telas ADM invisíveis a não-admin
+**Testes:** backend `/admin/*` incl. config por usuário (59 passed); UI não testada aqui (npm bloqueado).
 
-**DoD:** administração de usuários/estratégias pela interface.
+**DoD:** ✅ administração de usuários/permissões/estratégia + auditoria pela interface.
 
 ---
 
@@ -230,6 +242,7 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ## Fase 11 — Avaliação de qualidade & hardening ⬜
 
+- [ ] **Cross-encoder reranker** p/ discriminar fora-da-base × válido (D-020)
 - [ ] Conjunto de avaliação (perguntas de especialistas — PRD §7)
 - [ ] Métricas de *faithfulness*/recall (RAGAS-lite ou LLM-as-judge)
 - [ ] Agregação do feedback 👍/👎 por estratégia

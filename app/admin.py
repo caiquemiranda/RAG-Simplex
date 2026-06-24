@@ -64,6 +64,16 @@ class PermissoesExtraIn(BaseModel):
     permissoes: list[str]
 
 
+class PapelResumo(BaseModel):
+    nome: str
+    permissoes: list[str]
+
+
+class PermissaoResumo(BaseModel):
+    chave: str
+    descricao: str
+
+
 class ConfigIn(BaseModel):
     estrategia: str | None = None
     persona: str | None = None
@@ -85,6 +95,7 @@ class AuditoriaItem(BaseModel):
     estrategia: str
     latencia_ms: float | None = None
     fallback: bool
+    feedback: int | None = None
     criado_em: datetime
 
 
@@ -217,11 +228,45 @@ def definir_permissoes_extra(usuario_id: int, dados: PermissoesExtraIn,
 
 
 # --------------------------------------------------------------------------- #
+# Catálogos (papéis e permissões) — para os seletores do painel ADM            #
+# --------------------------------------------------------------------------- #
+@router.get("/papeis", response_model=list[PapelResumo])
+def listar_papeis(_: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> list[PapelResumo]:
+    return [
+        PapelResumo(nome=p.nome, permissoes=[perm.chave for perm in p.permissoes])
+        for p in sessao.scalars(select(Papel)).all()
+    ]
+
+
+@router.get("/permissoes", response_model=list[PermissaoResumo])
+def listar_permissoes(_: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> list[PermissaoResumo]:
+    return [
+        PermissaoResumo(chave=p.chave, descricao=p.descricao)
+        for p in sessao.scalars(select(Permissao)).all()
+    ]
+
+
+# --------------------------------------------------------------------------- #
 # Estratégias / configuração                                                   #
 # --------------------------------------------------------------------------- #
 @router.get("/estrategias", response_model=list[str])
 def listar_estrategias(_: Usuario = Depends(requer("gerir_estrategias"))) -> list[str]:
     return sorted(ESTRATEGIAS)
+
+
+@router.get("/usuarios/{usuario_id}/estrategia", response_model=ConfigResumo | None)
+def obter_estrategia_usuario(usuario_id: int,
+                             _: Usuario = Depends(requer("gerir_estrategias")),
+                             sessao: Session = Depends(get_session)) -> ConfigResumo | None:
+    _buscar_usuario(sessao, usuario_id)
+    cfg = sessao.scalar(
+        select(ConfigEstrategia).where(
+            ConfigEstrategia.escopo == "usuario", ConfigEstrategia.alvo == str(usuario_id)
+        )
+    )
+    return ConfigResumo.model_validate(cfg, from_attributes=True) if cfg else None
 
 
 @router.put("/usuarios/{usuario_id}/estrategia", response_model=ConfigResumo)
