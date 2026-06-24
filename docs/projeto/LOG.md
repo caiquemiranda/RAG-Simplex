@@ -9,6 +9,20 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Backlog: otimizações do cronograma (#CR1–#CR5)
+
+Registradas no [`BACKLOG.md`](BACKLOG.md) §C como atividades em andamento:
+- **#CR1** grade só do mês vigente (sem dias do mês seguinte);
+- **#CR2** miniatura do dia (avatares/atividade);
+- **#CR3** feriados + sábado/domingo com cor da logo;
+- **#CR4** notificações (cria atividade → notificação + sino + tela) — fundação genérica;
+- **#CR5** "onde cada um está" + avatar (foto/iniciais, ex.: Caíque Miranda → CM).
+
+Ordem sem retrabalho: `Avatar` reutilizável → #CR2/#CR5 → #CR1/#CR3 (visual) →
+#CR3 feriado/#CR4 (backend). PLANEJAMENTO atualizado.
+
+---
+
 ## 2026-06-24 — Etapa 3 — Cronograma (visitas) + card do dia (#C1); fix do logo
 
 **Branch:** `feat/fase-7-frontend`.

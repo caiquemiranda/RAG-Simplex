@@ -21,6 +21,7 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | Chat (streaming, citações, feedback, histórico, responsivo) | ✅ |
 | Painel ADM em cards (usuários+perfil+documentos, auditoria) | ✅ |
 | **Cronograma real (visitas) + card do dia por papel** | ✅ (Etapa 3 / #C1) |
+| **Cronograma — otimizações (#CR1–#CR5)** | 🔄 em andamento (ver BACKLOG §C) |
 | **Entidade Cliente (N:N técnico↔cliente) + card Clientes CRUD** | ✅ (Etapa 1) |
 | Cards ADM: API keys / Banco de dados | ⬜ placeholder |
 | **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo PNG) |
@@ -71,6 +72,11 @@ flowchart TD
   F11 -.paralelo.-> E5
   F10 -.requer API key.-> E5
 ```
+
+### Otimizações do Cronograma (em andamento — detalhe em BACKLOG §C)
+`Avatar` reutilizável → **#CR2** (miniatura do dia) e **#CR5** (onde cada um está) →
+**#CR1** (grade só do mês) e **#CR3** (fim de semana/feriado) → **#CR4** (notificações,
+fundação genérica). Ordem pensada para não retrabalhar.
 
 ### Marcos (milestones)
 - **M0 — Identidade & tema:** trilha Design (#D1 paleta da empresa, #D2 claro/escuro, #U1/#U2 redesign).
