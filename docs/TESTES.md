@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**78 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**79 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
 perfil, documentos, **clientes**), **cronograma** (visitas, **feriados**,
 **notificações**), **arquivos/biblioteca**, streaming e feedback.
@@ -104,8 +104,9 @@ pytest
 - `test_empresa_default_marca_ibsystems` — categoria empresa → marca IBSystems.
 - `test_categoria_invalida_e_op_nao_sobe` — 400 (categoria) e 403 (operador).
 
-### `test_cronograma.py` (9) — cronograma, clientes visíveis, feriados, notificações
+### `test_cronograma.py` (10) — cronograma (multi-técnico, clientes, feriados, notificações)
 - `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.
+- `test_multiplos_tecnicos_por_atividade` — vários técnicos numa visita; todos veem/são notificados; qualquer um fecha.
 - `test_tecnico_fecha_propria_visita` — técnico fecha a própria (status/observações); 403/400 nos limites.
 - `test_admin_cria_e_filtra_por_intervalo` — cria visita; filtra por intervalo de datas.
 - `test_tecnico_ve_apenas_as_proprias` — técnico só enxerga as próprias visitas.

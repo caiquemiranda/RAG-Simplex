@@ -70,11 +70,13 @@ export type AdminCliente = {
 export type ClienteEntrada = { nome?: string; unidade?: string | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; cor: string | null; logo_url: string | null }
 
+export type TecnicoMini = { id: number; nome: string; foto: string | null }
 export type Visita = {
   id: number
   usuario_id: number
   tecnico_nome: string
   tecnico_foto: string | null
+  tecnicos: TecnicoMini[]
   cliente_id: number | null
   cliente_nome: string | null
   cliente_cor: string | null
@@ -86,7 +88,7 @@ export type Visita = {
   observacoes: string | null
 }
 export type NovaVisita = {
-  usuario_id: number
+  usuario_ids: number[]
   cliente_id?: number | null
   data: string
   titulo: string

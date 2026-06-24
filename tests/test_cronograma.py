@@ -62,7 +62,7 @@ def test_admin_cria_e_filtra_por_intervalo(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
     r = client.post("/cronograma", headers=admin, json={
-        "usuario_id": ids["tec"], "cliente_id": ids["cliente"],
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"],
         "data": "2026-07-10", "titulo": "Manutenção 4100",
     })
     assert r.status_code == 201
@@ -78,8 +78,8 @@ def test_admin_cria_e_filtra_por_intervalo(ctx):
 def test_tecnico_ve_apenas_as_proprias(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
-    client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "A"})
-    client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec2"], "data": "2026-07-10", "titulo": "B"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "A"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "data": "2026-07-10", "titulo": "B"})
 
     visiveis = client.get("/cronograma?de=2026-07-01&ate=2026-07-31", headers=_login(client, "tec@x.com")).json()
     assert [v["titulo"] for v in visiveis] == ["A"]
@@ -88,14 +88,14 @@ def test_tecnico_ve_apenas_as_proprias(ctx):
 def test_tecnico_nao_cria(ctx):
     client, ids = ctx
     r = client.post("/cronograma", headers=_login(client, "tec@x.com"),
-                    json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "X"})
+                    json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "X"})
     assert r.status_code == 403
 
 
 def test_remover_visita(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
-    vid = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "X"}).json()["id"]
+    vid = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "X"}).json()["id"]
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 204
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 404
 
@@ -117,7 +117,7 @@ def test_clientes_visiveis_por_papel(ctx):
 def test_tecnico_fecha_propria_visita(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
-    vid = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "X"}).json()["id"]
+    vid = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "X"}).json()["id"]
     tec = _login(client, "tec@x.com")
 
     # Técnico fecha a própria visita (status + observações).
@@ -128,8 +128,27 @@ def test_tecnico_fecha_propria_visita(ctx):
     # Status inválido → 400.
     assert client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "xpto"}).status_code == 400
     # Visita de outro técnico → 403.
-    vid2 = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec2"], "data": "2026-07-10", "titulo": "Z"}).json()["id"]
+    vid2 = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "data": "2026-07-10", "titulo": "Z"}).json()["id"]
     assert client.patch(f"/cronograma/{vid2}", headers=tec, json={"status": "concluida"}).status_code == 403
+
+
+def test_multiplos_tecnicos_por_atividade(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    r = client.post("/cronograma", headers=admin,
+                    json={"usuario_ids": [ids["tec"], ids["tec2"]], "data": "2026-07-10", "titulo": "Dupla"})
+    assert r.status_code == 201
+    assert {t["id"] for t in r.json()["tecnicos"]} == {ids["tec"], ids["tec2"]}
+    vid = r.json()["id"]
+
+    # Ambos veem a atividade e ambos foram notificados.
+    assert client.get("/cronograma?de=2026-07-01&ate=2026-07-31", headers=_login(client, "tec@x.com")).json()
+    assert client.get("/cronograma?de=2026-07-01&ate=2026-07-31", headers=_login(client, "tec2@x.com")).json()
+    assert client.get("/notificacoes", headers=_login(client, "tec2@x.com")).json()
+
+    # Qualquer técnico atribuído fecha a atividade.
+    assert client.patch(f"/cronograma/{vid}", headers=_login(client, "tec2@x.com"),
+                        json={"status": "concluida"}).status_code == 200
 
 
 def test_feriado_crud(ctx):
@@ -147,7 +166,7 @@ def test_feriado_crud(ctx):
 def test_notificacao_ao_criar_atividade(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
-    client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "Manutenção"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "Manutenção"})
 
     # O técnico recebe a notificação; o outro técnico não.
     tec = _login(client, "tec@x.com")

@@ -33,6 +33,13 @@ criada pela micro-migração no banco existente.
   (`Feriado`; marcar/remover no card do dia); **#CR4** ao criar atividade gera
   **notificação só para o técnico** (router `/notificacoes`, sino com badge, tela).
 
+## Múltiplos técnicos por atividade (#CR8, 2026-06-24)
+N:N `visita_tecnico` (`Visita.tecnicos`); `usuario_id` = responsável (1º, compat).
+`VisitaIn.usuario_ids` (1+); `VisitaResumo.tecnicos[]` (+ `tecnico_nome/foto` do 1º).
+`GET` filtra por **atribuição** (`tecnicos.any(id=…)`); criação **notifica todos**;
+**qualquer atribuído** fecha (status/observações). Backfill em `db.criar_tabelas`.
+Frontend: criar com **checkbox** de técnicos; célula/card do dia mostram todos.
+
 ## Fechamento de visita (2026-06-24)
 No card do dia: **status** editável (agendada/concluída/cancelada) + **observações**.
 `PATCH /cronograma/{id}` com RBAC — admin edita tudo; **técnico fecha a PRÓPRIA** visita

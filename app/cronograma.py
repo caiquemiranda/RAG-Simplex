@@ -33,7 +33,7 @@ class FeriadoResumo(BaseModel):
 
 
 class VisitaIn(BaseModel):
-    usuario_id: int
+    usuario_ids: list[int]            # técnicos atribuídos (1+); o 1º é o responsável
     cliente_id: int | None = None
     data: date
     titulo: str
@@ -42,6 +42,7 @@ class VisitaIn(BaseModel):
 
 
 class VisitaAtualizar(BaseModel):
+    usuario_ids: list[int] | None = None
     cliente_id: int | None = None
     data: date | None = None
     titulo: str | None = None
@@ -49,11 +50,18 @@ class VisitaAtualizar(BaseModel):
     observacoes: str | None = None
 
 
+class TecnicoMini(BaseModel):
+    id: int
+    nome: str
+    foto: str | None = None
+
+
 class VisitaResumo(BaseModel):
     id: int
-    usuario_id: int
-    tecnico_nome: str
+    usuario_id: int                   # responsável (1º técnico) — compat
+    tecnico_nome: str                 # responsável — compat (dashboard)
     tecnico_foto: str | None = None
+    tecnicos: list[TecnicoMini] = []  # todos os atribuídos (#CR8)
     cliente_id: int | None = None
     cliente_nome: str | None = None
     cliente_cor: str | None = None
@@ -70,6 +78,7 @@ def _resumo(v: Visita) -> VisitaResumo:
         id=v.id, usuario_id=v.usuario_id,
         tecnico_nome=v.usuario.nome or v.usuario.email,
         tecnico_foto=v.usuario.foto_url,
+        tecnicos=[TecnicoMini(id=t.id, nome=t.nome or t.email, foto=t.foto_url) for t in v.tecnicos],
         cliente_id=v.cliente_id,
         cliente_nome=v.cliente.nome if v.cliente else None,
         cliente_cor=v.cliente.cor if v.cliente else None,
@@ -77,6 +86,18 @@ def _resumo(v: Visita) -> VisitaResumo:
         unidade=v.cliente.unidade if v.cliente else None,
         data=v.data, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
     )
+
+
+def _carregar_tecnicos(sessao: Session, ids: list[int]) -> list[Usuario]:
+    vistos: dict[int, Usuario] = {}
+    for uid in ids:
+        if uid in vistos:
+            continue
+        u = sessao.get(Usuario, uid)
+        if u is None:
+            raise HTTPException(status_code=404, detail=f"Técnico {uid} não encontrado.")
+        vistos[uid] = u
+    return list(vistos.values())
 
 
 @router.get("", response_model=list[VisitaResumo])
@@ -88,11 +109,11 @@ def listar(
     sessao: Session = Depends(get_session),
 ) -> list[VisitaResumo]:
     consulta = select(Visita).where(Visita.data >= de, Visita.data <= ate)
-    # Técnico (sem gestão) só enxerga as próprias visitas.
+    # Técnico (sem gestão) só vê visitas em que está atribuído.
     if not usuario.tem_permissao("gerir_usuarios"):
-        consulta = consulta.where(Visita.usuario_id == usuario.id)
+        consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
     elif tecnico_id is not None:
-        consulta = consulta.where(Visita.usuario_id == tecnico_id)
+        consulta = consulta.where(Visita.tecnicos.any(id=tecnico_id))
     return [_resumo(v) for v in sessao.scalars(consulta.order_by(Visita.data))]
 
 
@@ -106,22 +127,25 @@ def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:
 def criar(dados: VisitaIn,
           _: Usuario = Depends(requer("gerir_usuarios")),
           sessao: Session = Depends(get_session)) -> VisitaResumo:
-    if sessao.get(Usuario, dados.usuario_id) is None:
-        raise HTTPException(status_code=404, detail="Técnico não encontrado.")
+    if not dados.usuario_ids:
+        raise HTTPException(status_code=400, detail="Informe ao menos um técnico.")
+    tecnicos = _carregar_tecnicos(sessao, dados.usuario_ids)
     _buscar_cliente(sessao, dados.cliente_id)
     v = Visita(
-        usuario_id=dados.usuario_id, cliente_id=dados.cliente_id, data=dados.data,
+        usuario_id=tecnicos[0].id, cliente_id=dados.cliente_id, data=dados.data,
         titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
     )
+    v.tecnicos = tecnicos
     sessao.add(v)
     sessao.flush()
-    # #CR4: notifica o técnico vinculado à atividade.
+    # #CR4/#CR8: notifica TODOS os técnicos atribuídos à atividade.
     local = f" — {v.cliente.nome}" if v.cliente else ""
-    sessao.add(Notificacao(
-        usuario_id=v.usuario_id, tipo="cronograma",
-        titulo=f"Nova atividade: {v.titulo}",
-        texto=f"{v.data.isoformat()}{local}", ref_id=v.id,
-    ))
+    for t in tecnicos:
+        sessao.add(Notificacao(
+            usuario_id=t.id, tipo="cronograma",
+            titulo=f"Nova atividade: {v.titulo}",
+            texto=f"{v.data.isoformat()}{local}", ref_id=v.id,
+        ))
     sessao.commit()
     sessao.refresh(v)
     return _resumo(v)
@@ -141,13 +165,20 @@ def atualizar(visita_id: int, dados: VisitaAtualizar,
         raise HTTPException(status_code=404, detail="Visita não encontrada.")
     admin = usuario.tem_permissao("gerir_usuarios")
     if not admin:
-        if v.usuario_id != usuario.id:
+        if not any(t.id == usuario.id for t in v.tecnicos):
             raise HTTPException(status_code=403, detail="Sem acesso a esta visita.")
-        if dados.cliente_id is not None or dados.data is not None or dados.titulo is not None:
+        if (dados.cliente_id is not None or dados.data is not None
+                or dados.titulo is not None or dados.usuario_ids is not None):
             raise HTTPException(status_code=403, detail="Técnico só altera status e observações.")
     if dados.status is not None and dados.status not in _STATUS_VALIDOS:
         raise HTTPException(status_code=400, detail="status inválido.")
 
+    if admin and dados.usuario_ids is not None:
+        if not dados.usuario_ids:
+            raise HTTPException(status_code=400, detail="Informe ao menos um técnico.")
+        tecnicos = _carregar_tecnicos(sessao, dados.usuario_ids)
+        v.tecnicos = tecnicos
+        v.usuario_id = tecnicos[0].id
     if admin and dados.cliente_id is not None:
         _buscar_cliente(sessao, dados.cliente_id)
         v.cliente_id = dados.cliente_id

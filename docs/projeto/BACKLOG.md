@@ -128,12 +128,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `/arquivos/biblioteca/...`. Spec [`specs/spec-doc1-biblioteca.md`](specs/spec-doc1-biblioteca.md).
 
 ### I. Novas solicitações (2026-06-24, lote 2)
-- [ ] **#CR8 ⚑ — Múltiplos técnicos por atividade** (item 1): uma visita pode ter
-      **vários técnicos**. Refatora `Visita.usuario_id` (1) → **N:N `visita_tecnico`**.
-      Afeta: criação (selecionar vários), card do dia (lista de técnicos), **notificações**
-      (todos os atribuídos), **"fechar a própria"** (qualquer atribuído), `GET /cronograma`
-      (técnico vê onde está entre os atribuídos), e o agrupamento da célula (#CR6 segue ok).
-      ⚠️ *Refactor do modelo core de Visita + migração.* dep: cronograma ✅.
+- [x] **#CR8 — Múltiplos técnicos por atividade** (item 1): N:N `visita_tecnico`
+      (`Visita.tecnicos`; `usuario_id` = responsável). Criar com **vários técnicos**
+      (checkbox), célula/card do dia mostram todos, **notifica todos**, **GET** filtra por
+      atribuição, **qualquer atribuído fecha**. Backfill na migração. Spec spec-etapa3.
 - [ ] **#ALOC — Alocação fixa de técnicos a clientes** (item 2): alguns técnicos ficam
       **sempre em atividade** num cliente por padrão. Opção: flag na relação
       `usuario_cliente` (ex.: `fixo`) ou entidade de alocação recorrente; o calendário

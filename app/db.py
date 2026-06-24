@@ -51,6 +51,19 @@ def _migrar_colunas(eng: Engine) -> list[str]:
     return adicionadas
 
 
+def _backfill_visita_tecnicos(eng: Engine) -> None:
+    """Backfill #CR8: garante que cada visita tenha o técnico responsável em `visita_tecnico`."""
+    insp = inspect(eng)
+    if {"visita", "visita_tecnico"} <= set(insp.get_table_names()):
+        with eng.begin() as conn:
+            conn.execute(text(
+                "INSERT INTO visita_tecnico (visita_id, usuario_id) "
+                "SELECT v.id, v.usuario_id FROM visita v "
+                "WHERE v.usuario_id IS NOT NULL AND NOT EXISTS "
+                "(SELECT 1 FROM visita_tecnico vt WHERE vt.visita_id = v.id AND vt.usuario_id = v.usuario_id)"
+            ))
+
+
 def criar_tabelas(eng: Engine | None = None) -> list[str]:
     """Cria tabelas faltantes e adiciona colunas novas (idempotente).
 
@@ -58,7 +71,9 @@ def criar_tabelas(eng: Engine | None = None) -> list[str]:
     """
     alvo = eng or engine
     Base.metadata.create_all(alvo)
-    return _migrar_colunas(alvo)
+    migradas = _migrar_colunas(alvo)
+    _backfill_visita_tecnicos(alvo)
+    return migradas
 
 
 def get_session() -> Iterator[Session]:

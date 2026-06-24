@@ -36,6 +36,25 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #CR8: múltiplos técnicos por atividade (Visita N:N)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** N:N `visita_tecnico` + `Visita.tecnicos`; `usuario_id` vira o responsável
+  (1º). Backfill em `db.criar_tabelas` (`_backfill_visita_tecnicos`).
+- **API:** `VisitaIn.usuario_ids` (1+); `VisitaResumo.tecnicos[]` (mantém `tecnico_nome/
+  foto` do 1º p/ o dashboard). `GET` filtra por **atribuição**; criar **notifica todos**;
+  **qualquer atribuído** fecha; admin reatribui via `usuario_ids`.
+- **Frontend:** criar atividade com **checkbox** de técnicos; célula agrupa por cliente
+  mostrando **todos** os técnicos (dedup); card do dia edita técnicos por checkbox.
+- **Testes:** `test_multiplos_tecnicos_por_atividade` → **79 passed**. `tsc` OK.
+  Docs: MODELO_DADOS, spec-etapa3, TESTES, BACKLOG (#CR8 ✅).
+
+**Arquivos:** `app/{modelos,cronograma,db}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — Backlog lote 2 + auditoria de docs
 
 - **Backlog §I (lote 2):** **#CR8** múltiplos técnicos por atividade (Visita → N:N;

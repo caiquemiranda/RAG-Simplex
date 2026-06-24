@@ -57,6 +57,14 @@ usuario_cliente = Table(
     Column("cliente_id", ForeignKey("cliente.id"), primary_key=True),
 )
 
+# Técnicos atribuídos a uma visita/atividade (N:N) — #CR8 (vários técnicos por atividade).
+visita_tecnico = Table(
+    "visita_tecnico",
+    Base.metadata,
+    Column("visita_id", ForeignKey("visita.id", ondelete="CASCADE"), primary_key=True),
+    Column("usuario_id", ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -149,7 +157,8 @@ class Visita(Base):
     __tablename__ = "visita"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))  # técnico
+    # Técnico responsável (1º da lista) — mantido para compat; a lista completa é `tecnicos`.
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
     cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
     data: Mapped[date] = mapped_column(Date)
     titulo: Mapped[str] = mapped_column(String(160))            # atividade do dia
@@ -158,6 +167,7 @@ class Visita(Base):
 
     usuario: Mapped[Usuario] = relationship()
     cliente: Mapped[Cliente | None] = relationship()
+    tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
 
 
 class Feriado(Base):

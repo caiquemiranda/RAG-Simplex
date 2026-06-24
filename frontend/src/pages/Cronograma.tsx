@@ -9,19 +9,21 @@ import { STATUS_VISITA, isoData as fmt } from '../lib/format'
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STATUS_COR = STATUS_VISITA
 
-type GrupoCliente = { key: string; nome: string; cor: string | null; logo: string | null; visitas: Visita[] }
+type TecMini = { id: number; nome: string; foto: string | null }
+type GrupoCliente = { key: string; nome: string; cor: string | null; logo: string | null; visitas: Visita[]; tecnicos: TecMini[] }
 
-/** Agrupa as visitas do dia por cliente (2+ técnicos do mesmo cliente → um card). */
+/** Agrupa as visitas do dia por cliente; coleta os técnicos (dedup) — #CR6/#CR8. */
 function agruparPorCliente(evs: Visita[]): GrupoCliente[] {
   const m = new Map<string, GrupoCliente>()
   for (const v of evs) {
     const key = v.cliente_id != null ? `c${v.cliente_id}` : 'sem'
     let g = m.get(key)
     if (!g) {
-      g = { key, nome: v.cliente_nome ?? v.titulo, cor: v.cliente_cor, logo: v.cliente_logo, visitas: [] }
+      g = { key, nome: v.cliente_nome ?? v.titulo, cor: v.cliente_cor, logo: v.cliente_logo, visitas: [], tecnicos: [] }
       m.set(key, g)
     }
     g.visitas.push(v)
+    for (const t of v.tecnicos) if (!g.tecnicos.some((x) => x.id === t.id)) g.tecnicos.push(t)
   }
   return [...m.values()]
 }
@@ -41,7 +43,7 @@ export default function Cronograma() {
   const [tecnicoFiltro, setTecnicoFiltro] = useState<number | ''>('')
   const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
-  const [nova, setNova] = useState({ usuario_id: '' as number | '', cliente_id: '' as number | '', titulo: '', status: 'agendada' })
+  const [nova, setNova] = useState<{ usuarioIds: Set<number>; cliente_id: number | ''; titulo: string }>({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
 
   const de = fmt(new Date(ref.ano, ref.mes, 1))
   const ate = fmt(new Date(ref.ano, ref.mes + 1, 0))
@@ -113,14 +115,14 @@ export default function Cronograma() {
   })
 
   async function adicionar() {
-    if (!diaSel || !nova.usuario_id || !nova.titulo.trim()) return
+    if (!diaSel || nova.usuarioIds.size === 0 || !nova.titulo.trim()) return
     try {
       await api.cronograma.criar({
-        usuario_id: nova.usuario_id as number,
+        usuario_ids: Array.from(nova.usuarioIds),
         cliente_id: nova.cliente_id === '' ? null : (nova.cliente_id as number),
-        data: diaSel, titulo: nova.titulo.trim(), status: nova.status,
+        data: diaSel, titulo: nova.titulo.trim(),
       })
-      setNova({ usuario_id: '', cliente_id: '', titulo: '', status: 'agendada' })
+      setNova({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
       recarregar()
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao adicionar visita')
@@ -199,10 +201,10 @@ export default function Cronograma() {
                           <span className="truncate text-[11px] font-medium">{g.nome}</span>
                         </div>
                         <div className="mt-0.5 flex -space-x-1">
-                          {g.visitas.slice(0, 4).map((v) => (
-                            <Avatar key={v.id} nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-4 w-4 border border-card text-[7px]" title={v.tecnico_nome} />
+                          {g.tecnicos.slice(0, 4).map((t) => (
+                            <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto} className="h-4 w-4 border border-card text-[7px]" title={t.nome} />
                           ))}
-                          {g.visitas.length > 4 && <span className="pl-1.5 text-[9px] text-muted-foreground">+{g.visitas.length - 4}</span>}
+                          {g.tecnicos.length > 4 && <span className="pl-1.5 text-[9px] text-muted-foreground">+{g.tecnicos.length - 4}</span>}
                         </div>
                       </div>
                     ))}
@@ -284,12 +286,23 @@ export default function Cronograma() {
                       </select>
                     </div>
                     {podeGerir ? (
-                      <div className="grid grid-cols-2 gap-1">
-                        <select className="h-8 rounded border bg-background px-1 text-xs" value={v.usuario_id}
-                                onChange={(e) => atualizarVisita(v.id, { usuario_id: Number(e.target.value) })}>
-                          {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
-                        </select>
-                        <select className="h-8 rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap gap-1">
+                          {tecnicos.map((t) => {
+                            const marcado = v.tecnicos.some((x) => x.id === t.id)
+                            return (
+                              <label key={t.id} className={`flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] ${marcado ? 'border-primary bg-accent' : ''}`}>
+                                <input type="checkbox" checked={marcado} onChange={(e) => {
+                                  const ids = new Set(v.tecnicos.map((x) => x.id))
+                                  if (e.target.checked) ids.add(t.id); else ids.delete(t.id)
+                                  if (ids.size > 0) atualizarVisita(v.id, { usuario_ids: Array.from(ids) })
+                                }} />
+                                {t.nome || t.email}
+                              </label>
+                            )
+                          })}
+                        </div>
+                        <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
                                 onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
                           <option value="">sem cliente</option>
                           {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -318,20 +331,33 @@ export default function Cronograma() {
             {podeGerir && (
               <div className="mt-3 space-y-2 border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground">Adicionar atividade</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Técnicos (1+):</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tecnicos.map((t) => {
+                      const marcado = nova.usuarioIds.has(t.id)
+                      return (
+                        <label key={t.id} className={`flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-xs ${marcado ? 'border-primary bg-accent' : ''}`}>
+                          <input type="checkbox" checked={marcado} onChange={(e) => {
+                            const s = new Set(nova.usuarioIds)
+                            if (e.target.checked) s.add(t.id); else s.delete(t.id)
+                            setNova({ ...nova, usuarioIds: s })
+                          }} />
+                          {t.nome || t.email}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.usuario_id}
-                          onChange={(e) => setNova({ ...nova, usuario_id: e.target.value ? Number(e.target.value) : '' })}>
-                    <option value="">Técnico…</option>
-                    {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
-                  </select>
                   <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.cliente_id}
                           onChange={(e) => setNova({ ...nova, cliente_id: e.target.value ? Number(e.target.value) : '' })}>
                     <option value="">Cliente (opcional)…</option>
                     {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                   </select>
-                  <Input className="sm:col-span-2" value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Atividade (ex.: Manutenção 4100)" />
+                  <Input value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Atividade (ex.: Manutenção 4100)" />
                 </div>
-                <Button size="sm" onClick={adicionar} disabled={!nova.usuario_id || !nova.titulo.trim()}>Adicionar</Button>
+                <Button size="sm" onClick={adicionar} disabled={nova.usuarioIds.size === 0 || !nova.titulo.trim()}>Adicionar</Button>
               </div>
             )}
           </div>

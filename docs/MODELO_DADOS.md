@@ -15,7 +15,8 @@ erDiagram
   USUARIO }o--o{ CLIENTE : "N:N usuario_cliente (atende)"
   USUARIO ||--o{ DOCUMENTO_TECNICO : "1:N"
   USUARIO ||--o{ LOG_CONSULTA : "1:N (usuario_id)"
-  USUARIO ||--o{ VISITA : "1:N (técnico)"
+  USUARIO ||--o{ VISITA : "1:N (responsável)"
+  USUARIO }o--o{ VISITA : "N:N visita_tecnico (atribuídos)"
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
   PROVEDOR ||--o{ CONFIG_ESTRATEGIA : "0..1 (provedor_id)"
@@ -54,7 +55,7 @@ erDiagram
   }
   VISITA {
     int id PK
-    int usuario_id FK "técnico"
+    int usuario_id FK "responsável (1º); demais em visita_tecnico"
     int cliente_id FK "opcional"
     date data
     string titulo "atividade"
@@ -139,9 +140,11 @@ por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece na
 mas não é mais usado pela API.
 
 ### Visita (cronograma)
-Atividade agendada de um técnico (`usuario_id`) num dia (`data`), opcionalmente num
-cliente (`cliente_id`), com `status`. Técnico vê as próprias; admin vê todas. Ver
-[`FLUXOS.md`](FLUXOS.md) e o spec [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), com
+`status`. **Vários técnicos** podem ser atribuídos (N:N `visita_tecnico`, #CR8);
+`usuario_id` é o responsável (1º) por compatibilidade. Técnico vê visitas em que está
+atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
+Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
 
 ### Feriado / Notificacao
 `Feriado` (global): data única + descrição; destaca o dia no cronograma.
