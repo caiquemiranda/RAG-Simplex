@@ -9,6 +9,35 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 8 (parte 1) — Chat + markdown na resposta
+
+**Branch:** `feat/fase-7-frontend` (continuação).
+
+**Contexto:** frontend já subiu e funciona (login + consulta). Usuário pediu layout
+de **chat** (estilo ChatGPT/Claude) e **renderização do markdown**.
+
+**Feito:**
+- `Consulta.tsx` reescrita como **chat**: histórico rolável (bolhas usuário/assistente)
+  + input fixo no rodapé + auto-scroll + estado "Consultando…".
+- `components/Markdown.tsx`: `react-markdown` + `remark-gfm` + tipografia Tailwind;
+  blockquote com **AVISO DE SEGURANÇA** vira caixa de alerta vermelha em destaque.
+- `Layout.tsx` em altura cheia (`h-screen` flex-col) p/ o input fixar embaixo;
+  `Home.tsx` ajustado p/ rolagem própria.
+- Deps: `react-markdown`, `remark-gfm`, `@tailwindcss/typography` (plugin no tailwind).
+
+**Validação:** **não testado aqui** (npm bloqueado). Requer `npm install` (deps novas)
++ `npm run dev`. Revisão por leitura.
+
+**Observação:** a busca trouxe "Node Missing" como #1 para "head missing" — é a
+calibração de recuperação (**D-015**, pendente), independente do layout.
+
+**Próximo:** validar build; depois streaming + feedback (resto da Fase 8) e Docker.
+
+**Arquivos:** `frontend/src/{pages/Consulta,pages/Home,components/Layout,components/Markdown}.tsx`,
+`frontend/package.json`, `frontend/tailwind.config.js`.
+
+---
+
 ## 2026-06-23 — Fase 7 (parte 1) — Frontend React: base + auth
 
 **Branch:** `feat/fase-7-frontend`.

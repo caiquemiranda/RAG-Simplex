@@ -20,7 +20,7 @@ administrativo e controle de acesso por usuário**.
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | 🔄 |
-| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
+| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | 🔄 |
 | 9 | Frontend — painel ADM | ❌ Não | ⬜ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
 | 11 | Avaliação de qualidade (RAGAS-lite) & hardening | parcial | ⬜ |
@@ -186,15 +186,18 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 8 — Frontend: chat do técnico ⬜
+## Fase 8 — Frontend: chat do técnico 🔄
 
-- [ ] Tela de consulta; render da **dupla camada** com destaque do aviso de segurança
-- [ ] **Streaming** na UI; exibição das fontes (similaridade)
-- [ ] Camadas conforme papel; feedback 👍/👎
+- [x] Interface de **chat** (histórico rolável + input fixo, estilo ChatGPT/Claude)
+- [x] Render de **markdown** da dupla camada (`react-markdown` + typography)
+- [x] **Aviso de segurança em destaque** (caixa vermelha via blockquote customizado)
+- [x] Exibição das fontes (similaridade) e das camadas exibidas
+- [ ] **Streaming** (`/query/stream`) na UI
+- [ ] Feedback 👍/👎 (precisa de endpoint no backend)
 
-**Testes:** [ ] dupla camada renderiza · [ ] aviso aparece quando presente · [ ] fallback claro
+**Testes (na máquina do dev — npm bloqueado aqui):** [ ] dupla camada renderiza · [ ] aviso em destaque · [ ] fallback claro
 
-**DoD:** técnico pergunta e recebe resposta formatada com fontes (usando o extrativo).
+**DoD:** técnico pergunta e recebe resposta formatada (markdown), com fontes.
 
 ---
 

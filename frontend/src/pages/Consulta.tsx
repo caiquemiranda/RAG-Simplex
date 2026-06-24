@@ -1,72 +1,136 @@
-import { useState, type FormEvent } from 'react'
-import { api, type RespostaQuery } from '../lib/api'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { api, type Fonte, type RespostaQuery } from '../lib/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Markdown } from '../components/Markdown'
 
-// Versão base da consulta (Fase 7). A renderização rica em markdown da dupla
-// camada e o streaming entram na Fase 8.
+type Mensagem =
+  | { autor: 'usuario'; texto: string }
+  | {
+      autor: 'assistente'
+      texto: string
+      fontes: Fonte[]
+      camadas: string[]
+      fallback: boolean
+    }
+
+/** Assistente em formato de chat: histórico rolável + entrada fixa, resposta
+ *  renderizada como markdown (dupla camada + aviso de segurança em destaque). */
 export default function Consulta() {
+  const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [pergunta, setPergunta] = useState('')
-  const [resposta, setResposta] = useState<RespostaQuery | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
+  const fimRef = useRef<HTMLDivElement>(null)
 
-  async function onSubmit(e: FormEvent) {
+  useEffect(() => {
+    fimRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [mensagens, carregando])
+
+  async function enviar(e: FormEvent) {
     e.preventDefault()
-    setErro(null)
+    const texto = pergunta.trim()
+    if (!texto || carregando) return
+
+    setMensagens((m) => [...m, { autor: 'usuario', texto }])
+    setPergunta('')
     setCarregando(true)
-    setResposta(null)
     try {
-      setResposta(await api.query(pergunta))
+      const r: RespostaQuery = await api.query(texto)
+      setMensagens((m) => [
+        ...m,
+        {
+          autor: 'assistente',
+          texto: r.resposta,
+          fontes: r.fontes,
+          camadas: r.camadas_exibidas,
+          fallback: r.fallback,
+        },
+      ])
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha na consulta')
+      setMensagens((m) => [
+        ...m,
+        {
+          autor: 'assistente',
+          texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`,
+          fontes: [],
+          camadas: [],
+          fallback: true,
+        },
+      ])
     } finally {
       setCarregando(false)
     }
   }
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={onSubmit} className="flex gap-2">
-        <Input
-          value={pergunta}
-          onChange={(e) => setPergunta(e.target.value)}
-          placeholder="Ex.: HEAD MISSING no loop do 4100"
-          required
-        />
-        <Button type="submit" disabled={carregando}>
-          {carregando ? '…' : 'Consultar'}
-        </Button>
-      </form>
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl space-y-4 p-4">
+          {mensagens.length === 0 && (
+            <div className="mt-16 text-center text-muted-foreground">
+              <p className="text-lg font-medium text-foreground">Assistente técnico Simplex</p>
+              <p className="mt-2 text-sm">
+                Descreva a falha do painel ou cole o código exibido no display.
+              </p>
+              <p className="mt-4 text-xs">
+                Ex.: “HEAD MISSING no loop do 4100”, “painel apitando, luz vermelha piscando”.
+              </p>
+            </div>
+          )}
 
-      {erro && <p className="text-sm text-destructive">{erro}</p>}
-
-      {resposta && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {resposta.fallback ? 'Sem correspondência segura' : 'Resposta'}
-              {resposta.camadas_exibidas.length > 0 && (
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  ({resposta.camadas_exibidas.join(', ')})
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <pre className="whitespace-pre-wrap font-sans text-sm">{resposta.resposta}</pre>
-            {resposta.fontes.length > 0 && (
-              <div className="border-t pt-2 text-xs text-muted-foreground">
-                <span className="font-medium">Fontes: </span>
-                {resposta.fontes
-                  .map((f) => `${f.header} (${f.similaridade.toFixed(2)})`)
-                  .join(' · ')}
+          {mensagens.map((m, i) =>
+            m.autor === 'usuario' ? (
+              <div key={i} className="flex justify-end">
+                <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground">
+                  {m.texto}
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            ) : (
+              <div key={i} className="flex justify-start">
+                <div className="w-full rounded-2xl border bg-card px-4 py-3 shadow-sm">
+                  {m.camadas.length > 0 && (
+                    <div className="mb-1 text-xs text-muted-foreground">
+                      Camadas exibidas: {m.camadas.join(', ')}
+                    </div>
+                  )}
+                  <Markdown content={m.texto} />
+                  {m.fontes.length > 0 && (
+                    <div className="mt-3 border-t pt-2 text-xs text-muted-foreground">
+                      <span className="font-medium">Fontes: </span>
+                      {m.fontes
+                        .map((f) => `${f.header} (${f.similaridade.toFixed(2)})`)
+                        .join(' · ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ),
+          )}
+
+          {carregando && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl border bg-card px-4 py-3 text-sm text-muted-foreground">
+                Consultando a base…
+              </div>
+            </div>
+          )}
+          <div ref={fimRef} />
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t bg-background">
+        <form onSubmit={enviar} className="mx-auto flex max-w-3xl gap-2 p-4">
+          <Input
+            value={pergunta}
+            onChange={(e) => setPergunta(e.target.value)}
+            placeholder="Descreva a falha ou cole o código do display…"
+            autoFocus
+          />
+          <Button type="submit" disabled={carregando || !pergunta.trim()}>
+            Enviar
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

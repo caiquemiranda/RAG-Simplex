@@ -2,7 +2,8 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from './ui/button'
 
-/** Casca da aplicação: cabeçalho com navegação por papel + área de conteúdo. */
+/** Casca da aplicação em altura cheia: cabeçalho fixo + área de conteúdo rolável.
+ *  As páginas controlam a própria rolagem (`h-full`). */
 export default function Layout() {
   const { usuario, sair } = useAuth()
   const navegar = useNavigate()
@@ -14,8 +15,8 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b">
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      <header className="shrink-0 border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 p-4">
           <Link to="/" className="font-semibold">
             RAG-Simplex
@@ -35,7 +36,7 @@ export default function Layout() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl p-4">
+      <main className="min-h-0 flex-1">
         <Outlet />
       </main>
     </div>
