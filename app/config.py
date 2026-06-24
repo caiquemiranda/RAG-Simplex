@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # Gere uma com: python -m app.cripto
     secret_key: str = ""
 
+    # --- CORS (frontend React) ---
+    # Origens permitidas (separadas por vírgula). O front de dev roda em :5173.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
     # --- Autenticação (JWT) ---
     # Segredo HMAC dos tokens. Se vazio, usa `secret_key` como fallback.
     jwt_secret: str = ""

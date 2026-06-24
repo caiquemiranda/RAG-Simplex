@@ -9,6 +9,33 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 7 (parte 1) — Frontend React: base + auth
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito:**
+- Scaffold `frontend/` — Vite + React + TS + Tailwind, pronto p/ shadcn/ui (alias
+  `@/`, `cn()`, variáveis CSS de tema). Componentes UI base: button/input/label/card.
+- Auth: `AuthContext` (entrar/sair, valida sessão via `/auth/me`, token no
+  localStorage), `ProtectedRoute`, `Layout` com navegação por papel.
+- Páginas: `Login`, `Home` (usuário/permissões), `Consulta` (consulta básica a `/query`).
+- Cliente HTTP `lib/api.ts` com tipos da API.
+- Backend: **CORS** (`CORSMiddleware`) + `settings.cors_origins` (`RAG_CORS_ORIGINS`).
+- `.gitignore` raiz ignora `frontend/node_modules` e `frontend/dist`.
+
+**Decisões aplicadas:** D-010 (Vite+React+TS+Tailwind+shadcn).
+
+**Validação:** backend `pytest` = **44 passed** (com CORS). Frontend **não testado
+aqui** (npm bloqueado por SSL corporativo) — revisão por leitura; build roda na
+máquina do dev.
+
+**Próximo:** validar build do frontend; depois Docker (D-017); Fase 8 (chat).
+
+**Arquivos:** `frontend/**`, `app/{main,config}.py`, `.gitignore`,
+`docs/projeto/specs/spec-fase-7-frontend.md`.
+
+---
+
 ## 2026-06-23 — Fase 6 — Painel ADM (API)
 
 **Branch:** `feat/fase-6-admin` (sobre a 5).

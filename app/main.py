@@ -16,6 +16,7 @@ Execução local:
 from __future__ import annotations
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -47,6 +48,15 @@ app = FastAPI(
     version=__version__,
 )
 app.include_router(admin_router)
+
+# CORS para o frontend React (origens configuráveis via RAG_CORS_ORIGINS).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # --------------------------------------------------------------------------- #

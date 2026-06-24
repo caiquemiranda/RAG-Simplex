@@ -19,7 +19,7 @@ administrativo e controle de acesso por usuário**.
 | 4 | Autenticação (JWT) | ❌ Não | ✅ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
-| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ⬜ |
+| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | 🔄 |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ⬜ |
 | 9 | Frontend — painel ADM | ❌ Não | ⬜ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
@@ -164,11 +164,12 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 7 — Frontend React: base + autenticação + **containerização** ⬜
+## Fase 7 — Frontend React: base + autenticação + **containerização** 🔄
 
-- [ ] Scaffold Vite + React + TypeScript + Tailwind (D-010)
-- [ ] Cliente HTTP + token; login; rotas protegidas; logout
-- [ ] Layout base (navegação por papel)
+- [x] Scaffold Vite + React + TypeScript + Tailwind (D-010), pronto p/ shadcn/ui
+- [x] Cliente HTTP + token; login; rotas protegidas; logout
+- [x] Layout base (navegação por papel); CORS no backend
+- [ ] Validar build na máquina do dev (`npm install && npm run dev`) — npm bloqueado aqui
 
 **Docker (D-017) — orquestrar backend + frontend juntos:**
 - [ ] `Dockerfile` do backend (FastAPI + Chroma embarcado + SQLite + e5); **modelo e5

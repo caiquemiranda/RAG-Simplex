@@ -7,22 +7,23 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-6-admin` (empilhada sobre a 5; push via `http.sslBackend schannel`).
-- **Fase 6 ✅ concluída:** Painel ADM (API) — router `/admin` com CRUD de usuários,
-  estratégia/camadas/permissão extra por usuário, config global, auditoria e
-  provedores (chave **cifrada**, nunca em claro). **44 testes passando**.
-- **Fases 0–5 ✅:** RAG + extrativo + persistência + auth JWT + RBAC.
-- **Próxima fase:** **Fase 7 — Frontend React (base + auth) + Docker** (D-017).
+- **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
+- **Fase 7 🔄 em andamento:** frontend **base + auth ✅** (Vite+React+TS+Tailwind,
+  pronto p/ shadcn — login, rotas protegidas, layout por papel, cliente da API) +
+  **CORS** no backend. **Falta: validar `npm install/build` (npm bloqueado aqui) e o
+  Docker (D-017).** Backend: **44 testes passando**.
+- **Fases 0–6 ✅:** backend completo (RAG, extrativo, persistência, auth, RBAC, ADM).
 
 ## ⏭️ Próximos passos
 
-1. **Fase 7 — Frontend React + Docker:** scaffold Vite+React+TS+Tailwind (D-010),
-   login + rotas protegidas; depois `Dockerfile` backend (e5 pré-cacheado) +
-   `Dockerfile` frontend + `docker-compose` (D-017). **Confirmar D-010 antes.**
-2. **Pendência aberta (D-015):** calibrar o limiar — `python -m app.recuperacao --diagnostico`.
+1. **Validar o frontend** na máquina do dev: `cd frontend && npm install && npm run dev`
+   (se SSL: `npm config set cafile <CA>`). Reportar erros de build → eu ajusto.
+2. **Docker (D-017):** `Dockerfile` backend (e5 pré-cacheado) + `Dockerfile` frontend
+   (nginx) + `docker-compose` (volumes p/ `data/` e cache do modelo).
+3. **Fase 8:** chat do técnico (markdown da dupla camada, aviso em destaque, streaming).
+4. **Pendência (D-015):** calibrar limiar (`python -m app.recuperacao --diagnostico`).
 
-> ⚠️ Backend completo: `python -m app.db --init` + `python -m app.auth --criar-admin ...`
-> antes de subir a API. A partir da Fase 7 começa o frontend (Node/React).
+> Para rodar tudo: backend (`uvicorn app.main:app --reload`) + frontend (`npm run dev`).
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
