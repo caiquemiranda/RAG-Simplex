@@ -69,7 +69,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
     const railBtn = 'rounded-lg p-2 hover:bg-accent'
     const railLink = ({ isActive }: { isActive: boolean }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`
     return (
-      <aside className="flex h-full w-[56px] flex-col items-center gap-1 border-r bg-muted/30 py-2">
+      <aside className="flex h-full w-[56px] flex-col items-center gap-1 border-r bg-muted py-2">
         <button className={railBtn} title="Abrir barra lateral" onClick={onAbrir}><IconPainel /></button>
         <NavLink to="/consulta" className={railLink} title="Consulta" onClick={navegou}><IconConsulta /></NavLink>
         <NavLink to="/relatorios" className={railLink} title="Relatórios" onClick={navegou}><IconRelatorios /></NavLink>
@@ -84,7 +84,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
 
   /* ---- Barra completa ---- */
   return (
-    <aside className="flex h-full w-[260px] flex-col border-r bg-muted/30">
+    <aside className="flex h-full w-[260px] flex-col border-r bg-muted">
       <div className="flex items-center justify-between p-2">
         <span className="px-2 text-sm font-semibold">RAG-Simplex</span>
         <button className="rounded-lg p-2 hover:bg-accent" title="Fechar barra lateral" onClick={onFechar}><IconPainel /></button>

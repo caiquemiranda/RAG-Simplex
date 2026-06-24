@@ -59,11 +59,12 @@ if (-not (Test-Path $activate)) {
     & $activate
 }
 
-# --- Banco + admin padrao (apenas na primeira vez) ---
+# --- Banco: cria/atualiza schema sempre (idempotente, aplica micro-migrações) ---
 $dbFile = Join-Path $raiz 'data\processed\ragsimplex.db'
-if (-not (Test-Path $dbFile)) {
-    Write-Host '== Inicializando o banco (db --init) ==' -ForegroundColor Cyan
-    python -m app.db --init
+$dbNovo = -not (Test-Path $dbFile)
+Write-Host '== Banco: criando/atualizando schema (db --init) ==' -ForegroundColor Cyan
+python -m app.db --init
+if ($dbNovo) {
     Write-Host '== Criando admin padrao ==' -ForegroundColor Cyan
     python -m app.auth --criar-admin admin@local admin123
     Write-Host '   >>> Login: admin@local   Senha: admin123   (troque depois!)' -ForegroundColor Green

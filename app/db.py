@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -26,9 +26,39 @@ engine: Engine = create_engine(settings.database_url, echo=False, connect_args=_
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
-def criar_tabelas(eng: Engine | None = None) -> None:
-    """Cria todas as tabelas (idempotente)."""
-    Base.metadata.create_all(eng or engine)
+def _migrar_colunas(eng: Engine) -> list[str]:
+    """Adiciona colunas que existem no modelo mas faltam na tabela.
+
+    Micro-migração para evoluções **simples** de schema sem recriar o banco
+    (ex.: a coluna ``feedback`` da Fase 8). Cobre apenas colunas **nullable** e
+    sem PK/unique — mudanças complexas continuam exigindo migração dedicada.
+    Retorna a lista de colunas adicionadas (ex.: ``["log_consulta.feedback"]``).
+    """
+    insp = inspect(eng)
+    tabelas_db = set(insp.get_table_names())
+    adicionadas: list[str] = []
+    for tabela in Base.metadata.sorted_tables:
+        if tabela.name not in tabelas_db:
+            continue  # create_all já cuidou de tabelas novas
+        existentes = {c["name"] for c in insp.get_columns(tabela.name)}
+        for coluna in tabela.columns:
+            if coluna.name in existentes or coluna.primary_key or coluna.unique or not coluna.nullable:
+                continue
+            tipo = coluna.type.compile(eng.dialect)
+            with eng.begin() as conn:
+                conn.execute(text(f'ALTER TABLE "{tabela.name}" ADD COLUMN "{coluna.name}" {tipo}'))
+            adicionadas.append(f"{tabela.name}.{coluna.name}")
+    return adicionadas
+
+
+def criar_tabelas(eng: Engine | None = None) -> list[str]:
+    """Cria tabelas faltantes e adiciona colunas novas (idempotente).
+
+    Retorna as colunas migradas (pode ser lista vazia).
+    """
+    alvo = eng or engine
+    Base.metadata.create_all(alvo)
+    return _migrar_colunas(alvo)
 
 
 def get_session() -> Iterator[Session]:
@@ -46,8 +76,10 @@ def _main() -> None:
     parser.add_argument("--init", action="store_true", help="Cria tabelas e semeia padrões.")
     args = parser.parse_args()
 
-    criar_tabelas()
+    migradas = criar_tabelas()
     print(f"Tabelas criadas em: {settings.database_url}")
+    if migradas:
+        print(f"Colunas migradas: {', '.join(migradas)}")
     if args.init:
         with SessionLocal() as sessao:
             criados = semear_padroes(sessao)
