@@ -9,6 +9,7 @@ Requisitos de produto: [`prd_sistema_rag_simplex.md`](prd_sistema_rag_simplex.md
 > [`MODELO_DADOS.md`](MODELO_DADOS.md) (ER + entidades) ·
 > [`FLUXOS.md`](FLUXOS.md) (diagramas de sequência) ·
 > [`TECNOLOGIAS.md`](TECNOLOGIAS.md) (stack, parâmetros exatos, equivalentes) ·
+> [`DESIGN.md`](DESIGN.md) (identidade visual + tema) ·
 > [`TESTES.md`](TESTES.md) · [`projeto/BACKLOG.md`](projeto/BACKLOG.md) (tarefas + plano).
 
 ## 1. O que é

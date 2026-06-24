@@ -5,15 +5,25 @@ import App from './App'
 import './index.css'
 import { AuthProvider } from './auth/AuthContext'
 import { ChatProvider } from './chat/ChatContext'
+import { ThemeProvider } from './theme/ThemeContext'
+
+// Aplica o tema salvo antes do render (evita "flash" do tema claro).
+{
+  const salvo = localStorage.getItem('rag-tema')
+  const escuro = salvo ? salvo === 'escuro' : window.matchMedia?.('(prefers-color-scheme: dark)').matches
+  document.documentElement.classList.toggle('dark', !!escuro)
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <ChatProvider>
-          <App />
-        </ChatProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ChatProvider>
+            <App />
+          </ChatProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>,
 )

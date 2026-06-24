@@ -2,23 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Identidade visual IBSystems — paleta ciano → teal (verde-água) em gradiente.
+  Marca: --brand (ciano) → --brand-2 (teal). Tokens em HSL "H S% L%".
+*/
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 200 18% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --card-foreground: 200 18% 12%;
+    --primary: 175 75% 33%;          /* teal da marca (botões/links) */
+    --primary-foreground: 0 0% 100%;
+    --muted: 180 22% 96%;
+    --muted-foreground: 200 10% 40%;
+    --accent: 178 44% 92%;           /* hover/realces — teal claríssimo */
+    --accent-foreground: 176 70% 22%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 200 16% 88%;
+    --input: 200 16% 88%;
+    --ring: 175 75% 33%;
+    --brand: 184 78% 45%;            /* ciano (logo, esquerda) */
+    --brand-2: 168 46% 42%;          /* teal (logo, direita) */
+  }
+
+  .dark {
+    --background: 200 26% 8%;
+    --foreground: 180 12% 92%;
+    --card: 200 22% 11%;
+    --card-foreground: 180 12% 92%;
+    --primary: 175 68% 44%;          /* teal mais claro p/ fundo escuro */
+    --primary-foreground: 200 30% 8%;
+    --muted: 200 18% 16%;
+    --muted-foreground: 190 8% 62%;
+    --accent: 195 30% 20%;
+    --accent-foreground: 180 35% 90%;
+    --destructive: 0 62% 46%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 200 16% 22%;
+    --input: 200 16% 22%;
+    --ring: 175 68% 44%;
+    --brand: 184 80% 52%;
+    --brand-2: 168 52% 50%;
   }
 }
 

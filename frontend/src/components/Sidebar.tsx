@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
+import { useTema } from '../theme/ThemeContext'
+import { Logo } from './Logo'
 
 /* ---- Ícones (SVG inline) ---- */
 const ic = 'h-[18px] w-[18px] shrink-0'
@@ -37,6 +39,7 @@ type Props = {
 export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props) {
   const { usuario, sair } = useAuth()
   const { conversas, conversaAtivaId, novaConsulta, selecionar, excluir } = useChat()
+  const { tema, alternar } = useTema()
   const navegar = useNavigate()
   const local = useLocation()
   const pode = (p: string) => usuario?.permissoes.includes(p) ?? false
@@ -88,7 +91,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   return (
     <aside className="flex h-full w-[260px] flex-col border-r bg-muted">
       <div className="flex items-center justify-between p-2">
-        <span className="px-2 text-sm font-semibold">RAG-Simplex</span>
+        <Logo className="ml-1" />
         <button className="rounded-lg p-2 hover:bg-accent" title="Fechar barra lateral" onClick={onFechar}><IconPainel /></button>
       </div>
 
@@ -155,6 +158,10 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
               {pode('gerir_usuarios') && (
                 <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => irPara('/admin')}>Painel ADM</button>
               )}
+              <button className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent" onClick={alternar}>
+                <span>Tema</span>
+                <span className="text-muted-foreground">{tema === 'escuro' ? '🌙 escuro' : '☀️ claro'}</span>
+              </button>
               <button className="block w-full border-t px-3 py-2 text-left text-sm text-destructive hover:bg-accent" onClick={logout}>Sair</button>
             </div>
           </>

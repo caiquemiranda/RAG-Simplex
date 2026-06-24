@@ -9,6 +9,25 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — #D1/#D2 — Identidade visual IBSystems + tema claro/escuro
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#D1:** paleta da marca (ciano `--brand` → teal `--brand-2`; `--primary` teal) nos
+  tokens (`index.css` + `tailwind.config`). Logo IBSystems no topo da sidebar, header
+  mobile e login via `components/Logo.tsx` (usa `/logo.png`, **fallback** texto gradiente
+  se faltar). Falta só o usuário colocar `frontend/public/logo.png`.
+- **#D2:** `theme/ThemeContext.tsx` (classe `dark` no `<html>` + persistência `rag-tema`,
+  respeita `prefers-color-scheme`, aplicado antes do render p/ evitar flash). Toggle no
+  menu do usuário. Bloco `.dark` no `index.css`. `tsc` OK.
+- Doc: novo [`docs/DESIGN.md`](../DESIGN.md). Backlog #D1/#D2 = ✅.
+
+**Arquivos:** `frontend/src/{index.css,main.tsx,theme/ThemeContext,components/{Logo,
+Sidebar,Layout},pages/Login}.tsx`, `frontend/tailwind.config.js`, `frontend/public/README.md`,
+`docs/DESIGN.md`.
+
+---
+
 ## 2026-06-24 — Documentação de portabilidade + backlog/planejamento
 
 **Branch:** `feat/fase-7-frontend`.

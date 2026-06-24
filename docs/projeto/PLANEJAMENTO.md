@@ -22,7 +22,7 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | Painel ADM em cards (usuários+perfil+documentos, auditoria) | ✅ |
 | Cronograma (calendário mensal, dados de exemplo) | ✅ (UI) |
 | Cards ADM: API keys / Banco / Clientes | ⬜ placeholder |
-| **Identidade visual da empresa + tema claro/escuro** | ⬜ (aguarda paleta/logo) |
+| **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo PNG) |
 | **Redesign: lista de usuários (foto+cargo) e edição como tela própria** | ⬜ |
 | **Cronograma: card do dia (visão ADM/técnico)** | ⬜ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |

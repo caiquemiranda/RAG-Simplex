@@ -49,11 +49,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [ ] Spec de cada novo módulo (Clientes, Cronograma, API keys).
 
 ### G. Design, tema e telas (solicitações 2026-06-24)
-- [ ] **#D1 — Identidade visual da empresa**: aplicar **paleta/cores e logo** da empresa
-      nos tokens do tema (`index.css` + `tailwind.config`). ⛔ *Bloqueado:* aguardando a
-      paleta/branding (cores em hex, logo). Tokens já são variáveis CSS → troca centralizada.
-- [ ] **#D2 — Tema claro/escuro** em todo o sistema: toggle + persistência (`darkMode:'class'`
-      já habilitado no Tailwind; faltam as variáveis do tema escuro e o switch na UI).
+- [x] **#D1 — Identidade visual (IBSystems)**: paleta ciano→teal nos tokens (`index.css` +
+      `tailwind.config`); logo no topo/login com fallback gradiente. Falta só o usuário
+      colocar `frontend/public/logo.png`. Doc: [`../DESIGN.md`](../DESIGN.md).
+- [x] **#D2 — Tema claro/escuro**: `ThemeProvider` + toggle no menu do usuário +
+      persistência (`rag-tema`); variáveis do tema escuro no `index.css`.
 - [ ] **#U1 — Lista "Gerenciar usuários" moderna**: linha/card com **foto do técnico** como
       1º item, depois **email · nome · Cargo** (no lugar de "Papel"). Visual moderno. dep: #D2 (estética).
 - [ ] **#U2 — Edição de usuário como TELA própria** (não card inline), seções de cima p/ baixo:

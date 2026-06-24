@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import { Logo } from './Logo'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 
 const IconMenu = () => (
@@ -36,7 +37,7 @@ export default function Layout() {
           <button className="rounded-lg p-2 hover:bg-accent" aria-label="Abrir barra lateral" onClick={() => setDrawer(true)}>
             <IconMenu />
           </button>
-          <span className="font-semibold">RAG-Simplex</span>
+          <Logo className="h-6" />
         </header>
 
         <main className="min-h-0 flex-1">
