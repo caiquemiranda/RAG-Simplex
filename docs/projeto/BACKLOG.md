@@ -102,6 +102,34 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 
 ---
 
+### H. Novas solicitações (2026-06-24) — clientes visuais, documentos, calendário
+
+> ⚑ = fundação (fazer antes do que depende dela).
+
+- [ ] **#FILES ⚑ — Infra de upload/arquivos** (pasta na **raiz**, ex.: `arquivos/`):
+      endpoint genérico de **upload/download/servir** + modelo de metadados. **Keystone** —
+      reusado por **#DOC1** (documentos), pelo **logo do cliente (#CLIV)** e pela pendência
+      "foto por arquivo" (seção A). *Só admin faz upload.*
+- [ ] **#CLIV ⚑ — Cor + logo por cliente** (item 4): `Cliente` ganha `cor` e `logo_url`;
+      configurados no card Clientes. O logo/cor passam a ser **usados sempre** que o
+      cliente aparece. dep: **#FILES** (logo). **Fundação** de #R1 e #CR6.
+- [ ] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): cada cliente vira um
+      **card em Relatórios** e um item no **grupo "Relatórios" da sidebar** (como
+      Consulta→Nova consulta). Criar cliente → aparece nos dois. dep: Cliente ✅ + **#CLIV**.
+- [ ] **#CR6 — Calendário: atividade + cliente na célula** (item 3): mostrar **atividade
+      e cliente** no dia; se **2+ técnicos** no mesmo cliente, **agrupar num único card
+      miniatura**. **Editar** atividade agendada (admin: título/cliente/data/técnico).
+      dep: Cliente ✅ + **#CLIV** (cor/logo no card).
+- [ ] **#CR7 — Layout do calendário (estilo referência, img-1)** (item 5): **número do dia
+      grande** no canto superior; célula no estilo da referência. *Fazer junto do #CR6
+      (mesma célula) p/ não mexer duas vezes.*
+- [ ] **#DOC1 — Documentos: cards Empresa + Marcas** (item 2): card **Empresa (IBSystems,
+      com logo)** e card **Marcas** (Simplex, Notifier…) com docs dos equipamentos
+      (manuais, datasheets). **CRUD por card**: upload, download, **editar nome**, **ocultar**,
+      excluir. Só **admin** sobe; arquivos numa **pasta na raiz**. dep: **#FILES**.
+
+---
+
 ## 2. Plano sequenciado das PENDENTES (sem retrabalho)
 
 > A fundação (entidade Cliente) e a trilha Design já estão concluídas. Abaixo, só o
@@ -110,28 +138,34 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ```
 Ordem recomendada (pendentes)
 ═════════════════════════════
-Etapa 0 — Independentes / sem schema novo  ◀ EM ANDAMENTO
-  0a • Gerenciar API keys (UI sobre /admin/provedores — backend pronto)  → destrava Fase 10
-  0b • Alerta global de documentos vencendo na lista de usuários
-       (add docs_alerta ao UsuarioResumo → badge na lista)
-  0c • Input centralizado no estado vazio do chat (frontend puro)
-  0d • GET /me/documentos → #HOME mostra documentos vencendo do próprio técnico
+Etapa 0 — Independentes  ✅ CONCLUÍDA (API keys, alerta docs, input centralizado, /me/documentos)
 
-Etapa 1 — Cronograma: fechamento + (decidir Unidade)
-  1a • Fechar visita (status concluída + observações no card do dia)
-  1b • DECISÃO: "local de trabalho" vira entidade Unidade? (D)
-       → se sim, criar Unidade ANTES da "visão por unidade" (senão refaz o filtro)
-  1c • Visão por unidade/local no cronograma
+Etapa 1 — Cronograma
+  1a ✅ Fechar visita (status + observações; técnico fecha a própria)
+  1b ✅ DECISÃO D-021: "local de trabalho" vira entidade Unidade
+  1c • Criar entidade Unidade (modelo + CRUD + vínculo usuário/cliente)  ⚑
+  1d • Visão por unidade/local no cronograma            dep: 1c
+
+Etapa F — FUNDAÇÕES das novas solicitações (fazer ANTES das telas)  ◀ PRÓXIMA
+  Fa • #FILES — infra de upload/arquivos (pasta na raiz)  ⚑ keystone
+       → reusado por #DOC1, logo do cliente (#CLIV) e foto-por-arquivo (2b)
+  Fb • #CLIV — cor + logo por cliente (Cliente.cor/logo_url)  dep: Fa (logo)
+       → fundação de #R1 e #CR6
+
+Etapa N — Telas que usam as fundações
+  Na • #R1  — Relatórios = cards de clientes + grupo na sidebar     dep: Fb
+  Nb • #CR6 + #CR7 — calendário: atividade+cliente, agrupar por cliente,
+       editar atividade, layout (número grande)                    dep: Fb
+  Nc • #DOC1 — Documentos: cards Empresa + Marcas (CRUD de arquivos) dep: Fa
 
 Etapa 2 — Robustez/escala (depois que o schema acima estabilizar)
   2a • Alembic (migrações versionadas) — substitui a micro-migração caseira
-  2b • Upload de foto via arquivo (substitui o data URL)
+  2b • Upload de foto via arquivo (substitui o data URL)            dep: Fa
   2c • Card "Banco de dados": status/backup/reindexação
 
 Etapa 3 — Inteligência
   3a • Fase 11 — reranker cross-encoder (D-020) + RAGAS-lite  (sem API key)
   3b • Fase 10 — nuvem + arena  (requer API key + decisão D-006 do provedor)
-       usa as API keys cadastradas na Etapa 0a
 ```
 
 **Por que esta ordem evita retrabalho**
@@ -142,6 +176,11 @@ Etapa 3 — Inteligência
   no campo livre e refaz com a entidade.
 - **GET /me/documentos (0d)** habilita o bloco de documentos do #HOME sem tocar o resto.
 - **Fase 11 (3a)** é independente (núcleo RAG) — pode entrar a qualquer momento.
+- **#FILES (Fa) é keystone:** uma infra de arquivos única serve documentos (#DOC1),
+  logo do cliente (#CLIV) e foto-por-arquivo (2b) — construir 3× seria retrabalho.
+- **#CLIV (cor/logo do cliente) antes de #R1 e #CR6:** os cards de cliente (Relatórios)
+  e o card-miniatura do calendário já nascem usando a cor/logo — não refaz a UI depois.
+- **Editar atividade (#CR6)** reusa o `PATCH /cronograma/{id}` já existente (admin).
 
 ---
 

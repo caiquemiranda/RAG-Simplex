@@ -36,6 +36,22 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Backlog: novas solicitações (clientes visuais, documentos, calendário)
+
+Adicionadas ao [`BACKLOG.md`](BACKLOG.md) §H + sequência §2 (foco em não-retrabalho):
+- **#FILES** ⚑ infra de upload/arquivos (pasta na raiz) — keystone de #DOC1 / logo do
+  cliente / foto-por-arquivo.
+- **#CLIV** ⚑ cor + logo por cliente (`Cliente.cor/logo_url`) — fundação de #R1 e #CR6.
+- **#R1** Relatórios = cards de clientes + grupo na sidebar.
+- **#CR6+#CR7** calendário: atividade+cliente na célula, agrupar 2+ técnicos por
+  cliente num card, **editar** atividade, layout (número grande, estilo referência).
+- **#DOC1** Documentos: cards Empresa (logo) + Marcas, CRUD de arquivos (upload/download/
+  renomear/ocultar/excluir), só admin.
+
+Ordem sem retrabalho: **#FILES → #CLIV → (#R1, #CR6/#CR7, #DOC1)**.
+
+---
+
 ## 2026-06-24 — Etapa 1: fechamento de visita + decisão Unidade (D-021)
 
 **Branch:** `feat/fase-7-frontend`. **Decisão:** Unidade vira **entidade** (D-021).
