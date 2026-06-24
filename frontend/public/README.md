@@ -1,11 +1,14 @@
 # Arquivos públicos (servidos pelo Vite em `/`)
 
-Coloque o **logo da IBSystems** aqui como **`logo.png`** (ou `.svg`):
+O logo é renderizado por [`src/components/Logo.tsx`](../src/components/Logo.tsx) como
+um **SVG embutido** (wordmark "IBSystems" no gradiente da marca, **fundo transparente**,
+escalável). Não precisa de arquivo de imagem.
+
+Para usar o **logo oficial** da empresa, coloque um **SVG com fundo transparente** aqui:
 
 ```
-frontend/public/logo.png
+frontend/public/logo.svg
 ```
 
-O componente [`src/components/Logo.tsx`](../src/components/Logo.tsx) usa `/logo.png`.
-Enquanto o arquivo não existir, a UI mostra o texto **“IBSystems”** com o gradiente
-da marca (fallback automático). Recomendado: PNG/SVG com fundo transparente, ~40px de altura.
+O `Logo.tsx` prefere `/logo.svg` quando existe e cai no wordmark embutido caso
+contrário. (Evite PNG com fundo — perde a transparência e não escala bem.)

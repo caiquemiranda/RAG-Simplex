@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { Logo } from './Logo'
 import { useMediaQuery } from '../hooks/useMediaQuery'
@@ -37,7 +37,7 @@ export default function Layout() {
           <button className="rounded-lg p-2 hover:bg-accent" aria-label="Abrir barra lateral" onClick={() => setDrawer(true)}>
             <IconMenu />
           </button>
-          <Logo className="h-6" />
+          <Link to="/inicio"><Logo className="h-7" /></Link>
         </header>
 
         <main className="min-h-0 flex-1">

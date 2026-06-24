@@ -9,6 +9,23 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — #D3 logo SVG (sem fundo) + #HOME dashboard
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#D3:** `Logo.tsx` virou **SVG embutido** (wordmark "IBSystems" no gradiente da
+  marca, **fundo transparente**, maior, escalável). Prefere `/logo.svg` se houver o
+  logo oficial transparente. Resolve o "fundo cinza ao redor".
+- **#HOME:** logo **clicável** (Sidebar + header mobile) → `/inicio`. `Home.tsx`
+  reescrita como **dashboard**: saudação, **atividades de hoje** (técnico: as próprias
+  + "onde estará"; ADM: todas), **notificações** não lidas e **atalhos**. `tsc` OK.
+- Docs: BACKLOG #D3/#HOME ✅, PLANEJAMENTO, `frontend/public/README.md`.
+
+**Arquivos:** `frontend/src/{components/{Logo,Sidebar,Layout},pages/Home}.tsx`,
+`frontend/public/README.md`, `docs/projeto/**`.
+
+---
+
 ## 2026-06-24 — Backlog: logo natural (#D3) + Home ao clicar no logo (#HOME)
 
 Adicionados ao [`BACKLOG.md`](BACKLOG.md) §G e ao plano:

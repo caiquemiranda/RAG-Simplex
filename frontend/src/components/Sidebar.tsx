@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
 import { useTema } from '../theme/ThemeContext'
@@ -94,7 +94,9 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   return (
     <aside className="flex h-full w-[260px] flex-col border-r bg-muted">
       <div className="flex items-center justify-between p-2">
-        <Logo className="ml-1" />
+        <Link to="/inicio" onClick={navegou} title="Início" className="ml-1">
+          <Logo />
+        </Link>
         <div className="flex items-center gap-1">
           <button className="relative rounded-lg p-2 hover:bg-accent" title="Notificações"
                   onClick={() => { setMenu(false); navegar('/notificacoes'); navegou() }}>

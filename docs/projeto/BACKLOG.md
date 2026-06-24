@@ -75,16 +75,13 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       colocar `frontend/public/logo.png`. Doc: [`../DESIGN.md`](../DESIGN.md).
 - [x] **#D2 — Tema claro/escuro**: `ThemeProvider` + toggle no menu do usuário +
       persistência (`rag-tema`); variáveis do tema escuro no `index.css`.
-- [ ] **#D3 — Logo natural (SVG, sem fundo, maior)**: o PNG atual tem **fundo cinza ao
-      redor**. Usar o logo em **SVG com fundo transparente** e **aumentar** o tamanho.
-      ⚠️ *Depende do asset:* usuário fornece o **SVG/PNG transparente** (ou removemos o
-      fundo do PNG). No código, `Logo.tsx` já não tem container de fundo — só ajustar altura.
-- [ ] **#HOME — Home/Dashboard ao clicar no logo**: clicar no **logo** abre a **Home
-      personalizada**. **Técnico:** atividades **do dia**, **em qual cliente estará**, infos
-      relevantes (próximas visitas, documentos vencendo, notificações). **ADM:** visão geral
-      do dia (resumo do cronograma). Reusa cronograma (visitas de hoje) + documentos/
-      notificações. Tornar o `Logo` **clicável** (link p/ `/inicio` ou nova `/home`).
-      *Sem dependência nova* — cronograma e perfil já existem.
+- [x] **#D3 — Logo natural (SVG, sem fundo, maior)**: `Logo.tsx` virou **SVG embutido**
+      (wordmark gradiente, **fundo transparente**, escalável, maior). Prefere `/logo.svg`
+      se o usuário colocar o **logo oficial** (SVG transparente).
+- [x] **#HOME — Home/Dashboard ao clicar no logo**: logo **clicável** → `/inicio`.
+      Dashboard com **atividades de hoje** (técnico: as próprias + “onde estará”; ADM:
+      todas), **notificações** não lidas e **atalhos**. Reusa cronograma/notificações.
+      *Futuro:* documentos vencendo do próprio técnico (precisa de `GET /me/documentos`).
 - [ ] **#U1 — Lista "Gerenciar usuários" moderna**: linha/card com **foto do técnico** como
       1º item, depois **email · nome · Cargo** (no lugar de "Papel"). Visual moderno. dep: #D2 (estética).
 - [ ] **#U2 — Edição de usuário como TELA própria** (não card inline), seções de cima p/ baixo:
