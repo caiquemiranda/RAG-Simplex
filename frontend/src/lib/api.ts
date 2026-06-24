@@ -29,6 +29,11 @@ export type RespostaQuery = {
   camadas_exibidas: string[]
 }
 
+export type Documento = {
+  nome: string
+  conteudo: string
+}
+
 const TOKEN_KEY = 'rag_simplex_token'
 
 export function getToken(): string | null {
@@ -74,4 +79,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ pergunta, persona }),
     }),
+  documentos: () => request<string[]>('/documentos'),
+  documento: (nome: string) => request<Documento>(`/documentos/${encodeURIComponent(nome)}`),
 }

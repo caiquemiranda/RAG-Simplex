@@ -37,7 +37,7 @@ from app.config import settings
 from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
-from app.ingestao import get_collection, indexar
+from app.ingestao import documentos_indexados, get_collection, indexar
 from app.modelos import LogConsulta, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
@@ -93,6 +93,11 @@ class RespostaOut(BaseModel):
 class IngestOut(BaseModel):
     blocos_indexados: int
     colecao: str
+
+
+class DocumentoOut(BaseModel):
+    nome: str
+    conteudo: str
 
 
 class LoginIn(BaseModel):
@@ -280,3 +285,32 @@ def query_stream(
         yield texto
 
     return StreamingResponse(_emitir(), media_type="text/plain; charset=utf-8")
+
+
+# --------------------------------------------------------------------------- #
+# Documentos (para o painel de citações do frontend)                          #
+# --------------------------------------------------------------------------- #
+# Os guias ficam na mesma pasta da base de conhecimento configurada.
+_DOCS_DIR = settings.knowledge_base.parent
+
+
+@app.get("/documentos", response_model=list[str])
+def listar_documentos(_: Usuario = Depends(requer("consultar"))) -> list[str]:
+    """Documentos atualmente indexados (que o assistente pesquisa)."""
+    return documentos_indexados()
+
+
+@app.get("/documentos/{nome}", response_model=DocumentoOut)
+def obter_documento(nome: str, _: Usuario = Depends(requer("consultar"))) -> DocumentoOut:
+    """Conteúdo (markdown) de um documento indexado, para exibição lado a lado.
+
+    Só serve arquivos `.md` que constam na base — guarda contra path traversal.
+    """
+    if not nome.endswith(".md") or "/" in nome or "\\" in nome or ".." in nome:
+        raise HTTPException(status_code=400, detail="Nome de documento inválido.")
+    if nome not in documentos_indexados():
+        raise HTTPException(status_code=404, detail="Documento não indexado.")
+    caminho = _DOCS_DIR / nome
+    if not caminho.exists():
+        raise HTTPException(status_code=404, detail="Arquivo do documento não encontrado.")
+    return DocumentoOut(nome=nome, conteudo=caminho.read_text(encoding="utf-8"))

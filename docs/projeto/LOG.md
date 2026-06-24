@@ -9,6 +9,37 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 8 (parte 2) — Citações clicáveis + split-screen
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Pedido:** links no texto que, ao clicar, abrem o **documento ao lado** (metade
+chat, metade guia), rolado e **destacado** no trecho exato; pronto p/ multi-documento.
+
+**Feito (backend, testado):**
+- `ingestao.documentos_indexados()` — fontes distintas na coleção (docs que o
+  assistente pesquisa), sem usar o modelo.
+- `main`: `GET /documentos` (lista) e `GET /documentos/{nome}` (markdown do guia),
+  ambos `requer("consultar")`, com guarda contra path traversal (só `.md` indexado).
+- `tests/test_documentos.py` (5 casos) → `pytest` = **49 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `lib/api.ts`: `documentos()` / `documento(nome)`.
+- `components/DocumentoPanel.tsx`: carrega o guia, divide em seções por cabeçalho,
+  rola e **destaca** (amarelo) a seção cujo slug casa com a fonte clicada.
+- `pages/Consulta.tsx`: layout **split** (chat 1/2 + documento 1/2); fontes viram
+  **chips clicáveis** que abrem o documento no trecho.
+
+**Matching fonte↔seção:** `slug(header)` aplicado igualmente nos dois lados
+(consistente; acentos viram '-' — sem regex de combinantes).
+
+**Próximo:** validar no browser; depois streaming/feedback (resto da Fase 8); D-015.
+
+**Arquivos:** `app/{main,ingestao}.py`, `tests/test_documentos.py`,
+`frontend/src/{lib/api,components/DocumentoPanel,pages/Consulta}.tsx`.
+
+---
+
 ## 2026-06-23 — Fase 8 (parte 1) — Chat + markdown na resposta
 
 **Branch:** `feat/fase-7-frontend` (continuação).

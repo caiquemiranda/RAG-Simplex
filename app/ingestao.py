@@ -240,6 +240,20 @@ def get_collection(reset: bool = False):
     )
 
 
+def documentos_indexados() -> list[str]:
+    """Nomes dos documentos (campo `fonte`) atualmente presentes na coleção.
+
+    É a lista de guias que o assistente pesquisa — base para o painel de citações
+    do frontend. Não exige o modelo de embeddings (só lê metadados do Chroma).
+    """
+    colecao = get_collection(reset=False)
+    if colecao.count() == 0:
+        return []
+    dados = colecao.get(include=["metadatas"])
+    fontes = {(m or {}).get("fonte") for m in dados.get("metadatas", [])}
+    return sorted(f for f in fontes if f)
+
+
 def indexar(caminho: Path | None = None, reset: bool = True) -> int:
     """Pipeline completo: parse → embeddings → upsert no ChromaDB.
 

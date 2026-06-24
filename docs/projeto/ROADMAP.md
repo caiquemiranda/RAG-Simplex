@@ -192,6 +192,8 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 - [x] Render de **markdown** da dupla camada (`react-markdown` + typography)
 - [x] **Aviso de segurança em destaque** (caixa vermelha via blockquote customizado)
 - [x] Exibição das fontes (similaridade) e das camadas exibidas
+- [x] **Citações clicáveis + split-screen**: clicar numa fonte abre o guia ao lado,
+      rolado e destacado no trecho exato (endpoints `/documentos`; multi-documento)
 - [ ] **Streaming** (`/query/stream`) na UI
 - [ ] Feedback 👍/👎 (precisa de endpoint no backend)
 
