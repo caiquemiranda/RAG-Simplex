@@ -1,0 +1,26 @@
+# Controle de versão / IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Python
+**/__pycache__
+*.py[cod]
+.venv
+venv
+.pytest_cache
+
+# Dados gerados (Chroma + SQLite vêm do volume; ingestão roda no 1º start)
+data/processed/chroma
+data/processed/*.db
+data/processed/*.db-journal
+
+# Frontend (instala/builda dentro da imagem)
+frontend/node_modules
+frontend/dist
+**/*.tsbuildinfo
+
+# Segredos e infra
+.env
+docker-compose.yml

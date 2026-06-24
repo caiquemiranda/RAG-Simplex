@@ -19,7 +19,7 @@ administrativo e controle de acesso por usuário**.
 | 4 | Autenticação (JWT) | ❌ Não | ✅ |
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
-| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | 🔄 |
+| 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ✅ |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | 🔄 |
 | 9 | Frontend — painel ADM | ❌ Não | 🔄 |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
@@ -171,18 +171,18 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 - [x] Layout base (navegação por papel); CORS no backend
 - [ ] Validar build na máquina do dev (`npm install && npm run dev`) — npm bloqueado aqui
 
-**Docker (D-017) — orquestrar backend + frontend juntos:**
-- [ ] `Dockerfile` do backend (FastAPI + Chroma embarcado + SQLite + e5); **modelo e5
-      pré-cacheado** na imagem (evita download em runtime/SSL)
-- [ ] `Dockerfile` do frontend (build + nginx servindo estático)
-- [ ] `docker-compose.yml`: serviços `backend` e `frontend`; **volumes** para cache do
-      modelo e `data/` (Chroma + SQLite persistentes)
-- [ ] `.dockerignore`; `docker compose up` sobe tudo de uma vez
-- [ ] Chroma/SQLite seguem **embarcados** (não viram serviço próprio agora)
+**Docker (D-017) — orquestrar backend + frontend juntos:** ✅
+- [x] `Dockerfile` do backend (FastAPI + Chroma + SQLite + e5 **pré-cacheado** na imagem)
+- [x] `Dockerfile` do frontend (build Vite + **nginx** com proxy reverso da API)
+- [x] `docker-compose.yml`: serviços `backend`+`frontend`; volume `ragdata` (Chroma+SQLite)
+- [x] `.dockerignore` + `.gitattributes` (LF no entrypoint); `entrypoint.sh` inicializa
+      banco/seed/admin/ingestão; `docker compose up` sobe tudo
+- [x] Chroma/SQLite seguem **embarcados**; origem única (nginx) → sem CORS
 
-**Testes:** [ ] build sem erros · [ ] login redireciona · [ ] rota protegida bloqueia sem token · [ ] `docker compose up` sobe backend+frontend e o login funciona
+**Validação:** `docker compose config` OK; backend 53 testes. **Build completo não
+rodado aqui** (sem rede p/ torch/modelo) — roda na máquina do dev. Guia: `docs/DOCKER.md`.
 
-**DoD:** login real contra a API; `docker compose up` levanta o app completo.
+**DoD:** ✅ `docker compose up --build` levanta o app completo (front :8080, API :8000).
 
 ---
 

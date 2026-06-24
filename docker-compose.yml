@@ -1,0 +1,29 @@
+# Sobe o RAG-Simplex completo com um comando:  docker compose up --build
+# Frontend em http://localhost:8080  ·  API/docs em http://localhost:8000/docs
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Admin criado no 1º start (troque em produção, ou via .env).
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@simplex.local}
+      ADMIN_SENHA: ${ADMIN_SENHA:-admin123}
+      # RAG_SECRET_KEY: se vazio, o entrypoint gera e persiste no volume.
+      RAG_SECRET_KEY: ${RAG_SECRET_KEY:-}
+    volumes:
+      - ragdata:/app/data/processed
+    ports:
+      - "8000:8000" # acesso direto à API/Swagger (opcional)
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  ragdata:

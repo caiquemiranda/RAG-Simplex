@@ -9,6 +9,35 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 7 (parte 2 / D-017) — Docker: subir tudo com um comando
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito:**
+- `Dockerfile` (backend): Python 3.11, deps, **e5 pré-cacheado** na imagem, depois
+  `HF_HUB_OFFLINE=1`. `docker/entrypoint.sh` inicializa segredo (gera/persiste),
+  banco+seed, admin (env) e ingestão (se vazia), then `uvicorn`.
+- `frontend/Dockerfile`: build Vite (multi-stage) → **nginx**; `docker/nginx.conf`
+  serve o SPA e faz **proxy** das rotas de API p/ `backend` (origem única, sem CORS;
+  `VITE_API_URL=""`).
+- `docker-compose.yml`: `backend` (8000) + `frontend` (8080) + volume `ragdata`.
+- `.dockerignore`, `.gitattributes` (LF p/ `*.sh`), `docs/DOCKER.md`.
+
+**Validação:** `docker compose config` OK; `pytest` = **53 passed**. **Build completo
+não rodado aqui** (sem rede p/ torch/modelo) — instruções e troubleshooting de SSL
+em `docs/DOCKER.md`.
+
+**Uso:** `docker compose up --build` → front http://localhost:8080, API :8000/docs;
+admin padrão admin@simplex.local / admin123.
+
+**Próximo:** validar o build na máquina do dev; resto da Fase 9 (estratégia/auditoria
+na UI), Fase 8 (streaming/feedback), Fase 11 (reranker D-020).
+
+**Arquivos:** `Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`,
+`docker/{entrypoint.sh,nginx.conf}`, `.dockerignore`, `.gitattributes`, `docs/DOCKER.md`.
+
+---
+
 ## 2026-06-23 — D-015 — Busca híbrida (bônus léxico) p/ otimizar respostas
 
 **Branch:** `feat/fase-7-frontend`.

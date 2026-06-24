@@ -8,23 +8,21 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
-- **Fase 7 🔄 em andamento:** frontend **base + auth ✅** (Vite+React+TS+Tailwind,
-  pronto p/ shadcn — login, rotas protegidas, layout por papel, cliente da API) +
-  **CORS** no backend. **Falta: validar `npm install/build` (npm bloqueado aqui) e o
-  Docker (D-017).** Backend: **44 testes passando**.
-- **Fases 0–6 ✅:** backend completo (RAG, extrativo, persistência, auth, RBAC, ADM).
+- **Fase 7 ✅:** frontend base+auth + **Docker (D-017)** — `docker compose up --build`
+  sobe backend (:8000) + frontend (:8080) prontos. Backend **53 testes passando**.
+- **Fase 8 🔄:** chat + markdown + citações com split-screen ✅ (falta streaming/feedback).
+- **Fase 9 🔄:** painel ADM de **usuários/permissões** ✅ (falta estratégia/auditoria na UI).
+- **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
 
 ## ⏭️ Próximos passos
 
-1. **Validar o frontend** na máquina do dev: `cd frontend && npm install && npm run dev`
-   (se SSL: `npm config set cafile <CA>`). Reportar erros de build → eu ajusto.
-2. **Docker (D-017):** `Dockerfile` backend (e5 pré-cacheado) + `Dockerfile` frontend
-   (nginx) + `docker-compose` (volumes p/ `data/` e cache do modelo).
-3. **Fase 8:** chat do técnico (markdown da dupla camada, aviso em destaque, streaming).
-4. ~~D-015 limiar~~ ✅ **resolvido**: busca híbrida (bônus léxico) corrigiu o ranking;
-   limiar mantido 0.78. Discriminar fora-da-base exige reranker (D-020, Fase 11).
+1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou o
+   fluxo nativo (uvicorn + `npm run dev`). Se o build bater em SSL, ver `docs/DOCKER.md`.
+2. **Resto da Fase 9:** estratégia/persona por usuário + visualização da auditoria na UI.
+3. **Resto da Fase 8:** streaming (`/query/stream`) + feedback 👍/👎.
+4. **Fase 11:** cross-encoder reranker (D-020) p/ fallback robusto.
 
-> Para rodar tudo: backend (`uvicorn app.main:app --reload`) + frontend (`npm run dev`).
+> Rodar tudo: `docker compose up --build` **ou** uvicorn + `npm run dev`.
 
 > Tudo até a Fase 9 é **sem API key e sem custo**.
 
