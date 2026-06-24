@@ -127,6 +127,23 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       **CRUD** (upload/download/renomear/ocultar/excluir), só admin sobe; arquivos em
       `/arquivos/biblioteca/...`. Spec [`specs/spec-doc1-biblioteca.md`](specs/spec-doc1-biblioteca.md).
 
+### I. Novas solicitações (2026-06-24, lote 2)
+- [ ] **#CR8 ⚑ — Múltiplos técnicos por atividade** (item 1): uma visita pode ter
+      **vários técnicos**. Refatora `Visita.usuario_id` (1) → **N:N `visita_tecnico`**.
+      Afeta: criação (selecionar vários), card do dia (lista de técnicos), **notificações**
+      (todos os atribuídos), **"fechar a própria"** (qualquer atribuído), `GET /cronograma`
+      (técnico vê onde está entre os atribuídos), e o agrupamento da célula (#CR6 segue ok).
+      ⚠️ *Refactor do modelo core de Visita + migração.* dep: cronograma ✅.
+- [ ] **#ALOC — Alocação fixa de técnicos a clientes** (item 2): alguns técnicos ficam
+      **sempre em atividade** num cliente por padrão. Opção: flag na relação
+      `usuario_cliente` (ex.: `fixo`) ou entidade de alocação recorrente; o calendário
+      mostra esses técnicos no cliente por padrão. **DECISÃO:** só **visual** (exibir os
+      fixos do cliente no dia) **ou** **gera visitas recorrentes**? dep: Cliente ✅ +
+      recomendável **#CR8** antes (vários técnicos por cliente).
+- [ ] **#DOC2 — Documentos como grupo na sidebar (sub-abas)** (item 3): a aba **Documentos**
+      vira **grupo colapsável** com sub-itens (Empresa + cada marca), igual a
+      **Relatórios↔clientes** (#R1). *Reusa o padrão de grupo da sidebar.* dep: #DOC1 ✅.
+
 ---
 
 ## 2. Plano sequenciado das PENDENTES (sem retrabalho)
@@ -145,17 +162,15 @@ Etapa 1 — Cronograma
   1c • Criar entidade Unidade (modelo + CRUD + vínculo usuário/cliente)  ⚑
   1d • Visão por unidade/local no cronograma            dep: 1c
 
-Etapa F — FUNDAÇÕES das novas solicitações (fazer ANTES das telas)  ◀ PRÓXIMA
-  Fa • #FILES — infra de upload/arquivos (pasta na raiz)  ⚑ keystone
-       → reusado por #DOC1, logo do cliente (#CLIV) e foto-por-arquivo (2b)
-  Fb • #CLIV — cor + logo por cliente (Cliente.cor/logo_url)  dep: Fa (logo)
-       → fundação de #R1 e #CR6
+Etapa F — FUNDAÇÕES  ✅ (#FILES infra de arquivos · #CLIV cor/logo por cliente)
+Etapa N — Telas      ✅ (#R1 relatórios · #CR6/#CR7 calendário · #DOC1 documentos)
 
-Etapa N — Telas que usam as fundações
-  Na • #R1  — Relatórios = cards de clientes + grupo na sidebar     dep: Fb
-  Nb • #CR6 + #CR7 — calendário: atividade+cliente, agrupar por cliente,
-       editar atividade, layout (número grande)                    dep: Fb
-  Nc • #DOC1 — Documentos: cards Empresa + Marcas (CRUD de arquivos) dep: Fa
+Etapa L2 — Novas solicitações (lote 2)  ◀ PRÓXIMA
+  L2a • #CR8 ⚑ — múltiplos técnicos por atividade (Visita → N:N visita_tecnico)
+        → refactor do core; afeta notificações/fechamento/GET. Fazer antes de #ALOC.
+  L2b • #ALOC — alocação fixa de técnicos a clientes (decidir: visual × recorrente)
+        dep: #CR8 recomendado
+  L2c • #DOC2 — Documentos como grupo na sidebar (sub-abas)  dep: #DOC1 ✅ (independente)
 
 Etapa 2 — Robustez/escala (depois que o schema acima estabilizar)
   2a • Alembic (migrações versionadas) — substitui a micro-migração caseira

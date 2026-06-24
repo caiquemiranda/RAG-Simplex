@@ -36,6 +36,18 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Backlog lote 2 + auditoria de docs
+
+- **Backlog §I (lote 2):** **#CR8** múltiplos técnicos por atividade (Visita → N:N;
+  refactor core, fazer antes de #ALOC) · **#ALOC** alocação fixa de técnicos a clientes
+  (decidir visual × recorrente) · **#DOC2** Documentos como grupo na sidebar (sub-abas).
+  Sequência: #CR8 → #ALOC; #DOC2 independente.
+- **Auditoria:** `ESTADO_ATUAL` e `PLANEJAMENTO` estavam em "70 testes" e com próximos
+  passos já feitos → atualizados para o estado real (**78 testes**; #FILES/#CLIV/#R1/
+  #DOC1/#CR6-7 marcados). Snapshot do PLANEJAMENTO completado.
+
+---
+
 ## 2026-06-24 — #DOC1: biblioteca de documentos (empresa + marcas)
 
 **Branch:** `feat/fase-7-frontend`.

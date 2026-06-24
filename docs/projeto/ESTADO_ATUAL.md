@@ -13,37 +13,36 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-7-frontend`. **Backend: 70 testes** passando.
-- **Fases 0–9 ✅ + evoluções pós-fase-9** (tudo **sem API key e sem custo**):
+- **Branch:** `feat/fase-7-frontend`. **Backend: 78 testes** passando.
+- **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
-  - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática** de schema.
-  - **Marca/tema:** identidade **IBSystems** (paleta), **tema claro/escuro**, **logo SVG** clicável.
-  - **Chat:** streaming NDJSON, citações split-screen, feedback 👍/👎, histórico persistente,
-    sidebar responsiva, input centralizado no estado vazio.
-  - **Dashboard (#HOME)** ao clicar no logo: atividades do dia, onde estará, notificações, seus documentos.
-  - **Painel ADM (cards):** **Gerenciar usuários** (lista moderna com avatar; **edição em tela
-    própria** — perfil/foto/documentos+validade/permissões/estratégia; alerta ⚠️ de docs);
-    **Clientes** (CRUD + técnico↔cliente); **API keys** (chave cifrada); **Auditoria**.
-    *Card "Banco de dados" ainda é placeholder.*
-  - **Cronograma (real):** visitas por técnico/cliente, **card do dia** por papel, avatares,
-    fim de semana/**feriados**, **notificações** (sino com badge).
-- **Rodar:** `scripts\run.ps1` (nativo, caches em `.cache/`) ou `docker compose up --build`.
-  Login da 1ª execução: **admin@local / admin123**.
+  - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática**, **infra de
+    arquivos** (`/upload` + `/arquivos`, #FILES).
+  - **Marca/tema:** identidade **IBSystems**, **tema claro/escuro**, **logo SVG** clicável.
+  - **Chat:** streaming NDJSON, citações split-screen, feedback, histórico, sidebar responsiva.
+  - **Dashboard (#HOME):** atividades do dia, onde estará, notificações, seus documentos.
+  - **Painel ADM (cards):** Gerenciar usuários (edição em tela própria; alerta ⚠️ docs);
+    **Clientes** (CRUD + **cor/logo**, técnico↔cliente); **API keys** (cifrada); Auditoria.
+  - **Relatórios:** **cards de clientes** + grupo na sidebar (#R1).
+  - **Documentos:** biblioteca **Empresa + Marcas** com CRUD de arquivos (#DOC1).
+  - **Cronograma (real):** visitas, **card do dia** por papel, **fechamento** (status+obs),
+    agrupamento por **cliente** (cor/logo + avatares), **editar** atividade, feriados,
+    **notificações** (sino), layout (número grande).
+- **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
 ## ⏭️ Próximo passo (plano completo em [`PLANEJAMENTO.md`](PLANEJAMENTO.md) e [`BACKLOG.md`](BACKLOG.md) §2)
 
 Pendências em ordem **sem retrabalho**:
-1. **Etapa 1 — Cronograma:** fechar visita (status *concluída* + observações no card do dia) ·
-   **DECISÃO pendente: "local de trabalho" vira entidade `Unidade`?** (fazer **antes** da
-   "visão por unidade", senão refaz o filtro) · visão por unidade/local.
-2. **Etapa 2 — Robustez:** **Alembic** (migrações versionadas) · upload de **foto por arquivo**
-   (hoje data URL) · card **"Banco de dados"**.
-3. **Etapa 3 — Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite, *sem key*) ·
-   **Fase 10** (nuvem + arena, *requer API key* + decisão D-006).
-4. Pequenas: **#1** alinhamento fino ao ChatGPT (precisa sua confirmação).
+1. **Lote 2 (novas solicitações):** **#CR8** ⚑ múltiplos técnicos por atividade (refactor
+   `Visita` → N:N) → **#ALOC** alocação fixa de técnicos a clientes → **#DOC2** Documentos
+   como grupo na sidebar (independente). *Decisão #ALOC: visual × recorrente.*
+2. **Unidade:** criar entidade **`Unidade`** (D-021 decidida) → **visão por unidade** no cronograma.
+3. **Robustez:** **Alembic** · upload de **foto por arquivo** (já temos #FILES) · card **"Banco de dados"**.
+4. **Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite) · **Fase 10** (nuvem, *requer API key*).
+5. Pequena: **#1** alinhamento fino ao ChatGPT.
 
-> ⚠️ **Bloqueio leve:** a **decisão sobre `Unidade`** (cadastro/entidade vs texto livre)
-> destrava a "visão por unidade" do cronograma sem retrabalho.
+> ⚠️ **Decisão pendente (#ALOC):** técnicos fixos no cliente são só **exibidos** no dia,
+> ou **geram visitas recorrentes**? Define o modelo sem retrabalho.
 
 ## 🔧 Para rodar na sua máquina
 
