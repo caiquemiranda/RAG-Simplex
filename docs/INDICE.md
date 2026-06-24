@@ -63,7 +63,8 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
 - [Arquitetura (consolidado)](projeto/specs/spec-arquitetura.md) ·
   [Etapa 0 — API keys/perfil](projeto/specs/spec-etapa0-apikeys-perfil.md) ·
   [Etapa 1 — Clientes](projeto/specs/spec-etapa1-clientes.md) ·
-  [Etapa 3 — Cronograma](projeto/specs/spec-etapa3-cronograma.md)
+  [Etapa 3 — Cronograma](projeto/specs/spec-etapa3-cronograma.md) ·
+  [#FILES — Arquivos](projeto/specs/spec-files-arquivos.md)
 
 ## 7. Roteiro: recriar o sistema em outra linguagem
 1. **Requisitos & invariantes** → [`prd…`](prd_sistema_rag_simplex.md) + [`FLUXOS.md`](FLUXOS.md) §"invariantes".

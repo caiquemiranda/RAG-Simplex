@@ -21,12 +21,14 @@ import re
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import __version__
 from app.admin import router as admin_router
+from app.arquivos import router as arquivos_router
 from app.cronograma import router as cronograma_router
 from app.notificacoes import router as notificacoes_router
 from app.auth import (
@@ -55,6 +57,11 @@ app = FastAPI(
 app.include_router(admin_router)
 app.include_router(cronograma_router)
 app.include_router(notificacoes_router)
+app.include_router(arquivos_router)
+
+# Arquivos enviados (logos, documentos…) servidos em /arquivos.
+settings.arquivos_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/arquivos", StaticFiles(directory=settings.arquivos_dir), name="arquivos")
 
 # CORS para o frontend React (origens configuráveis via RAG_CORS_ORIGINS).
 app.add_middleware(

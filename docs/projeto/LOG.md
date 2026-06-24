@@ -36,6 +36,24 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #FILES: infra de upload/arquivos (keystone)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **`app/arquivos.py`:** `salvar_upload`/`remover_arquivo` (nome único+sanitizado,
+  10 MB, guarda de path traversal) + `POST /upload` (multipart, perm. `gerir_usuarios`).
+  `main.py`: monta `StaticFiles` em `/arquivos`; cria a pasta no startup.
+- **Config:** `settings.arquivos_dir = BASE_DIR/'arquivos'` (gitignorada). Dep nova
+  `python-multipart==0.0.20` (requirements + instalada).
+- **Reuso:** destrava logo do cliente (#CLIV), documentos (#DOC1) e foto-por-arquivo.
+- **Testes:** `test_arquivos.py` (3) → **74 passed**. Spec
+  [`spec-files-arquivos.md`](specs/spec-files-arquivos.md); ARQUITETURA/TESTES/INDICE/BACKLOG.
+
+**Arquivos:** `app/{arquivos,main,config}.py`, `requirements.txt`, `.gitignore`,
+`tests/test_arquivos.py`, `docs/**`.
+
+---
+
 ## 2026-06-24 — Backlog: novas solicitações (clientes visuais, documentos, calendário)
 
 Adicionadas ao [`BACKLOG.md`](BACKLOG.md) §H + sequência §2 (foco em não-retrabalho):

@@ -53,6 +53,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
 | `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados globais. |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
+| `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
 | `db.py` | Engine/Session; `criar_tabelas` (create_all + micro-migração); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
@@ -80,6 +81,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
 | GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
+| POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
 | PUT | `/admin/config-global` | `gerir_estrategias` | Estratégia padrão global. |
 | GET | `/admin/auditoria` | `gerir_usuarios` | Log de consultas (com feedback). |

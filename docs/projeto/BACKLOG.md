@@ -106,10 +106,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 
 > ⚑ = fundação (fazer antes do que depende dela).
 
-- [ ] **#FILES ⚑ — Infra de upload/arquivos** (pasta na **raiz**, ex.: `arquivos/`):
-      endpoint genérico de **upload/download/servir** + modelo de metadados. **Keystone** —
-      reusado por **#DOC1** (documentos), pelo **logo do cliente (#CLIV)** e pela pendência
-      "foto por arquivo" (seção A). *Só admin faz upload.*
+- [x] **#FILES ⚑ — Infra de upload/arquivos** (pasta `arquivos/` na raiz): `POST /upload`
+      (multipart, só admin) + estáticos em `/arquivos`; `salvar_upload`/`remover_arquivo`
+      (sanitização, 10 MB, guarda de path traversal). Dep nova: `python-multipart`. Spec
+      [`specs/spec-files-arquivos.md`](specs/spec-files-arquivos.md). **Keystone pronto.**
 - [ ] **#CLIV ⚑ — Cor + logo por cliente** (item 4): `Cliente` ganha `cor` e `logo_url`;
       configurados no card Clientes. O logo/cor passam a ser **usados sempre** que o
       cliente aparece. dep: **#FILES** (logo). **Fundação** de #R1 e #CR6.
