@@ -9,6 +9,32 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 9 (parte 2) — Estratégia por usuário + auditoria na UI
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (backend, testado):**
+- `admin.py`: `GET /admin/usuarios/{id}/estrategia` (config do usuário ou null);
+  `feedback` exposto em `AuditoriaItem`. (`PUT estrategia`, `/auditoria`,
+  `/estrategias` já existiam.)
+- `tests/test_admin.py`: GET/PUT da estratégia por usuário → `pytest` = **59 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `pages/Admin.tsx`: **abas Usuários/Auditoria**. No editar usuário, nova seção
+  **Estratégia/persona/camadas** (carrega config atual, select de estratégias,
+  checkboxes de camadas → PUT). 
+- `components/AuditoriaView.tsx`: tabela das consultas (quando, usuário→email,
+  pergunta, estratégia, fallback, feedback 👍/👎).
+- `lib/api.ts`: `estrategias`, `estrategiaUsuario`, `definirEstrategiaUsuario`, `auditoria`.
+
+**Fase 9 ✅ concluída.** Próximo: Fase 11 (reranker D-020 / hardening) — Fase 10
+(nuvem) depende de API key, fica para o fim.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{pages/Admin,components/AuditoriaView,lib/api}.tsx`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 3) — Streaming (NDJSON) + feedback 👍/👎
 
 **Branch:** `feat/fase-7-frontend`.

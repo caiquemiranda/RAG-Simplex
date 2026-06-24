@@ -107,6 +107,27 @@ def test_admin_troca_estrategia_vale_na_consulta(ctx, monkeypatch):
     assert capturado["estrategia"] == "claude_nuvem"
 
 
+def test_estrategia_por_usuario_get_e_put(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Sem config própria → null.
+    r0 = client.get(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin)
+    assert r0.status_code == 200 and r0.json() is None
+
+    # Define estratégia + persona + camadas.
+    r1 = client.put(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin,
+                    json={"estrategia": "local_extrativa", "persona": "técnico de campo",
+                          "camadas": ["simples", "tecnica"]})
+    assert r1.status_code == 200
+
+    # Agora o GET retorna o que foi salvo.
+    r2 = client.get(f"/admin/usuarios/{ids['tec']}/estrategia", headers=admin)
+    assert r2.json()["estrategia"] == "local_extrativa"
+    assert r2.json()["persona"] == "técnico de campo"
+    assert r2.json()["camadas"] == "simples,tecnica"
+
+
 def test_auditoria_registra_consulta(ctx, monkeypatch):
     client, _ = ctx
     monkeypatch.setattr("app.main.buscar", lambda *a, **k: Recuperacao("q", [], True))

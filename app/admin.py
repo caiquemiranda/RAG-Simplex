@@ -95,6 +95,7 @@ class AuditoriaItem(BaseModel):
     estrategia: str
     latencia_ms: float | None = None
     fallback: bool
+    feedback: int | None = None
     criado_em: datetime
 
 
@@ -253,6 +254,19 @@ def listar_permissoes(_: Usuario = Depends(requer("gerir_usuarios")),
 @router.get("/estrategias", response_model=list[str])
 def listar_estrategias(_: Usuario = Depends(requer("gerir_estrategias"))) -> list[str]:
     return sorted(ESTRATEGIAS)
+
+
+@router.get("/usuarios/{usuario_id}/estrategia", response_model=ConfigResumo | None)
+def obter_estrategia_usuario(usuario_id: int,
+                             _: Usuario = Depends(requer("gerir_estrategias")),
+                             sessao: Session = Depends(get_session)) -> ConfigResumo | None:
+    _buscar_usuario(sessao, usuario_id)
+    cfg = sessao.scalar(
+        select(ConfigEstrategia).where(
+            ConfigEstrategia.escopo == "usuario", ConfigEstrategia.alvo == str(usuario_id)
+        )
+    )
+    return ConfigResumo.model_validate(cfg, from_attributes=True) if cfg else None
 
 
 @router.put("/usuarios/{usuario_id}/estrategia", response_model=ConfigResumo)

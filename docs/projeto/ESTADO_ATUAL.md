@@ -8,19 +8,19 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
-- **Fase 7 ✅:** frontend base+auth + **Docker (D-017)** — `docker compose up --build`
-  sobe backend (:8000) + frontend (:8080) prontos. Backend **53 testes passando**.
-- **Fase 8 🔄:** chat + markdown + citações com split-screen ✅ (falta streaming/feedback).
-- **Fase 9 🔄:** painel ADM de **usuários/permissões** ✅ (falta estratégia/auditoria na UI).
+- **Fases 7, 8, 9 ✅:** frontend completo + Docker. Chat com **streaming (NDJSON)**,
+  markdown, citações split-screen, **feedback 👍/👎**; painel ADM com CRUD de
+  usuários/permissões, **estratégia por usuário** e **auditoria**. **Backend 59 testes**.
 - **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
 
 ## ⏭️ Próximos passos
 
-1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou o
-   fluxo nativo (uvicorn + `npm run dev`). Se o build bater em SSL, ver `docs/DOCKER.md`.
-2. **Resto da Fase 9:** estratégia/persona por usuário + visualização da auditoria na UI.
-3. **Resto da Fase 8:** streaming (`/query/stream`) + feedback 👍/👎.
-4. **Fase 11:** cross-encoder reranker (D-020) p/ fallback robusto.
+1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou
+   nativo (uvicorn + `npm run dev`). Schema mudou (coluna `feedback`): no nativo,
+   recriar o `.db`; no Docker, volume novo. Ver `docs/DOCKER.md`.
+2. **Fase 11 (hardening):** cross-encoder reranker (D-020); avaliação RAGAS-lite;
+   migrações Alembic (evitar recriar o banco a cada mudança de schema).
+3. **Fase 10 (fim):** estratégias de nuvem + arena — **requer API key**.
 
 > Rodar tudo: `docker compose up --build` **ou** uvicorn + `npm run dev`.
 

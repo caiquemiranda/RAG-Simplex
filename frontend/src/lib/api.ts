@@ -55,6 +55,31 @@ export type AdminUsuario = {
 export type AdminPapel = { nome: string; permissoes: string[] }
 export type AdminPermissao = { chave: string; descricao: string }
 
+export type AdminConfig = {
+  escopo: string
+  alvo: string | null
+  estrategia: string
+  persona: string | null
+  camadas: string | null
+}
+
+export type AdminAuditoria = {
+  id: number
+  usuario_id: number | null
+  pergunta: string
+  estrategia: string
+  latencia_ms: number | null
+  fallback: boolean
+  feedback: number | null
+  criado_em: string
+}
+
+export type ConfigUsuarioIn = {
+  estrategia?: string | null
+  persona?: string | null
+  camadas?: string[] | null
+}
+
 export type NovoUsuario = { email: string; senha: string; nome?: string; papel?: string | null }
 export type AtualizaUsuario = {
   nome?: string
@@ -182,5 +207,14 @@ export const api = {
       }),
     papeis: () => request<AdminPapel[]>('/admin/papeis'),
     permissoes: () => request<AdminPermissao[]>('/admin/permissoes'),
+    estrategias: () => request<string[]>('/admin/estrategias'),
+    estrategiaUsuario: (id: number) =>
+      request<AdminConfig | null>(`/admin/usuarios/${id}/estrategia`),
+    definirEstrategiaUsuario: (id: number, dados: ConfigUsuarioIn) =>
+      request<AdminConfig>(`/admin/usuarios/${id}/estrategia`, {
+        method: 'PUT',
+        body: JSON.stringify(dados),
+      }),
+    auditoria: (limite = 50) => request<AdminAuditoria[]>(`/admin/auditoria?limite=${limite}`),
   },
 }
