@@ -9,6 +9,29 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Etapa 3 — Cronograma (visitas) + card do dia (#C1); fix do logo
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix logo:** fallback “IBSystems” estava invisível (`text-transparent` sem o
+  gradiente do Tailwind antes do rebuild). Agora o gradiente vem por **CSS var inline**
+  no `Logo.tsx` (funciona sem rebuild). O `logo.png` ainda não existe → some que mostra
+  o fallback; colocar em `frontend/public/logo.png`.
+- **Modelo:** `Visita` (técnico, cliente, data, título, status, observações). Tabela
+  nova via micro-migração.
+- **API:** novo router `/cronograma` (GET por papel via `usuario_atual`; POST/PATCH/
+  DELETE com `gerir_usuarios`). `cronograma.py` registrado no `main.py`.
+- **Frontend:** `Cronograma.tsx` com dados reais + **card do dia** (modal): ADM vê
+  todos os técnicos e gerencia (add/remove, filtro por técnico); técnico vê os próprios.
+- **Testes:** `test_cronograma.py` (4) → **66 passed**. `tsc` OK.
+- Docs: spec [`spec-etapa3-cronograma.md`](specs/spec-etapa3-cronograma.md),
+  `MODELO_DADOS`/`ARQUITETURA`/`TESTES`/`BACKLOG`/`PLANEJAMENTO`/`INDICE`.
+
+**Arquivos:** `app/{modelos,cronograma,main}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx,components/Logo.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — Etapa 1 — Entidade Cliente (fundação) + índice de docs
 
 **Branch:** `feat/fase-7-frontend`.

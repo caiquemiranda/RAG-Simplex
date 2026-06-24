@@ -140,6 +140,23 @@ class Cliente(Base):
     )
 
 
+class Visita(Base):
+    """Visita/atividade agendada de um técnico no cronograma (por dia e cliente/local)."""
+
+    __tablename__ = "visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))  # técnico
+    cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
+    data: Mapped[date] = mapped_column(Date)
+    titulo: Mapped[str] = mapped_column(String(160))            # atividade do dia
+    status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|concluida|cancelada
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
+
+    usuario: Mapped[Usuario] = relationship()
+    cliente: Mapped[Cliente | None] = relationship()
+
+
 class DocumentoTecnico(Base):
     """Documento exigido do técnico (ex.: NR-10, ASO, crachá de cliente) com validade.
 

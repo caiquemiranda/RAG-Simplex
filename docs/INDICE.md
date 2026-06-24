@@ -61,7 +61,8 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
   [Fase 8 — chat](projeto/specs/spec-fase-8-frontend-chat.md) ·
   [Fase 9 — painel ADM](projeto/specs/spec-fase-9-painel-adm-frontend.md)
 - [Arquitetura (consolidado)](projeto/specs/spec-arquitetura.md) ·
-  [Etapa 1 — Clientes](projeto/specs/spec-etapa1-clientes.md)
+  [Etapa 1 — Clientes](projeto/specs/spec-etapa1-clientes.md) ·
+  [Etapa 3 — Cronograma](projeto/specs/spec-etapa3-cronograma.md)
 
 ## 7. Roteiro: recriar o sistema em outra linguagem
 1. **Requisitos & invariantes** → [`prd…`](prd_sistema_rag_simplex.md) + [`FLUXOS.md`](FLUXOS.md) §"invariantes".

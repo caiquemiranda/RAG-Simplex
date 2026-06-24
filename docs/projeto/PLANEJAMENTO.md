@@ -20,7 +20,7 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | Plataforma (auth JWT, RBAC, persistência, migração) | ✅ |
 | Chat (streaming, citações, feedback, histórico, responsivo) | ✅ |
 | Painel ADM em cards (usuários+perfil+documentos, auditoria) | ✅ |
-| Cronograma (calendário mensal, dados de exemplo) | ✅ (UI) |
+| **Cronograma real (visitas) + card do dia por papel** | ✅ (Etapa 3 / #C1) |
 | **Entidade Cliente (N:N técnico↔cliente) + card Clientes CRUD** | ✅ (Etapa 1) |
 | Cards ADM: API keys / Banco de dados | ⬜ placeholder |
 | **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo PNG) |

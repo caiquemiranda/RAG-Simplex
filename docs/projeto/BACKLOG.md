@@ -27,10 +27,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [ ] **Banco de dados**: status/backup/reindexação (definir escopo real).
 
 ### C. Cronograma
-- [ ] **Backend de cronograma**: modelo de **visita/evento** (técnico, cliente/local,
-      data, status) + endpoints CRUD. dep: entidade Cliente/Unidade.
-- [ ] Substituir os **eventos de exemplo** do calendário por dados reais.
-- [ ] **Visão por técnico/local** real (filtra pelo `unidade`/clientes do técnico).
+- [x] **Backend de cronograma**: modelo `Visita` (técnico, cliente, data, título, status)
+      + endpoints CRUD (`/cronograma`). Spec [`specs/spec-etapa3-cronograma.md`](specs/spec-etapa3-cronograma.md).
+- [x] Calendário com **dados reais** + **card do dia** (#C1): ADM vê todos os técnicos
+      e gerencia; técnico vê os próprios.
+- [ ] Visão por **unidade/local** (além de por técnico) e fechamento com histórico.
 
 ### D. Modelo de dados (consolidação — evita retrabalho)
 - [x] Trocar `Usuario.clientes` (CSV placeholder) por **relação N:N `usuario↔cliente`**
@@ -61,10 +62,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       4) Estratégia e camadas**. Em *Perfil e gestão*: nome, **papel/cargo**, **nova senha com
       mostrar/ocultar (👁)**, **ativo (checkbox)** e **clientes como checkbox** (puxados do banco).
       dep: parte de **clientes** → entidade Cliente (Etapa 1); o resto é independente.
-- [ ] **#C1 — Cronograma: card do dia**: clicar num dia abre **card central** com as informações
-      do dia. **ADM/visão completa:** onde cada técnico está + atividade/histórico do dia.
-      **Técnico:** onde estará + atividade do dia. dep: Cronograma backend (Etapa 3) p/ dados reais
-      (shell de UI pode vir antes; visão por papel já é suportada pelo RBAC).
+- [x] **#C1 — Cronograma: card do dia**: clicar num dia abre card central — ADM vê
+      todos os técnicos (onde estão + atividade) e gerencia; técnico vê os próprios. ✅
 
 ---
 

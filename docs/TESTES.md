@@ -1,8 +1,8 @@
 # Testes — RAG-Simplex
 
-**62 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**66 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
-perfil, documentos, **clientes**), streaming e feedback.
+perfil, documentos, **clientes**), **cronograma**, streaming e feedback.
 
 ## Princípios
 
@@ -88,6 +88,12 @@ pytest
 ### `test_documentos.py` (5) — guias (split-screen)
 - Exige autenticação; lista indexados; obtém conteúdo; rejeita nome inválido;
   documento não indexado → 404.
+
+### `test_cronograma.py` (4) — cronograma (visitas)
+- `test_admin_cria_e_filtra_por_intervalo` — cria visita; filtra por intervalo de datas.
+- `test_tecnico_ve_apenas_as_proprias` — técnico só enxerga as próprias visitas.
+- `test_tecnico_nao_cria` — sem `gerir_usuarios` → 403 ao criar.
+- `test_remover_visita` — remove (204) e inexistente → 404.
 
 ### `test_consulta.py` (5) — streaming e feedback (Fase 8)
 - `test_query_retorna_log_id` — `/query` devolve `log_id`.

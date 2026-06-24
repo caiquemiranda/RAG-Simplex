@@ -55,6 +55,27 @@ export type AdminUsuario = {
 export type DocumentoTecnico = { id: number; nome: string; validade: string | null }
 export type AdminCliente = { id: number; nome: string; unidade: string | null; ativo: boolean }
 
+export type Visita = {
+  id: number
+  usuario_id: number
+  tecnico_nome: string
+  cliente_id: number | null
+  cliente_nome: string | null
+  unidade: string | null
+  data: string
+  titulo: string
+  status: string
+  observacoes: string | null
+}
+export type NovaVisita = {
+  usuario_id: number
+  cliente_id?: number | null
+  data: string
+  titulo: string
+  status?: string
+  observacoes?: string | null
+}
+
 export type AdminUsuarioDetalhe = AdminUsuario & {
   foto_url: string | null
   telefone: string | null
@@ -254,5 +275,14 @@ export const api = {
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
+  },
+  cronograma: {
+    listar: (de: string, ate: string, tecnicoId?: number | null) =>
+      request<Visita[]>(`/cronograma?de=${de}&ate=${ate}${tecnicoId ? `&tecnico_id=${tecnicoId}` : ''}`),
+    criar: (dados: NovaVisita) =>
+      request<Visita>('/cronograma', { method: 'POST', body: JSON.stringify(dados) }),
+    atualizar: (id: number, dados: Partial<NovaVisita>) =>
+      request<Visita>(`/cronograma/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    remover: (id: number) => request<void>(`/cronograma/${id}`, { method: 'DELETE' }),
   },
 }

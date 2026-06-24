@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session
 
 from app import __version__
 from app.admin import router as admin_router
+from app.cronograma import router as cronograma_router
 from app.auth import (
     TokenInvalido,
     criar_access_token,
@@ -51,6 +52,7 @@ app = FastAPI(
     version=__version__,
 )
 app.include_router(admin_router)
+app.include_router(cronograma_router)
 
 # CORS para o frontend React (origens configuráveis via RAG_CORS_ORIGINS).
 app.add_middleware(

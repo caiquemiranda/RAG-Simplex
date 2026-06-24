@@ -15,6 +15,8 @@ erDiagram
   USUARIO }o--o{ CLIENTE : "N:N usuario_cliente (atende)"
   USUARIO ||--o{ DOCUMENTO_TECNICO : "1:N"
   USUARIO ||--o{ LOG_CONSULTA : "1:N (usuario_id)"
+  USUARIO ||--o{ VISITA : "1:N (técnico)"
+  CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
   PROVEDOR ||--o{ CONFIG_ESTRATEGIA : "0..1 (provedor_id)"
 
   PAPEL {
@@ -46,6 +48,15 @@ erDiagram
     string nome UK
     string unidade "local/cidade"
     bool ativo
+  }
+  VISITA {
+    int id PK
+    int usuario_id FK "técnico"
+    int cliente_id FK "opcional"
+    date data
+    string titulo "atividade"
+    string status "agendada|concluida|cancelada"
+    text observacoes
   }
   DOCUMENTO_TECNICO {
     int id PK
@@ -99,6 +110,11 @@ Cliente atendido (prédio/condomínio/instalação) com `unidade` (local). Técn
 associados a clientes via `usuario_cliente` (N:N) — define **acesso** e o **cronograma
 por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece na tabela
 mas não é mais usado pela API.
+
+### Visita (cronograma)
+Atividade agendada de um técnico (`usuario_id`) num dia (`data`), opcionalmente num
+cliente (`cliente_id`), com `status`. Técnico vê as próprias; admin vê todas. Ver
+[`FLUXOS.md`](FLUXOS.md) e o spec [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
 
 ### DocumentoTecnico
 Documento exigido do técnico (NR-10, ASO, crachá de cliente) com `validade`. O painel
