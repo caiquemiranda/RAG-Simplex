@@ -1,6 +1,10 @@
 # Spec — Fase 7: Frontend React (base + auth) + Docker
 
-**Status:** 🔄 Em andamento (frontend base ✅ · Docker ⬜) · **Data:** 2026-06-23
+**Status:** ✅ Concluído (frontend base + auth + Docker) · **Data:** 2026-06-23
+
+> **Evolução:** o chat e o layout amadureceram na Fase 8
+> ([`spec-fase-8-frontend-chat.md`](spec-fase-8-frontend-chat.md)): streaming,
+> citações, feedback, histórico e sidebar responsiva estilo ChatGPT.
 
 ## Objetivo
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
@@ -25,21 +25,26 @@ function iniciais(texto: string): string {
 
 const itemBase = 'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-accent'
 
-export default function Sidebar() {
+type Props = {
+  /** `full` = barra de 260px; `rail` = trilho de ícones (56px). */
+  variant: 'full' | 'rail'
+  onAbrir?: () => void // trilho → expandir
+  onFechar?: () => void // barra → recolher (desktop) ou fechar drawer (compacto)
+  aoNavegar?: () => void // chamado ao navegar (fecha o drawer no modo compacto)
+}
+
+export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props) {
   const { usuario, sair } = useAuth()
   const { conversas, conversaAtivaId, novaConsulta, selecionar, excluir } = useChat()
   const navegar = useNavigate()
   const local = useLocation()
   const pode = (p: string) => usuario?.permissoes.includes(p) ?? false
 
-  const [aberta, setAberta] = useState(() => localStorage.getItem('rag-sidebar') !== '0')
-  const [grupo, setGrupo] = useState(true) // grupo "Consulta" expandido
+  const [grupo, setGrupo] = useState(true)
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
   const [menu, setMenu] = useState(false)
   const buscaRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => { localStorage.setItem('rag-sidebar', aberta ? '1' : '0') }, [aberta])
 
   const naConsulta = local.pathname === '/consulta'
   const recentes = [...conversas]
@@ -50,42 +55,39 @@ export default function Sidebar() {
       return c.titulo.toLowerCase().includes(q) || c.mensagens.some((m) => m.texto.toLowerCase().includes(q))
     })
 
-  function abrirNova() { novaConsulta(); navegar('/consulta') }
-  function abrirConsulta(id: string) { selecionar(id); navegar('/consulta') }
-  function toggleBusca() {
-    if (!aberta) setAberta(true)
-    setGrupo(true)
-    setBuscando((v) => !v)
-    setTimeout(() => buscaRef.current?.focus(), 0)
-  }
+  const navegou = () => aoNavegar?.()
+  function abrirNova() { novaConsulta(); navegar('/consulta'); navegou() }
+  function abrirConsulta(id: string) { selecionar(id); navegar('/consulta'); navegou() }
+  function irPara(rota: string) { setMenu(false); navegar(rota); navegou() }
+  function toggleBusca() { setGrupo(true); setBuscando((v) => !v); setTimeout(() => buscaRef.current?.focus(), 0) }
   function logout() { sair(); navegar('/login') }
 
-  const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `${itemBase} ${isActive ? 'bg-accent font-medium' : ''}`
+  const linkCls = ({ isActive }: { isActive: boolean }) => `${itemBase} ${isActive ? 'bg-accent font-medium' : ''}`
 
-  /* ---- Rail recolhido (só ícones) ---- */
-  if (!aberta) {
+  /* ---- Trilho recolhido (só ícones) ---- */
+  if (variant === 'rail') {
     const railBtn = 'rounded-lg p-2 hover:bg-accent'
+    const railLink = ({ isActive }: { isActive: boolean }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`
     return (
       <aside className="flex h-full w-[56px] flex-col items-center gap-1 border-r bg-muted/30 py-2">
-        <button className={railBtn} title="Abrir barra" onClick={() => setAberta(true)}><IconPainel /></button>
-        <NavLink to="/consulta" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Consulta"><IconConsulta /></NavLink>
-        <NavLink to="/relatorios" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Relatórios"><IconRelatorios /></NavLink>
-        <NavLink to="/equipamentos" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Buscar Equipamento"><IconEquipamento /></NavLink>
-        <NavLink to="/documentos" className={({ isActive }) => `${railBtn} ${isActive ? 'bg-accent' : ''}`} title="Documentos"><IconDocumentos /></NavLink>
-        <button className="mt-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground" title={usuario?.email} onClick={() => setAberta(true)}>
+        <button className={railBtn} title="Abrir barra lateral" onClick={onAbrir}><IconPainel /></button>
+        <NavLink to="/consulta" className={railLink} title="Consulta" onClick={navegou}><IconConsulta /></NavLink>
+        <NavLink to="/relatorios" className={railLink} title="Relatórios" onClick={navegou}><IconRelatorios /></NavLink>
+        <NavLink to="/equipamentos" className={railLink} title="Buscar Equipamento" onClick={navegou}><IconEquipamento /></NavLink>
+        <NavLink to="/documentos" className={railLink} title="Documentos" onClick={navegou}><IconDocumentos /></NavLink>
+        <button className="mt-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground" title={usuario?.email} onClick={onAbrir}>
           {iniciais(usuario?.nome || usuario?.email || '?')}
         </button>
       </aside>
     )
   }
 
-  /* ---- Sidebar aberta ---- */
+  /* ---- Barra completa ---- */
   return (
     <aside className="flex h-full w-[260px] flex-col border-r bg-muted/30">
       <div className="flex items-center justify-between p-2">
         <span className="px-2 text-sm font-semibold">RAG-Simplex</span>
-        <button className="rounded-lg p-2 hover:bg-accent" title="Recolher barra" onClick={() => setAberta(false)}><IconPainel /></button>
+        <button className="rounded-lg p-2 hover:bg-accent" title="Fechar barra lateral" onClick={onFechar}><IconPainel /></button>
       </div>
 
       <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
@@ -134,9 +136,9 @@ export default function Sidebar() {
 
         {/* Outras abas */}
         <div className="pt-2">
-          <NavLink to="/relatorios" className={linkCls}><IconRelatorios /> Relatórios</NavLink>
-          <NavLink to="/equipamentos" className={linkCls}><IconEquipamento /> Buscar Equipamento</NavLink>
-          <NavLink to="/documentos" className={linkCls}><IconDocumentos /> Documentos</NavLink>
+          <NavLink to="/relatorios" className={linkCls} onClick={navegou}><IconRelatorios /> Relatórios</NavLink>
+          <NavLink to="/equipamentos" className={linkCls} onClick={navegou}><IconEquipamento /> Buscar Equipamento</NavLink>
+          <NavLink to="/documentos" className={linkCls} onClick={navegou}><IconDocumentos /> Documentos</NavLink>
         </div>
       </nav>
 
@@ -146,9 +148,9 @@ export default function Sidebar() {
           <>
             <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar menu" onClick={() => setMenu(false)} />
             <div className="absolute bottom-14 left-2 right-2 z-50 overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg">
-              <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/inicio') }}>Início</button>
+              <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => irPara('/inicio')}>Início</button>
               {pode('gerir_usuarios') && (
-                <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setMenu(false); navegar('/admin') }}>Painel ADM</button>
+                <button className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => irPara('/admin')}>Painel ADM</button>
               )}
               <button className="block w-full border-t px-3 py-2 text-left text-sm text-destructive hover:bg-accent" onClick={logout}>Sair</button>
             </div>

@@ -9,6 +9,23 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 7) — Sidebar responsiva + specs (frontend/arquitetura)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Responsivo:** `hooks/useMediaQuery.ts`; `Layout` vira drawer sobreposto (com ☰
+  no topo + backdrop) abaixo de 768px e barra fixa (full/rail) acima. `Sidebar`
+  refatorada para receber `variant`/callbacks (estado de aberta sobe p/ o Layout);
+  drawer fecha ao navegar. `tsc` OK.
+- **Specs:** novo `spec-fase-8-frontend-chat.md` (chat + layout responsivo) e
+  `spec-arquitetura.md` (contratos/invariantes); notas de evolução em fase-7 e fase-9.
+
+**Arquivos:** `frontend/src/{hooks/useMediaQuery.ts,components/{Layout,Sidebar}.tsx}`,
+`docs/projeto/specs/{spec-fase-8-frontend-chat,spec-arquitetura,spec-fase-7-frontend,
+spec-fase-9-painel-adm-frontend}.md`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 6) — Sidebar em grupos + abas novas; fix do menu
 
 **Branch:** `feat/fase-7-frontend`.
