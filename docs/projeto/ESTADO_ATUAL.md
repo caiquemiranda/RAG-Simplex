@@ -28,6 +28,8 @@
 ## ⏭️ Próximo passo (ver plano completo em [`PLANEJAMENTO.md`](PLANEJAMENTO.md))
 
 Ordem **sem retrabalho** (detalhe em [`BACKLOG.md`](BACKLOG.md) §2):
+0. **Trilha Design (paralela):** identidade visual da empresa (⛔ aguarda paleta/logo),
+   **tema claro/escuro**, lista de usuários moderna (foto+cargo), edição como tela própria.
 1. **Etapa 0** (rápido, independente): alerta global de vencimento na lista de
    usuários · UI de **API keys** (backend `/admin/provedores` pronto).
 2. **Etapa 1 — fundação `Cliente`** (entidade + relação técnico↔cliente). Destrava

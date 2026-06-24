@@ -22,6 +22,9 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | Painel ADM em cards (usuários+perfil+documentos, auditoria) | ✅ |
 | Cronograma (calendário mensal, dados de exemplo) | ✅ (UI) |
 | Cards ADM: API keys / Banco / Clientes | ⬜ placeholder |
+| **Identidade visual da empresa + tema claro/escuro** | ⬜ (aguarda paleta/logo) |
+| **Redesign: lista de usuários (foto+cargo) e edição como tela própria** | ⬜ |
+| **Cronograma: card do dia (visão ADM/técnico)** | ⬜ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |
 | Fase 11 (reranker, RAGAS-lite, Alembic) | ⬜ |
 
@@ -47,28 +50,31 @@ A entidade **`Cliente`** é dependência de 4 frentes → vem antes.
 
 ```mermaid
 flowchart TD
+  D["Trilha DESIGN (paralela)<br/>#D1 identidade visual ⛔ · #D2 tema claro/escuro<br/>#U1 lista moderna · #U2 edição como tela"]
   E0["Etapa 0 — Higiene (independente)<br/>alerta de vencimento · UI API keys · input centralizado"]
   E1["Etapa 1 — FUNDAÇÃO Cliente ⚑<br/>entidade + relação técnico↔cliente + migrar Usuario.clientes"]
-  E2["Etapa 2 — Card Clientes (UI)"]
-  E3["Etapa 3 — Cronograma backend<br/>modelo Visita + dados reais"]
+  E2["Etapa 2 — Card Clientes (UI)<br/>completa #U2 (clientes em checkbox)"]
+  E3["Etapa 3 — Cronograma backend<br/>modelo Visita + dados reais → completa #C1 (card do dia)"]
   E4["Etapa 4 — Documentos exigidos por cliente"]
   E5["Etapa 5 — Robustez<br/>Alembic · upload de foto · card Banco de dados"]
   F10["Fase 10 — Nuvem + arena (API key)"]
   F11["Fase 11 — Reranker D-020 · RAGAS-lite"]
 
+  D -.estética p/ telas.-> E0
   E0 --> E1
   E1 --> E2
   E1 --> E3
   E1 --> E4
-  E2 --> E5
-  E3 --> E5
+  E2 -.fecha #U2.-> E5
+  E3 -.fecha #C1.-> E5
   F11 -.paralelo.-> E5
   F10 -.requer API key.-> E5
 ```
 
 ### Marcos (milestones)
-- **M1 — Fundação de clientes:** Etapa 1 entregue (entidade + relação + migração + specs/testes/docs).
-- **M2 — Gestão operacional:** Etapas 2–3 (card Clientes + Cronograma real).
+- **M0 — Identidade & tema:** trilha Design (#D1 paleta da empresa, #D2 claro/escuro, #U1/#U2 redesign).
+- **M1 — Fundação de clientes:** Etapa 1 (entidade + relação + migração + specs/testes/docs).
+- **M2 — Gestão operacional:** Etapas 2–3 (card Clientes + Cronograma real + cards do dia).
 - **M3 — Robustez:** Etapa 5 (Alembic, storage de foto, banco de dados).
 - **M4 — Inteligência avançada:** Fase 11 (reranker/avaliação) e, com chave, Fase 10 (nuvem).
 
@@ -76,6 +82,9 @@ flowchart TD
 
 | Item | Depende de | Risco se invertido |
 | --- | --- | --- |
+| #D1 identidade visual | **paleta/logo da empresa** (⛔ pendente) | retrabalho de cores se feito a olho |
+| #U2 clientes em checkbox | entidade Cliente (Etapa 1) | refazer o seletor de clientes |
+| #C1 card do dia (dados reais) | Cronograma backend (Etapa 3) | preencher com dados falsos 2× |
 | Card Clientes | entidade Cliente | refazer UI + migrar dados 2× |
 | Cronograma real | Cliente/Unidade | eventos sem vínculo correto |
 | `Usuario.clientes` → relação | entidade Cliente | acoplamento ao CSV provisório |

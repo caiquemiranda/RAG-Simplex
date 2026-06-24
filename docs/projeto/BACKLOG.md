@@ -48,6 +48,24 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `TESTES.md` e os **specs** atualizados a cada entrega.
 - [ ] Spec de cada novo módulo (Clientes, Cronograma, API keys).
 
+### G. Design, tema e telas (solicitações 2026-06-24)
+- [ ] **#D1 — Identidade visual da empresa**: aplicar **paleta/cores e logo** da empresa
+      nos tokens do tema (`index.css` + `tailwind.config`). ⛔ *Bloqueado:* aguardando a
+      paleta/branding (cores em hex, logo). Tokens já são variáveis CSS → troca centralizada.
+- [ ] **#D2 — Tema claro/escuro** em todo o sistema: toggle + persistência (`darkMode:'class'`
+      já habilitado no Tailwind; faltam as variáveis do tema escuro e o switch na UI).
+- [ ] **#U1 — Lista "Gerenciar usuários" moderna**: linha/card com **foto do técnico** como
+      1º item, depois **email · nome · Cargo** (no lugar de "Papel"). Visual moderno. dep: #D2 (estética).
+- [ ] **#U2 — Edição de usuário como TELA própria** (não card inline), seções de cima p/ baixo:
+      **1) Perfil e gestão de acesso · 2) Documentos exigidos (validade) · 3) Permissões ·
+      4) Estratégia e camadas**. Em *Perfil e gestão*: nome, **papel/cargo**, **nova senha com
+      mostrar/ocultar (👁)**, **ativo (checkbox)** e **clientes como checkbox** (puxados do banco).
+      dep: parte de **clientes** → entidade Cliente (Etapa 1); o resto é independente.
+- [ ] **#C1 — Cronograma: card do dia**: clicar num dia abre **card central** com as informações
+      do dia. **ADM/visão completa:** onde cada técnico está + atividade/histórico do dia.
+      **Técnico:** onde estará + atividade do dia. dep: Cronograma backend (Etapa 3) p/ dados reais
+      (shell de UI pode vir antes; visão por papel já é suportada pelo RBAC).
+
 ---
 
 ## 2. Plano sequenciado (sem retrabalho)
@@ -60,6 +78,12 @@ por cliente/local, documentos exigidos por cliente) dependem de uma entidade
 ```
 Ordem recomendada
 ═════════════════
+Trilha DESIGN (paralela — não depende de dados)
+  D1 • Identidade visual da empresa (#D1)  ⛔ aguarda paleta/logo
+  D2 • Tema claro/escuro (#D2)
+  D3 • Lista de usuários moderna: foto+email+nome+cargo (#U1)
+  D4 • Edição de usuário como tela própria + seções (#U2, parte sem clientes)
+
 Etapa 0 — Higiene rápida (independente, baixo custo)
   • Alerta global de vencimento de documentos na lista de usuários
   • Input centralizado no estado vazio do chat
@@ -73,10 +97,12 @@ Etapa 1 — FUNDAÇÃO: entidade Cliente  ⚑ destrava o resto
 
 Etapa 2 — Card "Clientes" (UI)            dep: Etapa 1
   • Listar/criar/editar clientes; atribuir técnicos
+  • Completa o #U2: clientes como CHECKBOX (puxados do banco)
 
 Etapa 3 — Cronograma (backend + real)     dep: Etapa 1
   • Modelo Visita (técnico, cliente/local, data, status) + endpoints
   • Calendário consome dados reais; visão por técnico/local
+  • Completa o #C1: card do dia com dados reais (ADM completo / técnico)
 
 Etapa 4 — Documentos exigidos POR cliente dep: Etapa 1
   • Relacionar DocumentoTecnico ao cliente que o exige (opcional)
@@ -89,6 +115,11 @@ Etapa 5 — Robustez/escala
 Paralelo / quando houver API key
   • Fase 10 (nuvem + arena) · Fase 11 (reranker, RAGAS-lite)
 ```
+
+> **Cuidado de não-retrabalho:** o **#U2** e o **#C1** têm uma parte que entra agora
+> (tela/seções, card do dia com dados de exemplo) e uma parte que **só fecha depois da
+> Etapa 1/3** (clientes em checkbox; dados reais do dia). Construir já prevendo esses
+> encaixes (componentes que recebem a lista de clientes / eventos por props).
 
 **Por que esta ordem evita retrabalho**
 - A entidade **Cliente** é dependência de 4 frentes; criá-la primeiro evita refazer
