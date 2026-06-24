@@ -9,6 +9,33 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 3) — Streaming (NDJSON) + feedback 👍/👎
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (backend, testado):**
+- `modelos.py`: coluna `LogConsulta.feedback` (1/-1/None).
+- `main.py`: `_executar_consulta()` (helper compartilhado, devolve `log_id`);
+  `/query` agora retorna `log_id`; `/query/stream` reescrito como **NDJSON**
+  (`{tipo:meta,...}` + `{tipo:delta,texto}`); novo `POST /feedback` (só no próprio log).
+- `tests/test_consulta.py` (6 casos: log_id, feedback ok/400/404, stream NDJSON,
+  stream negado sem permissão) → `pytest` = **58 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `lib/api.ts`: `queryStream()` (lê NDJSON via ReadableStream), `api.feedback()`.
+- `pages/Consulta.tsx`: usa streaming (efeito de digitação) p/ quem tem
+  `consultar_stream` (operador cai p/ `/query`); botões **👍/👎** por resposta.
+
+**⚠️ Schema:** coluna nova em `log_consulta`. Em banco existente, recriar
+(`rm data/processed/ragsimplex.db && python -m app.db --init`); no Docker o volume é novo.
+
+**Próximo:** resto da Fase 9 (estratégia/auditoria na UI), Fase 11 (reranker D-020).
+
+**Arquivos:** `app/{main,modelos}.py`, `tests/test_consulta.py`,
+`frontend/src/{lib/api,pages/Consulta}.tsx`.
+
+---
+
 ## 2026-06-23 — Fase 7 (parte 2 / D-017) — Docker: subir tudo com um comando
 
 **Branch:** `feat/fase-7-frontend`.

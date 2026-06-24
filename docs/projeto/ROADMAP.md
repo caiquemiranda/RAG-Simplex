@@ -20,7 +20,7 @@ administrativo e controle de acesso por usuário**.
 | 5 | Autorização / RBAC (papéis e permissões) | ❌ Não | ✅ |
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | ✅ |
-| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | 🔄 |
+| 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ✅ |
 | 9 | Frontend — painel ADM | ❌ Não | 🔄 |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
 | 11 | Avaliação de qualidade (RAGAS-lite) & hardening | parcial | ⬜ |
@@ -186,7 +186,7 @@ rodado aqui** (sem rede p/ torch/modelo) — roda na máquina do dev. Guia: `doc
 
 ---
 
-## Fase 8 — Frontend: chat do técnico 🔄
+## Fase 8 — Frontend: chat do técnico ✅
 
 - [x] Interface de **chat** (histórico rolável + input fixo, estilo ChatGPT/Claude)
 - [x] Render de **markdown** da dupla camada (`react-markdown` + typography)
@@ -194,12 +194,14 @@ rodado aqui** (sem rede p/ torch/modelo) — roda na máquina do dev. Guia: `doc
 - [x] Exibição das fontes (similaridade) e das camadas exibidas
 - [x] **Citações clicáveis + split-screen**: clicar numa fonte abre o guia ao lado,
       rolado e destacado no trecho exato (endpoints `/documentos`; multi-documento)
-- [ ] **Streaming** (`/query/stream`) na UI
-- [ ] Feedback 👍/👎 (precisa de endpoint no backend)
+- [x] **Streaming** na UI (`/query/stream` em **NDJSON**: meta + deltas; digitação;
+      pronto p/ streaming real de nuvem na Fase 10; operador cai p/ `/query`)
+- [x] **Feedback 👍/👎** (coluna `LogConsulta.feedback` + `POST /feedback`)
 
-**Testes (na máquina do dev — npm bloqueado aqui):** [ ] dupla camada renderiza · [ ] aviso em destaque · [ ] fallback claro
+**Testes:** backend `/query` log_id, `/query/stream` NDJSON, `/feedback` (58 passed);
+UI não testada aqui (npm bloqueado).
 
-**DoD:** técnico pergunta e recebe resposta formatada (markdown), com fontes.
+**DoD:** ✅ técnico pergunta e recebe resposta em streaming/markdown, com fontes e feedback.
 
 ---
 

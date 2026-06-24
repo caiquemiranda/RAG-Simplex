@@ -1,24 +1,27 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { api, type Fonte, type RespostaQuery } from '../lib/api'
+import { api, queryStream, type Fonte } from '../lib/api'
+import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Markdown } from '../components/Markdown'
 import { DocumentoPanel } from '../components/DocumentoPanel'
 
-type Mensagem =
-  | { autor: 'usuario'; texto: string }
-  | {
-      autor: 'assistente'
-      texto: string
-      fontes: Fonte[]
-      camadas: string[]
-      fallback: boolean
-    }
+type Mensagem = {
+  autor: 'usuario' | 'assistente'
+  texto: string
+  fontes?: Fonte[]
+  camadas?: string[]
+  fallback?: boolean
+  logId?: number | null
+  voto?: number
+}
 
 type DocAberto = { nome: string; header: string }
 
-/** Assistente em chat + painel lateral do documento citado (split screen). */
 export default function Consulta() {
+  const { usuario } = useAuth()
+  const podeStream = usuario?.permissoes.includes('consultar_stream') ?? false
+
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [pergunta, setPergunta] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -29,37 +32,64 @@ export default function Consulta() {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensagens, carregando])
 
+  // Atualiza a última mensagem (a do assistente em curso).
+  function patchUltima(patch: Partial<Mensagem>) {
+    setMensagens((prev) => {
+      const copia = [...prev]
+      const i = copia.length - 1
+      copia[i] = { ...copia[i], ...patch }
+      return copia
+    })
+  }
+  function appendUltima(delta: string) {
+    setMensagens((prev) => {
+      const copia = [...prev]
+      const i = copia.length - 1
+      copia[i] = { ...copia[i], texto: copia[i].texto + delta }
+      return copia
+    })
+  }
+
   async function enviar(e: FormEvent) {
     e.preventDefault()
     const texto = pergunta.trim()
     if (!texto || carregando) return
 
-    setMensagens((m) => [...m, { autor: 'usuario', texto }])
+    setMensagens((m) => [
+      ...m,
+      { autor: 'usuario', texto },
+      { autor: 'assistente', texto: '', fontes: [], camadas: [], fallback: false, logId: null, voto: 0 },
+    ])
     setPergunta('')
     setCarregando(true)
     try {
-      const r: RespostaQuery = await api.query(texto)
-      setMensagens((m) => [
-        ...m,
-        {
-          autor: 'assistente',
+      if (podeStream) {
+        await queryStream(
+          texto,
+          (meta) =>
+            patchUltima({
+              fontes: meta.fontes,
+              camadas: meta.camadas_exibidas,
+              fallback: meta.fallback,
+              logId: meta.log_id,
+            }),
+          (delta) => appendUltima(delta),
+        )
+      } else {
+        const r = await api.query(texto)
+        patchUltima({
           texto: r.resposta,
           fontes: r.fontes,
           camadas: r.camadas_exibidas,
           fallback: r.fallback,
-        },
-      ])
+          logId: r.log_id,
+        })
+      }
     } catch (err) {
-      setMensagens((m) => [
-        ...m,
-        {
-          autor: 'assistente',
-          texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`,
-          fontes: [],
-          camadas: [],
-          fallback: true,
-        },
-      ])
+      patchUltima({
+        texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`,
+        fallback: true,
+      })
     } finally {
       setCarregando(false)
     }
@@ -67,6 +97,17 @@ export default function Consulta() {
 
   function abrirFonte(f: Fonte) {
     if (f.fonte) setDoc({ nome: f.fonte, header: f.header ?? '' })
+  }
+
+  async function votar(idx: number, voto: number) {
+    const m = mensagens[idx]
+    if (!m.logId) return
+    try {
+      await api.feedback(m.logId, voto)
+      setMensagens((prev) => prev.map((x, i) => (i === idx ? { ...x, voto } : x)))
+    } catch {
+      /* silencioso: feedback é best-effort */
+    }
   }
 
   return (
@@ -97,39 +138,57 @@ export default function Consulta() {
               ) : (
                 <div key={i} className="flex justify-start">
                   <div className="w-full rounded-2xl border bg-card px-4 py-3 shadow-sm">
-                    {m.camadas.length > 0 && (
-                      <div className="mb-1 text-xs text-muted-foreground">
-                        Camadas exibidas: {m.camadas.join(', ')}
-                      </div>
-                    )}
-                    <Markdown content={m.texto} />
-                    {m.fontes.length > 0 && (
-                      <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t pt-2">
-                        <span className="text-xs font-medium text-muted-foreground">Fontes:</span>
-                        {m.fontes.map((f, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => abrirFonte(f)}
-                            title={`Abrir ${f.fonte ?? 'documento'} no trecho citado`}
-                            className="rounded border bg-background px-1.5 py-0.5 text-xs text-primary hover:bg-accent hover:text-accent-foreground"
-                          >
-                            {f.header ?? f.id} ({f.similaridade.toFixed(2)})
-                          </button>
-                        ))}
-                      </div>
+                    {!m.texto && carregando ? (
+                      <p className="text-sm text-muted-foreground">Consultando a base…</p>
+                    ) : (
+                      <>
+                        {m.camadas && m.camadas.length > 0 && (
+                          <div className="mb-1 text-xs text-muted-foreground">
+                            Camadas exibidas: {m.camadas.join(', ')}
+                          </div>
+                        )}
+                        <Markdown content={m.texto} />
+                        {m.fontes && m.fontes.length > 0 && (
+                          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t pt-2">
+                            <span className="text-xs font-medium text-muted-foreground">Fontes:</span>
+                            {m.fontes.map((f, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => abrirFonte(f)}
+                                title={`Abrir ${f.fonte ?? 'documento'} no trecho citado`}
+                                className="rounded border bg-background px-1.5 py-0.5 text-xs text-primary hover:bg-accent hover:text-accent-foreground"
+                              >
+                                {f.header ?? f.id} ({f.similaridade.toFixed(2)})
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {m.logId && !m.fallback && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => votar(i, 1)}
+                              className={`rounded px-1.5 text-sm hover:bg-accent ${m.voto === 1 ? 'opacity-100' : 'opacity-50'}`}
+                              title="Resposta útil"
+                            >
+                              👍
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => votar(i, -1)}
+                              className={`rounded px-1.5 text-sm hover:bg-accent ${m.voto === -1 ? 'opacity-100' : 'opacity-50'}`}
+                              title="Resposta ruim"
+                            >
+                              👎
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               ),
-            )}
-
-            {carregando && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl border bg-card px-4 py-3 text-sm text-muted-foreground">
-                  Consultando a base…
-                </div>
-              </div>
             )}
             <div ref={fimRef} />
           </div>

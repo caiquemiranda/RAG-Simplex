@@ -134,6 +134,8 @@ class LogConsulta(Base):
     latencia_ms: Mapped[float | None] = mapped_column(Float, default=None)
     custo_estimado: Mapped[float] = mapped_column(Float, default=0.0)
     fallback: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Feedback do usuário: 1 (👍), -1 (👎) ou None (sem voto).
+    feedback: Mapped[int | None] = mapped_column(default=None)
     criado_em: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

@@ -15,6 +15,9 @@ Execução local:
 
 from __future__ import annotations
 
+import json
+import re
+
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -88,6 +91,12 @@ class RespostaOut(BaseModel):
     fallback: bool
     fontes: list[FonteOut]
     camadas_exibidas: list[str] = []  # quais camadas o papel do usuário recebeu
+    log_id: int | None = None         # id da consulta (para enviar feedback)
+
+
+class FeedbackIn(BaseModel):
+    log_id: int
+    voto: int = Field(..., description="1 (👍) ou -1 (👎)")
 
 
 class IngestOut(BaseModel):
@@ -204,16 +213,10 @@ def ingest(usuario: Usuario = Depends(requer("ingerir"))) -> IngestOut:
     return IngestOut(blocos_indexados=total, colecao=settings.collection_name)
 
 
-@app.post("/query", response_model=RespostaOut)
-def query(
-    consulta: ConsultaIn,
-    usuario: Usuario = Depends(requer("consultar")),
-    sessao: Session = Depends(get_session),
-) -> RespostaOut:
-    """Recupera contexto e gera a resposta na estratégia configurada para o usuário.
+def _executar_consulta(consulta: ConsultaIn, usuario: Usuario, sessao: Session):
+    """Roda a consulta (estratégia + camadas por papel) e registra a auditoria.
 
-    As camadas exibidas dependem do papel (RBAC): operador recebe só a camada de
-    linguagem simples; técnico/analista recebem também a resolução técnica.
+    Retorna ``(texto_filtrado, resposta, camadas_exibidas, log_id)``.
     """
     papel = usuario.papel.nome if usuario.papel else None
     estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
@@ -226,28 +229,43 @@ def query(
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 
-    # Filtra as camadas conforme o papel. Fallback e estratégias sem camadas
-    # estruturadas usam o texto completo.
+    # Filtra as camadas conforme o papel (fallback usa o texto completo).
     texto = montar_texto(resp.camadas, permitidas) if resp.camadas else resp.texto
 
-    # Auditoria (PRD §6.2): registra a consulta sem expor a chave do provedor.
-    sessao.add(LogConsulta(
-        usuario_id=usuario.id,
-        pergunta=consulta.pergunta,
-        estrategia=resp.estrategia or estrategia,
-        latencia_ms=resp.latencia_ms,
-        custo_estimado=resp.custo_estimado,
-        fallback=resp.fallback,
-    ))
+    log = LogConsulta(
+        usuario_id=usuario.id, pergunta=consulta.pergunta,
+        estrategia=resp.estrategia or estrategia, latencia_ms=resp.latencia_ms,
+        custo_estimado=resp.custo_estimado, fallback=resp.fallback,
+    )
+    sessao.add(log)
     sessao.commit()
+    sessao.refresh(log)
+    return texto, resp, sorted(permitidas), log.id
 
+
+@app.post("/query", response_model=RespostaOut)
+def query(
+    consulta: ConsultaIn,
+    usuario: Usuario = Depends(requer("consultar")),
+    sessao: Session = Depends(get_session),
+) -> RespostaOut:
+    """Recupera contexto e gera a resposta na estratégia/camadas do usuário (RBAC)."""
+    texto, resp, camadas, log_id = _executar_consulta(consulta, usuario, sessao)
     return RespostaOut(
         pergunta=consulta.pergunta,
         resposta=texto,
         fallback=resp.fallback,
         fontes=resp.fontes,
-        camadas_exibidas=sorted(permitidas),
+        camadas_exibidas=camadas,
+        log_id=log_id,
     )
+
+
+def _fatiar(texto: str, palavras_por_chunk: int = 4):
+    """Quebra o texto em pedaços (mantendo espaços) para o efeito de digitação."""
+    pedacos = re.findall(r"\S+\s*", texto)
+    for i in range(0, len(pedacos), palavras_por_chunk):
+        yield "".join(pedacos[i : i + palavras_por_chunk])
 
 
 @app.post("/query/stream")
@@ -256,35 +274,40 @@ def query_stream(
     usuario: Usuario = Depends(requer("consultar_stream")),
     sessao: Session = Depends(get_session),
 ) -> StreamingResponse:
-    """Mesma resposta de ``/query``, porém em streaming (text/plain; charset=utf-8).
+    """Resposta em streaming **NDJSON** (uma linha JSON por evento).
 
-    As camadas são filtradas por papel antes do envio (gera a resposta e transmite
-    o texto já filtrado). O streaming token a token de nuvem é tratado na Fase 10.
+    Eventos: ``{"tipo":"meta", log_id, fallback, camadas_exibidas, fontes}`` seguido
+    de vários ``{"tipo":"delta","texto":...}``. Pronto para o streaming token a token
+    das estratégias de nuvem (Fase 10); no local, transmite o texto em pedaços.
     """
-    papel = usuario.papel.nome if usuario.papel else None
-    estrategia = resolver_estrategia(sessao, usuario_id=usuario.id, papel_nome=papel)
-    permitidas = resolver_camadas(sessao, usuario_id=usuario.id, papel_nome=papel)
-    try:
-        rec = buscar(consulta.pergunta, top_k=consulta.top_k, sistema=consulta.sistema)
-        resp = gerar_resposta(
-            consulta.pergunta, recuperacao=rec, persona=consulta.persona, estrategia=estrategia
-        )
-    except RuntimeError as e:
-        raise HTTPException(status_code=503, detail=str(e)) from e
-
-    texto = montar_texto(resp.camadas, permitidas) if resp.camadas else resp.texto
-
-    sessao.add(LogConsulta(
-        usuario_id=usuario.id, pergunta=consulta.pergunta,
-        estrategia=resp.estrategia or estrategia, latencia_ms=resp.latencia_ms,
-        custo_estimado=resp.custo_estimado, fallback=resp.fallback,
-    ))
-    sessao.commit()
+    texto, resp, camadas, log_id = _executar_consulta(consulta, usuario, sessao)
 
     def _emitir():
-        yield texto
+        yield json.dumps({
+            "tipo": "meta", "log_id": log_id, "fallback": resp.fallback,
+            "camadas_exibidas": camadas, "fontes": resp.fontes,
+        }, ensure_ascii=False) + "\n"
+        for pedaco in _fatiar(texto):
+            yield json.dumps({"tipo": "delta", "texto": pedaco}, ensure_ascii=False) + "\n"
 
-    return StreamingResponse(_emitir(), media_type="text/plain; charset=utf-8")
+    return StreamingResponse(_emitir(), media_type="application/x-ndjson")
+
+
+@app.post("/feedback")
+def feedback(
+    dados: FeedbackIn,
+    usuario: Usuario = Depends(requer("consultar")),
+    sessao: Session = Depends(get_session),
+) -> dict:
+    """Registra o feedback (👍/👎) do usuário sobre uma de suas consultas."""
+    if dados.voto not in (1, -1):
+        raise HTTPException(status_code=400, detail="voto deve ser 1 (👍) ou -1 (👎).")
+    log = sessao.get(LogConsulta, dados.log_id)
+    if log is None or log.usuario_id != usuario.id:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada.")
+    log.feedback = dados.voto
+    sessao.commit()
+    return {"ok": True, "log_id": dados.log_id, "voto": dados.voto}
 
 
 # --------------------------------------------------------------------------- #
