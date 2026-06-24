@@ -24,7 +24,8 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | **Cronograma — otimizações (#CR1–#CR5)** | ✅ (grade do mês, avatares, fim de semana, feriados, notificações) |
 | **Entidade Cliente (N:N técnico↔cliente) + card Clientes CRUD** | ✅ (Etapa 1) |
 | Cards ADM: API keys / Banco de dados | ⬜ placeholder |
-| **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo PNG) |
+| **Identidade visual (IBSystems) + tema claro/escuro** | ✅ (logo: falta o arquivo) |
+| **Logo natural (SVG/sem fundo/maior) + Home ao clicar no logo** | ⬜ (#D3 ⛔ asset · #HOME) |
 | **Redesign: lista de usuários (foto+cargo) e edição como tela própria** | ⬜ |
 | **Cronograma: card do dia (visão ADM/técnico)** | ⬜ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |

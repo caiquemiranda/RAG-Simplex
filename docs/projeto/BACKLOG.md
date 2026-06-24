@@ -75,6 +75,16 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       colocar `frontend/public/logo.png`. Doc: [`../DESIGN.md`](../DESIGN.md).
 - [x] **#D2 — Tema claro/escuro**: `ThemeProvider` + toggle no menu do usuário +
       persistência (`rag-tema`); variáveis do tema escuro no `index.css`.
+- [ ] **#D3 — Logo natural (SVG, sem fundo, maior)**: o PNG atual tem **fundo cinza ao
+      redor**. Usar o logo em **SVG com fundo transparente** e **aumentar** o tamanho.
+      ⚠️ *Depende do asset:* usuário fornece o **SVG/PNG transparente** (ou removemos o
+      fundo do PNG). No código, `Logo.tsx` já não tem container de fundo — só ajustar altura.
+- [ ] **#HOME — Home/Dashboard ao clicar no logo**: clicar no **logo** abre a **Home
+      personalizada**. **Técnico:** atividades **do dia**, **em qual cliente estará**, infos
+      relevantes (próximas visitas, documentos vencendo, notificações). **ADM:** visão geral
+      do dia (resumo do cronograma). Reusa cronograma (visitas de hoje) + documentos/
+      notificações. Tornar o `Logo` **clicável** (link p/ `/inicio` ou nova `/home`).
+      *Sem dependência nova* — cronograma e perfil já existem.
 - [ ] **#U1 — Lista "Gerenciar usuários" moderna**: linha/card com **foto do técnico** como
       1º item, depois **email · nome · Cargo** (no lugar de "Papel"). Visual moderno. dep: #D2 (estética).
 - [ ] **#U2 — Edição de usuário como TELA própria** (não card inline), seções de cima p/ baixo:
@@ -98,10 +108,12 @@ por cliente/local, documentos exigidos por cliente) dependem de uma entidade
 Ordem recomendada
 ═════════════════
 Trilha DESIGN (paralela — não depende de dados)
-  D1 • Identidade visual da empresa (#D1)  ⛔ aguarda paleta/logo
-  D2 • Tema claro/escuro (#D2)
-  D3 • Lista de usuários moderna: foto+email+nome+cargo (#U1)
-  D4 • Edição de usuário como tela própria + seções (#U2, parte sem clientes)
+  D1 • Identidade visual da empresa (#D1) ✅
+  D2 • Tema claro/escuro (#D2) ✅
+  D3 • Logo natural SVG/sem fundo/maior (#D3)  ⛔ aguarda asset SVG transparente
+  D4 • Home/Dashboard ao clicar no logo (#HOME)  — atividades do dia/cliente/infos
+  D5 • Lista de usuários moderna: foto+email+nome+cargo (#U1)
+  D6 • Edição de usuário como tela própria + seções (#U2, parte sem clientes)
 
 Etapa 0 — Higiene rápida (independente, baixo custo)
   • Alerta global de vencimento de documentos na lista de usuários

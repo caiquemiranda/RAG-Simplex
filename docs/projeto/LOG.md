@@ -9,6 +9,17 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Backlog: logo natural (#D3) + Home ao clicar no logo (#HOME)
+
+Adicionados ao [`BACKLOG.md`](BACKLOG.md) §G e ao plano:
+- **#D3** — logo em **SVG sem fundo** (PNG atual tem fundo cinza) e **maior**;
+  depende do **asset** transparente do usuário.
+- **#HOME** — clicar no **logo** abre **Home personalizada**: técnico vê **atividades
+  do dia**, **cliente** onde estará e infos relevantes; ADM vê resumo do dia.
+  Sem dependência nova (reusa cronograma/perfil/notificações).
+
+---
+
 ## 2026-06-24 — Cronograma: #CR3 feriados (global) + #CR4 notificações
 
 **Branch:** `feat/fase-7-frontend`. **Decisões:** feriado **global**; notificar **só o técnico**.
