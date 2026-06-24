@@ -65,6 +65,7 @@ export type AdminCliente = {
   logo_url: string | null
 }
 export type ClienteEntrada = { nome?: string; unidade?: string | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
+export type ClienteVisivel = { id: number; nome: string; unidade: string | null; cor: string | null; logo_url: string | null }
 
 export type Visita = {
   id: number
@@ -272,6 +273,7 @@ export const api = {
     }),
   me: () => request<Usuario>('/auth/me'),
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
+  clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',

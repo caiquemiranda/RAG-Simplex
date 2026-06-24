@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Consulta from './pages/Consulta'
 import Admin from './pages/Admin'
 import Relatorios from './pages/Relatorios'
+import RelatorioCliente from './pages/RelatorioCliente'
 import Equipamentos from './pages/Equipamentos'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/consulta" replace />} />
           <Route path="/consulta" element={<Consulta />} />
           <Route path="/relatorios" element={<Relatorios />} />
+          <Route path="/relatorios/:id" element={<RelatorioCliente />} />
           <Route path="/equipamentos" element={<Equipamentos />} />
           <Route path="/documentos" element={<Documentos />} />
           <Route path="/cronograma" element={<Cronograma />} />

@@ -45,7 +45,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import LogConsulta, Usuario
+from app.modelos import Cliente, LogConsulta, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -204,6 +204,32 @@ def meus_documentos(usuario: Usuario = Depends(usuario_atual)) -> list[MeuDocume
     return [
         MeuDocumento(id=d.id, nome=d.nome, validade=d.validade.isoformat() if d.validade else None)
         for d in usuario.documentos
+    ]
+
+
+class ClientePublico(BaseModel):
+    id: int
+    nome: str
+    unidade: str | None = None
+    cor: str | None = None
+    logo_url: str | None = None
+
+
+@app.get("/clientes", response_model=list[ClientePublico])
+def clientes_visiveis(
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[ClientePublico]:
+    """Clientes ativos visíveis (Relatórios/sidebar): admin vê todos; técnico vê os seus."""
+    if usuario.tem_permissao("gerir_usuarios"):
+        clientes = sessao.scalars(
+            select(Cliente).where(Cliente.ativo.is_(True)).order_by(Cliente.nome)
+        ).all()
+    else:
+        clientes = sorted((c for c in usuario.clientes_rel if c.ativo), key=lambda c: c.nome)
+    return [
+        ClientePublico(id=c.id, nome=c.nome, unidade=c.unidade, cor=c.cor, logo_url=c.logo_url)
+        for c in clientes
     ]
 
 

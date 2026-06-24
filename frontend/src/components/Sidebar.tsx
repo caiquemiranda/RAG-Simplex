@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { api, type ClienteVisivel } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
 import { useTema } from '../theme/ThemeContext'
@@ -44,12 +45,19 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   const pode = (p: string) => usuario?.permissoes.includes(p) ?? false
 
   const [grupo, setGrupo] = useState(true)
+  const [grupoRel, setGrupoRel] = useState(false)
+  const [clientesRel, setClientesRel] = useState<ClienteVisivel[]>([])
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
   const [menu, setMenu] = useState(false)
   const buscaRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    if (usuario) api.clientesVisiveis().then(setClientesRel).catch(() => {})
+  }, [usuario])
+
   const naConsulta = local.pathname === '/consulta'
+  const naRel = local.pathname.startsWith('/relatorios')
   const recentes = [...conversas]
     .sort((a, b) => b.atualizadoEm - a.atualizadoEm)
     .filter((c) => {
@@ -157,7 +165,24 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
 
         {/* Outras abas */}
         <div className="pt-2">
-          <NavLink to="/relatorios" className={linkCls} onClick={navegou}><IconRelatorios /> Relatórios</NavLink>
+          {/* Grupo Relatórios (clientes) */}
+          <button className={`${itemBase} ${naRel ? 'font-medium' : ''}`} onClick={() => setGrupoRel((v) => !v)}>
+            <Chevron aberto={grupoRel} />
+            <IconRelatorios />
+            <span className="flex-1 text-left">Relatórios</span>
+          </button>
+          {grupoRel && (
+            <div className="ml-3 space-y-0.5 border-l pl-2">
+              <NavLink to="/relatorios" end className={linkCls} onClick={navegou}>Visão geral</NavLink>
+              {clientesRel.map((c) => (
+                <NavLink key={c.id} to={`/relatorios/${c.id}`} className={linkCls} onClick={navegou}>
+                  <Avatar nome={c.nome} fotoUrl={c.logo_url} cor={c.cor} className="h-5 w-5" />
+                  <span className="truncate">{c.nome}</span>
+                </NavLink>
+              ))}
+              {clientesRel.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">Nenhum cliente.</p>}
+            </div>
+          )}
           <NavLink to="/equipamentos" className={linkCls} onClick={navegou}><IconEquipamento /> Buscar Equipamento</NavLink>
           <NavLink to="/documentos" className={linkCls} onClick={navegou}><IconDocumentos /> Documentos</NavLink>
           <NavLink to="/cronograma" className={linkCls} onClick={navegou}><IconCronograma /> Cronograma</NavLink>

@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**74 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**75 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
 perfil, documentos, **clientes**), **cronograma** (visitas, **feriados**,
 **notificações**), streaming e feedback.
@@ -99,7 +99,9 @@ pytest
 - `test_upload_exige_admin` — sem `gerir_usuarios` → 403.
 - `test_remover_arquivo` — remoção segura (não apaga fora da pasta).
 
-### `test_cronograma.py` (7) — cronograma, feriados, notificações, fechamento
+### `test_cronograma.py` (9) — cronograma, clientes visíveis, feriados, notificações
+- `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.
+- `test_tecnico_fecha_propria_visita` — técnico fecha a própria (status/observações); 403/400 nos limites.
 - `test_admin_cria_e_filtra_por_intervalo` — cria visita; filtra por intervalo de datas.
 - `test_tecnico_ve_apenas_as_proprias` — técnico só enxerga as próprias visitas.
 - `test_tecnico_nao_cria` — sem `gerir_usuarios` → 403 ao criar.

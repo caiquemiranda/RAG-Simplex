@@ -113,9 +113,9 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [x] **#CLIV ⚑ — Cor + logo por cliente** (item 4): `Cliente.cor` + `Cliente.logo_url`;
       card Clientes com **seletor de cor** e **upload de logo** (via `/upload`). `Avatar`
       ganhou prop `cor`. **Fundação pronta** para #R1 e #CR6.
-- [ ] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): cada cliente vira um
-      **card em Relatórios** e um item no **grupo "Relatórios" da sidebar** (como
-      Consulta→Nova consulta). Criar cliente → aparece nos dois. dep: Cliente ✅ + **#CLIV**.
+- [x] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): `GET /clientes`
+      (visível por papel); página Relatórios com **cards** (avatar cor/logo) → `/relatorios/:id`
+      (shell do relatório); sidebar com **grupo "Relatórios"** colapsável listando os clientes.
 - [ ] **#CR6 — Calendário: atividade + cliente na célula** (item 3): mostrar **atividade
       e cliente** no dia; se **2+ técnicos** no mesmo cliente, **agrupar num único card
       miniatura**. **Editar** atividade agendada (admin: título/cliente/data/técnico).

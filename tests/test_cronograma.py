@@ -100,6 +100,20 @@ def test_remover_visita(ctx):
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 404
 
 
+def test_clientes_visiveis_por_papel(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    # Vincula o cliente "Shopping X" (criado no fixture) ao tec.
+    client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_ids": [ids["cliente"]]})
+
+    # Admin vê todos os clientes ativos; o técnico vê só os seus.
+    assert any(c["id"] == ids["cliente"] for c in client.get("/clientes", headers=admin).json())
+    vis_tec = client.get("/clientes", headers=_login(client, "tec@x.com")).json()
+    assert [c["id"] for c in vis_tec] == [ids["cliente"]]
+    # tec2 não tem clientes vinculados.
+    assert client.get("/clientes", headers=_login(client, "tec2@x.com")).json() == []
+
+
 def test_tecnico_fecha_propria_visita(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")

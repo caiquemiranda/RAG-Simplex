@@ -36,6 +36,24 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #R1: Relatórios = cards de clientes + grupo na sidebar
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Backend:** `GET /clientes` (autenticado) — admin vê todos os ativos; técnico vê só
+  os seus (`clientes_rel`). `ClientePublico` (id, nome, unidade, cor, logo_url).
+- **Frontend:** `pages/Relatorios.tsx` (grid de **cards** com avatar cor/logo) →
+  `pages/RelatorioCliente.tsx` (`/relatorios/:id`, shell do relatório). **Sidebar**:
+  "Relatórios" vira **grupo colapsável** listando os clientes (avatar) + "Visão geral".
+  `api.clientesVisiveis`.
+- **Testes:** `test_clientes_visiveis_por_papel` → **75 passed**. `tsc` OK.
+
+**Arquivos:** `app/main.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,components/Sidebar.tsx,pages/{Relatorios,RelatorioCliente}.tsx,App.tsx}`,
+`docs/**`.
+
+---
+
 ## 2026-06-24 — #CLIV: cor + logo por cliente (fundação visual)
 
 **Branch:** `feat/fase-7-frontend`.
