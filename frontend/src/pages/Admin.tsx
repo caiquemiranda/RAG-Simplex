@@ -653,7 +653,14 @@ export default function Admin() {
                   <div key={u.id} className="flex items-center gap-3 py-2">
                     <Avatar nome={u.nome || u.email} fotoUrl={u.foto_url} className="h-10 w-10" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{u.email}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">{u.email}</span>
+                        {u.docs_alerta > 0 && (
+                          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700" title="Documentos vencidos ou vencendo em até 30 dias">
+                            ⚠️ {u.docs_alerta} doc.
+                          </span>
+                        )}
+                      </div>
                       <div className="truncate text-xs text-muted-foreground">
                         {u.nome || '—'} · {u.cargo || u.papel || '—'}{!u.ativo && ' · inativo'}
                       </div>

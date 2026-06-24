@@ -14,9 +14,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### A. Frontend / UX
 - [ ] **#1 — Alinhamento fino ao ChatGPT + "exatidão dos documentos"**: confirmar com o
       usuário se é (a) só ajuste visual, (b) atualizar docs/specs, (c) modelagem de dados.
-- [ ] **Alerta global de vencimento de documentos** na lista "Gerenciar usuários"
-      (⚠️ ao lado de quem tem documento vencido/vencendo). dep: card de usuário (✅).
-- [ ] **Input centralizado** no estado vazio da consulta (estilo "O que tem na agenda").
+- [x] **Alerta global de vencimento de documentos** na lista "Gerenciar usuários":
+      `docs_alerta` (vencidos/≤30d) no `UsuarioResumo` → badge **⚠️ N doc.** na linha.
+- [x] **Input centralizado** no estado vazio da consulta (estilo "O que tem na agenda"):
+      quando não há mensagens, o título + campo de envio ficam **centralizados**.
 - [ ] **Foto do técnico**: hoje é data URL no banco. Migrar para upload de arquivo
       + endpoint de mídia quando houver muitos usuários. dep: decisão de storage.
 

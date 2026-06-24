@@ -88,6 +88,7 @@ class UsuarioResumo(BaseModel):
     papel: str | None = None
     cargo: str | None = None
     foto_url: str | None = None
+    docs_alerta: int = 0   # documentos vencidos ou vencendo em ≤ 30 dias
     permissoes_extra: list[str] = []
 
 
@@ -170,10 +171,14 @@ class ProvedorResumo(BaseModel):
 # Helpers                                                                      #
 # --------------------------------------------------------------------------- #
 def _resumo_usuario(u: Usuario) -> UsuarioResumo:
+    hoje = date.today()
+    docs_alerta = sum(
+        1 for d in u.documentos if d.validade and (d.validade - hoje).days <= 30
+    )
     return UsuarioResumo(
         id=u.id, email=u.email, nome=u.nome, ativo=u.ativo,
         papel=u.papel.nome if u.papel else None,
-        cargo=u.cargo, foto_url=u.foto_url,
+        cargo=u.cargo, foto_url=u.foto_url, docs_alerta=docs_alerta,
         permissoes_extra=[p.chave for p in u.permissoes_extra],
     )
 

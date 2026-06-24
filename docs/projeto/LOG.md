@@ -9,6 +9,20 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Etapa 0b/0c: alerta de documentos + input centralizado
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **0b:** `UsuarioResumo.docs_alerta` (documentos vencidos/≤30 dias) → **badge
+  ⚠️ N doc.** na lista de "Gerenciar usuários". Teste `test_lista_marca_documento_vencendo`.
+- **0c:** estado vazio do chat com **título + campo centralizados** (estilo "O que
+  tem na agenda"); campo de envio reaproveitado (`campoEnvio`). `tsc` OK; **69 testes**.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`, `frontend/src/{lib/api.ts,
+pages/{Admin,Consulta}.tsx}`.
+
+---
+
 ## 2026-06-24 — Plano das pendentes + Etapa 0a: UI de API keys
 
 **Branch:** `feat/fase-7-frontend`.

@@ -51,6 +51,7 @@ export type AdminUsuario = {
   papel: string | null
   cargo: string | null
   foto_url: string | null
+  docs_alerta: number
   permissoes_extra: string[]
 }
 

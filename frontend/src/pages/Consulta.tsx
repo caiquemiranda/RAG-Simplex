@@ -31,22 +31,36 @@ export default function Consulta() {
     if (f.fonte) setDoc({ nome: f.fonte, header: f.header ?? '' })
   }
 
+  const vazio = mensagens.length === 0
+  const campoEnvio = (
+    <form onSubmit={onSubmit} className="flex w-full items-center gap-2">
+      <Input
+        value={pergunta}
+        onChange={(e) => setPergunta(e.target.value)}
+        placeholder="Descreva a falha ou cole o código do display…"
+        autoFocus
+      />
+      <Button type="submit" disabled={carregando || !pergunta.trim()}>Enviar</Button>
+    </form>
+  )
+
   return (
     <div className="flex h-full">
       <div className={doc ? 'flex h-full w-1/2 flex-col' : 'flex h-full w-full flex-col'}>
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-4 p-4">
-            {mensagens.length === 0 && (
-              <div className="mt-24 text-center text-muted-foreground">
+            {vazio && (
+              <div className="flex min-h-[62vh] flex-col items-center justify-center text-center">
                 <p className="text-2xl font-semibold text-foreground">
                   Qual falha vamos diagnosticar?
                 </p>
-                <p className="mt-3 text-sm">
+                <p className="mt-3 text-sm text-muted-foreground">
                   Descreva a falha do painel ou cole o código exibido no display.
                 </p>
-                <p className="mt-4 text-xs">
+                <div className="mt-6 w-full max-w-2xl">{campoEnvio}</div>
+                <p className="mt-4 text-xs text-muted-foreground">
                   Clique em uma <span className="font-medium">fonte</span> para abrir o guia ao
-                  lado, no trecho exato. Cada consulta fica salva em “Consultas recentes”.
+                  lado. Cada consulta fica salva em “Consultas recentes”.
                 </p>
               </div>
             )}
@@ -117,19 +131,11 @@ export default function Consulta() {
           </div>
         </div>
 
-        <div className="shrink-0 border-t bg-background">
-          <form onSubmit={onSubmit} className="mx-auto flex max-w-3xl items-center gap-2 p-4">
-            <Input
-              value={pergunta}
-              onChange={(e) => setPergunta(e.target.value)}
-              placeholder="Descreva a falha ou cole o código do display…"
-              autoFocus
-            />
-            <Button type="submit" disabled={carregando || !pergunta.trim()}>
-              Enviar
-            </Button>
-          </form>
-        </div>
+        {!vazio && (
+          <div className="shrink-0 border-t bg-background">
+            <div className="mx-auto max-w-3xl p-4">{campoEnvio}</div>
+          </div>
+        )}
       </div>
 
       {doc && (

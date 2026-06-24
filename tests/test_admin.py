@@ -161,6 +161,18 @@ def test_perfil_e_documentos_do_usuario(ctx):
     assert client.delete(f"/admin/usuarios/{uid}/documentos/9999", headers=admin).status_code == 404
 
 
+def test_lista_marca_documento_vencendo(ctx):
+    from datetime import date, timedelta
+
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    venc = (date.today() + timedelta(days=10)).isoformat()
+    client.post(f"/admin/usuarios/{ids['tec']}/documentos", headers=admin, json={"nome": "NR-10", "validade": venc})
+    lst = client.get("/admin/usuarios", headers=admin).json()
+    tec = next(u for u in lst if u["id"] == ids["tec"])
+    assert tec["docs_alerta"] == 1
+
+
 def test_clientes_crud_e_associacao(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
