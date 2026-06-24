@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import {
   api,
+  type AdminCliente,
   type AdminPapel,
   type AdminPermissao,
   type AdminUsuario,
@@ -27,7 +28,7 @@ type PerfilForm = {
   telefone: string
   cargo: string
   unidade: string
-  clientes: string
+  clienteIds: Set<number>
   observacoes: string
   acesso_expira_em: string
 }
@@ -61,6 +62,8 @@ export default function Admin() {
   const [papeis, setPapeis] = useState<AdminPapel[]>([])
   const [permissoes, setPermissoes] = useState<AdminPermissao[]>([])
   const [estrategias, setEstrategias] = useState<string[]>([])
+  const [clientes, setClientes] = useState<AdminCliente[]>([])
+  const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '' })
   const [erro, setErro] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
 
@@ -77,16 +80,18 @@ export default function Admin() {
   async function carregar() {
     setErro(null)
     try {
-      const [us, ps, pms, es] = await Promise.all([
+      const [us, ps, pms, es, cs] = await Promise.all([
         api.admin.usuarios(),
         api.admin.papeis(),
         api.admin.permissoes(),
         api.admin.estrategias(),
+        api.admin.clientes(),
       ])
       setUsuarios(us)
       setPapeis(ps)
       setPermissoes(pms)
       setEstrategias(es)
+      setClientes(cs)
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar')
     }
@@ -148,7 +153,7 @@ export default function Admin() {
         telefone: det.telefone ?? '',
         cargo: det.cargo ?? '',
         unidade: det.unidade ?? '',
-        clientes: det.clientes ?? '',
+        clienteIds: new Set(det.clientes.map((c) => c.id)),
         observacoes: det.observacoes ?? '',
         acesso_expira_em: det.acesso_expira_em ?? '',
       })
@@ -172,7 +177,7 @@ export default function Admin() {
         telefone: perfil?.telefone ?? '',
         cargo: perfil?.cargo ?? '',
         unidade: perfil?.unidade ?? '',
-        clientes: perfil?.clientes ?? '',
+        cliente_ids: perfil ? Array.from(perfil.clienteIds) : undefined,
         observacoes: perfil?.observacoes ?? '',
         acesso_expira_em: perfil?.acesso_expira_em || null,
       })
@@ -216,6 +221,36 @@ export default function Admin() {
       setDocumentos(det.documentos)
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao remover documento')
+    }
+  }
+
+  async function criarCliente() {
+    if (!novoCliente.nome.trim()) return
+    setErro(null)
+    try {
+      await api.admin.criarCliente({ nome: novoCliente.nome.trim(), unidade: novoCliente.unidade || null })
+      setNovoCliente({ nome: '', unidade: '' })
+      setClientes(await api.admin.clientes())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao criar cliente')
+    }
+  }
+
+  async function alternarClienteAtivo(c: AdminCliente) {
+    try {
+      await api.admin.atualizarCliente(c.id, { ativo: !c.ativo })
+      setClientes(await api.admin.clientes())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao atualizar cliente')
+    }
+  }
+
+  async function removerCliente(c: AdminCliente) {
+    try {
+      await api.admin.removerCliente(c.id)
+      setClientes(await api.admin.clientes())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao remover cliente')
     }
   }
 
@@ -297,9 +332,40 @@ export default function Admin() {
           </CardContent></Card>
         )}
         {secao === 'clientes' && (
-          <Card><CardContent className="p-6 text-sm text-muted-foreground">
-            🚧 Em construção: <strong>clientes</strong> e quais técnicos têm acesso a cada um.
-          </CardContent></Card>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Novo cliente</CardTitle></CardHeader>
+              <CardContent className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1"><Label>Nome</Label><Input value={novoCliente.nome} onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })} /></div>
+                <div className="space-y-1"><Label>Unidade / local</Label><Input value={novoCliente.unidade} onChange={(e) => setNovoCliente({ ...novoCliente, unidade: e.target.value })} /></div>
+                <Button size="sm" onClick={criarCliente} disabled={!novoCliente.nome.trim()}>Adicionar</Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-0">
+                <table className="w-full text-sm">
+                  <thead className="border-b text-left text-muted-foreground">
+                    <tr><th className="p-3">Cliente</th><th className="p-3">Unidade</th><th className="p-3">Ativo</th><th className="p-3"></th></tr>
+                  </thead>
+                  <tbody>
+                    {clientes.map((c) => (
+                      <tr key={c.id} className="border-b last:border-0">
+                        <td className="p-3">{c.nome}</td>
+                        <td className="p-3">{c.unidade ?? '—'}</td>
+                        <td className="p-3"><button className="text-xs underline" onClick={() => alternarClienteAtivo(c)}>{c.ativo ? 'sim' : 'não'}</button></td>
+                        <td className="p-3 text-right"><Button variant="outline" size="sm" onClick={() => removerCliente(c)}>Remover</Button></td>
+                      </tr>
+                    ))}
+                    {clientes.length === 0 && <tr><td className="p-3 text-muted-foreground" colSpan={4}>Nenhum cliente cadastrado.</td></tr>}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+            <p className="text-xs text-muted-foreground">
+              Os <strong>técnicos com acesso</strong> a cada cliente são definidos na
+              edição do usuário (Perfil e gestão → Clientes atendidos).
+            </p>
+          </div>
         )}
 
         {secao === 'auditoria' && <AuditoriaView emailPorId={emailPorId} />}
@@ -492,7 +558,34 @@ export default function Admin() {
                             <div className="space-y-1"><Label>Cargo / função</Label><Input value={perfil.cargo} onChange={(e) => setPerfil({ ...perfil, cargo: e.target.value })} /></div>
                             <div className="space-y-1"><Label>Local de trabalho / unidade</Label><Input value={perfil.unidade} onChange={(e) => setPerfil({ ...perfil, unidade: e.target.value })} /></div>
                             <div className="space-y-1"><Label>Validade do acesso</Label><Input type="date" value={perfil.acesso_expira_em} onChange={(e) => setPerfil({ ...perfil, acesso_expira_em: e.target.value })} /></div>
-                            <div className="space-y-1 sm:col-span-2"><Label>Clientes associados</Label><Input value={perfil.clientes} onChange={(e) => setPerfil({ ...perfil, clientes: e.target.value })} placeholder="ex.: Shopping X, Hospital Y (separe por vírgula)" /></div>
+                            <div className="space-y-1 sm:col-span-2">
+                              <Label>Clientes atendidos</Label>
+                              {clientes.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado — cadastre no card “Clientes”.</p>
+                              ) : (
+                                <div className="flex flex-wrap gap-2">
+                                  {clientes.map((c) => {
+                                    const marcado = perfil.clienteIds.has(c.id)
+                                    return (
+                                      <label key={c.id} className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-sm ${marcado ? 'border-primary bg-accent' : ''}`}>
+                                        <input
+                                          type="checkbox"
+                                          checked={marcado}
+                                          onChange={(e) => {
+                                            const ids = new Set(perfil.clienteIds)
+                                            if (e.target.checked) ids.add(c.id)
+                                            else ids.delete(c.id)
+                                            setPerfil({ ...perfil, clienteIds: ids })
+                                          }}
+                                        />
+                                        {c.nome}
+                                        {c.unidade && <span className="text-muted-foreground"> · {c.unidade}</span>}
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
                             <div className="space-y-1 sm:col-span-2">
                               <Label>Observações</Label>
                               <textarea className="min-h-[60px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={perfil.observacoes} onChange={(e) => setPerfil({ ...perfil, observacoes: e.target.value })} />

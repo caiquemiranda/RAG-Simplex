@@ -72,6 +72,8 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST | `/admin/usuarios` | `gerir_usuarios` | Lista/cria usuários. |
 | PUT | `/admin/usuarios/{id}/permissoes-extra` | `gerir_usuarios` | Permissões extra do usuário. |
 | GET/PUT | `/admin/usuarios/{id}/estrategia` | `gerir_estrategias` | Estratégia/persona/camadas por usuário. |
+| POST/DELETE | `/admin/usuarios/{id}/documentos[/{doc_id}]` | `gerir_usuarios` | Documentos do técnico (validade). |
+| GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário). |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
 | PUT | `/admin/config-global` | `gerir_estrategias` | Estratégia padrão global. |
 | GET | `/admin/auditoria` | `gerir_usuarios` | Log de consultas (com feedback). |

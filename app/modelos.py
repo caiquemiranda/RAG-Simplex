@@ -49,6 +49,14 @@ usuario_permissao = Table(
     Column("permissao_id", ForeignKey("permissao.id"), primary_key=True),
 )
 
+# Quais clientes cada técnico/usuário atende (N:N).
+usuario_cliente = Table(
+    "usuario_cliente",
+    Base.metadata,
+    Column("usuario_id", ForeignKey("usuario.id"), primary_key=True),
+    Column("cliente_id", ForeignKey("cliente.id"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -97,12 +105,16 @@ class Usuario(Base):
     telefone: Mapped[str | None] = mapped_column(String(40), default=None)
     cargo: Mapped[str | None] = mapped_column(String(80), default=None)
     unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local de trabalho
-    clientes: Mapped[str | None] = mapped_column(Text, default=None)        # CSV (placeholder)
+    clientes: Mapped[str | None] = mapped_column(Text, default=None)        # legado (CSV) — usar clientes_rel
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
     acesso_expira_em: Mapped[date | None] = mapped_column(Date, default=None)
 
     documentos: Mapped[list[DocumentoTecnico]] = relationship(
         back_populates="usuario", cascade="all, delete-orphan"
+    )
+    # Clientes que este técnico atende (N:N) — substitui o CSV `clientes`.
+    clientes_rel: Mapped[list[Cliente]] = relationship(
+        secondary=usuario_cliente, back_populates="tecnicos"
     )
 
     def tem_permissao(self, chave: str) -> bool:
@@ -110,6 +122,22 @@ class Usuario(Base):
         if self.papel is not None and self.papel.tem_permissao(chave):
             return True
         return any(p.chave == chave for p in self.permissoes_extra)
+
+
+class Cliente(Base):
+    """Cliente atendido (prédio/condomínio/instalação). Técnicos são associados a
+    clientes (N:N) para definir acesso e o cronograma por local."""
+
+    __tablename__ = "cliente"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local/cidade
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    tecnicos: Mapped[list[Usuario]] = relationship(
+        secondary=usuario_cliente, back_populates="clientes_rel"
+    )
 
 
 class DocumentoTecnico(Base):

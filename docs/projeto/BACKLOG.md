@@ -21,8 +21,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       + endpoint de mídia quando houver muitos usuários. dep: decisão de storage.
 
 ### B. Painel ADM — cards hoje placeholder
-- [ ] **Clientes** (entidade + CRUD): cadastrar clientes e quais técnicos acessam cada um.
-      ⚑ *Fundação* — ver plano §2.
+- [x] **Clientes** (entidade + CRUD): cadastrar clientes; técnicos associados via
+      `cliente_ids` na edição do usuário. ⚑ *Fundação* — spec [`specs/spec-etapa1-clientes.md`](specs/spec-etapa1-clientes.md).
 - [ ] **Gerenciar API keys**: UI sobre `/admin/provedores` (backend já cifra a chave).
 - [ ] **Banco de dados**: status/backup/reindexação (definir escopo real).
 
@@ -33,8 +33,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [ ] **Visão por técnico/local** real (filtra pelo `unidade`/clientes do técnico).
 
 ### D. Modelo de dados (consolidação — evita retrabalho)
-- [ ] Trocar `Usuario.clientes` (CSV placeholder) por **relação N:N `usuario↔cliente`**.
-      dep: entidade Cliente. ⚠️ fazer ANTES de muita UI usar o CSV.
+- [x] Trocar `Usuario.clientes` (CSV placeholder) por **relação N:N `usuario↔cliente`**
+      (`usuario_cliente`). Coluna CSV permanece como legado sem uso na API.
 - [ ] (Opcional) Entidade **Unidade/Local** se "local de trabalho" virar cadastro.
 
 ### E. Núcleo RAG / fases pendentes

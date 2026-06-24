@@ -12,6 +12,7 @@ erDiagram
   PAPEL ||--o{ USUARIO : "1:N (papel_id)"
   PAPEL }o--o{ PERMISSAO : "N:N papel_permissao"
   USUARIO }o--o{ PERMISSAO : "N:N usuario_permissao (extra)"
+  USUARIO }o--o{ CLIENTE : "N:N usuario_cliente (atende)"
   USUARIO ||--o{ DOCUMENTO_TECNICO : "1:N"
   USUARIO ||--o{ LOG_CONSULTA : "1:N (usuario_id)"
   PROVEDOR ||--o{ CONFIG_ESTRATEGIA : "0..1 (provedor_id)"
@@ -36,9 +37,15 @@ erDiagram
     string telefone
     string cargo
     string unidade "local de trabalho"
-    text clientes "CSV (placeholder → futura relação)"
+    text clientes "LEGADO (CSV) — usar relação usuario_cliente"
     text observacoes
     date acesso_expira_em
+  }
+  CLIENTE {
+    int id PK
+    string nome UK
+    string unidade "local/cidade"
+    bool ativo
   }
   DOCUMENTO_TECNICO {
     int id PK
@@ -86,6 +93,12 @@ Conta de técnico/operador. `papel_id` define o papel; `usuario_permissao` conce
 cargo, unidade, clientes, observações, `acesso_expira_em`) adicionados na Fase 8.
 > `clientes` é **CSV provisório**; o plano prevê trocar por relação N:N com `CLIENTE`
 > (ver [`projeto/BACKLOG.md`](projeto/BACKLOG.md) §2, Etapa 1) — evitar acoplar muito a ele.
+
+### Cliente
+Cliente atendido (prédio/condomínio/instalação) com `unidade` (local). Técnicos são
+associados a clientes via `usuario_cliente` (N:N) — define **acesso** e o **cronograma
+por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece na tabela
+mas não é mais usado pela API.
 
 ### DocumentoTecnico
 Documento exigido do técnico (NR-10, ASO, crachá de cliente) com `validade`. O painel

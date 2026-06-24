@@ -23,6 +23,7 @@ from app.auth import hash_senha, requer
 from app.db import get_session
 from app.estrategias import ESTRATEGIAS
 from app.modelos import (
+    Cliente,
     ConfigEstrategia,
     DocumentoTecnico,
     LogConsulta,
@@ -45,6 +46,25 @@ class UsuarioCriar(BaseModel):
     papel: str | None = None
 
 
+class ClienteIn(BaseModel):
+    nome: str
+    unidade: str | None = None
+    ativo: bool = True
+
+
+class ClienteAtualizar(BaseModel):
+    nome: str | None = None
+    unidade: str | None = None
+    ativo: bool | None = None
+
+
+class ClienteResumo(BaseModel):
+    id: int
+    nome: str
+    unidade: str | None = None
+    ativo: bool
+
+
 class UsuarioAtualizar(BaseModel):
     nome: str | None = None
     ativo: bool | None = None
@@ -55,7 +75,7 @@ class UsuarioAtualizar(BaseModel):
     telefone: str | None = None
     cargo: str | None = None
     unidade: str | None = None
-    clientes: str | None = None
+    cliente_ids: list[int] | None = None   # clientes atendidos (substitui o CSV)
     observacoes: str | None = None
     acesso_expira_em: date | None = None
 
@@ -87,7 +107,7 @@ class UsuarioDetalhe(UsuarioResumo):
     telefone: str | None = None
     cargo: str | None = None
     unidade: str | None = None
-    clientes: str | None = None
+    clientes: list[ClienteResumo] = []     # clientes atendidos (relação)
     observacoes: str | None = None
     acesso_expira_em: date | None = None
     documentos: list[DocumentoResumo] = []
@@ -161,7 +181,11 @@ def _detalhe_usuario(u: Usuario) -> UsuarioDetalhe:
         papel=u.papel.nome if u.papel else None,
         permissoes_extra=[p.chave for p in u.permissoes_extra],
         foto_url=u.foto_url, telefone=u.telefone, cargo=u.cargo, unidade=u.unidade,
-        clientes=u.clientes, observacoes=u.observacoes, acesso_expira_em=u.acesso_expira_em,
+        observacoes=u.observacoes, acesso_expira_em=u.acesso_expira_em,
+        clientes=[
+            ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+            for c in u.clientes_rel
+        ],
         documentos=[
             DocumentoResumo(id=d.id, nome=d.nome, validade=d.validade) for d in u.documentos
         ],
@@ -252,15 +276,73 @@ def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
     if dados.senha is not None:
         usuario.hash_senha = hash_senha(dados.senha)
     # Campos de perfil/acesso (atualizados quando enviados; "" limpa o campo).
-    for campo in ("foto_url", "telefone", "cargo", "unidade", "clientes", "observacoes"):
+    for campo in ("foto_url", "telefone", "cargo", "unidade", "observacoes"):
         valor = getattr(dados, campo)
         if valor is not None:
             setattr(usuario, campo, valor or None)
     if dados.acesso_expira_em is not None:
         usuario.acesso_expira_em = dados.acesso_expira_em
+    if dados.cliente_ids is not None:
+        usuario.clientes_rel = [
+            c for c in sessao.scalars(select(Cliente).where(Cliente.id.in_(dados.cliente_ids)))
+        ]
     sessao.commit()
     sessao.refresh(usuario)
     return _detalhe_usuario(usuario)
+
+
+# --------------------------------------------------------------------------- #
+# Clientes                                                                     #
+# --------------------------------------------------------------------------- #
+@router.get("/clientes", response_model=list[ClienteResumo])
+def listar_clientes(_: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)) -> list[ClienteResumo]:
+    rows = sessao.scalars(select(Cliente).order_by(Cliente.nome)).all()
+    return [ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo) for c in rows]
+
+
+@router.post("/clientes", response_model=ClienteResumo, status_code=status.HTTP_201_CREATED)
+def criar_cliente(dados: ClienteIn,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> ClienteResumo:
+    if not dados.nome.strip():
+        raise HTTPException(status_code=400, detail="Nome do cliente é obrigatório.")
+    if sessao.scalar(select(Cliente).where(Cliente.nome == dados.nome.strip())):
+        raise HTTPException(status_code=409, detail="Já existe um cliente com esse nome.")
+    c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None, ativo=dados.ativo)
+    sessao.add(c)
+    sessao.commit()
+    sessao.refresh(c)
+    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+
+
+@router.patch("/clientes/{cliente_id}", response_model=ClienteResumo)
+def atualizar_cliente(cliente_id: int, dados: ClienteAtualizar,
+                      _: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> ClienteResumo:
+    c = sessao.get(Cliente, cliente_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado.")
+    if dados.nome is not None:
+        c.nome = dados.nome.strip()
+    if dados.unidade is not None:
+        c.unidade = dados.unidade or None
+    if dados.ativo is not None:
+        c.ativo = dados.ativo
+    sessao.commit()
+    sessao.refresh(c)
+    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+
+
+@router.delete("/clientes/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_cliente(cliente_id: int,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)):
+    c = sessao.get(Cliente, cliente_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado.")
+    sessao.delete(c)
+    sessao.commit()
 
 
 @router.post("/usuarios/{usuario_id}/documentos", response_model=UsuarioDetalhe,

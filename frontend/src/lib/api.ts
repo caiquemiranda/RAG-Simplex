@@ -53,13 +53,14 @@ export type AdminUsuario = {
 }
 
 export type DocumentoTecnico = { id: number; nome: string; validade: string | null }
+export type AdminCliente = { id: number; nome: string; unidade: string | null; ativo: boolean }
 
 export type AdminUsuarioDetalhe = AdminUsuario & {
   foto_url: string | null
   telefone: string | null
   cargo: string | null
   unidade: string | null
-  clientes: string | null
+  clientes: AdminCliente[]
   observacoes: string | null
   acesso_expira_em: string | null
   documentos: DocumentoTecnico[]
@@ -103,7 +104,7 @@ export type AtualizaUsuario = {
   telefone?: string | null
   cargo?: string | null
   unidade?: string | null
-  clientes?: string | null
+  cliente_ids?: number[]
   observacoes?: string | null
   acesso_expira_em?: string | null
 }
@@ -246,5 +247,12 @@ export const api = {
         body: JSON.stringify(dados),
       }),
     auditoria: (limite = 50) => request<AdminAuditoria[]>(`/admin/auditoria?limite=${limite}`),
+    clientes: () => request<AdminCliente[]>('/admin/clientes'),
+    criarCliente: (dados: { nome: string; unidade?: string | null; ativo?: boolean }) =>
+      request<AdminCliente>('/admin/clientes', { method: 'POST', body: JSON.stringify(dados) }),
+    atualizarCliente: (id: number, dados: { nome?: string; unidade?: string | null; ativo?: boolean }) =>
+      request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    removerCliente: (id: number) =>
+      request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
   },
 }

@@ -32,9 +32,10 @@ Ordem **sem retrabalho** (detalhe em [`BACKLOG.md`](BACKLOG.md) §2):
    **tema claro/escuro**, lista de usuários moderna (foto+cargo), edição como tela própria.
 1. **Etapa 0** (rápido, independente): alerta global de vencimento na lista de
    usuários · UI de **API keys** (backend `/admin/provedores` pronto).
-2. **Etapa 1 — fundação `Cliente`** (entidade + relação técnico↔cliente). Destrava
-   card Clientes, Cronograma real e troca do `Usuario.clientes` (CSV) por relação.
-3. **Etapas 2–4:** card Clientes · Cronograma backend · documentos por cliente.
+2. ~~**Etapa 1 — fundação `Cliente`**~~ ✅ feito (entidade + N:N + card Clientes +
+   clientes em checkbox no usuário). Destravou o resto.
+3. **Etapas 3–4:** Cronograma backend (modelo Visita → card do dia #C1) · documentos por cliente.
+   **Redesign #U1/#U2** (lista de usuários com foto/cargo; edição como tela própria).
 4. **Depois:** Fase 11 (reranker D-020, RAGAS-lite, **Alembic**) · Fase 10 (nuvem, **requer API key**).
 
 ## 🔧 Para rodar na sua máquina

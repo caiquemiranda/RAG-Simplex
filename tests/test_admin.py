@@ -161,6 +161,32 @@ def test_perfil_e_documentos_do_usuario(ctx):
     assert client.delete(f"/admin/usuarios/{uid}/documentos/9999", headers=admin).status_code == 404
 
 
+def test_clientes_crud_e_associacao(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Cria cliente.
+    r = client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X", "unidade": "SP"})
+    assert r.status_code == 201
+    cid = r.json()["id"]
+    # Nome duplicado → 409.
+    assert client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X"}).status_code == 409
+
+    # Lista contém o cliente.
+    r = client.get("/admin/clientes", headers=admin)
+    assert any(c["id"] == cid for c in r.json())
+
+    # Associa ao técnico via cliente_ids e confere no detalhe do usuário.
+    r = client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_ids": [cid]})
+    assert r.status_code == 200
+    assert [c["id"] for c in r.json()["clientes"]] == [cid]
+
+    # Atualiza e remove o cliente.
+    assert client.patch(f"/admin/clientes/{cid}", headers=admin, json={"ativo": False}).json()["ativo"] is False
+    assert client.delete(f"/admin/clientes/{cid}", headers=admin).status_code == 204
+    assert client.delete(f"/admin/clientes/{cid}", headers=admin).status_code == 404
+
+
 def test_auditoria_registra_consulta(ctx, monkeypatch):
     client, _ = ctx
     monkeypatch.setattr("app.main.buscar", lambda *a, **k: Recuperacao("q", [], True))

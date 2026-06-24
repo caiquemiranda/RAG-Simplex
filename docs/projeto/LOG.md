@@ -9,6 +9,28 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Etapa 1 — Entidade Cliente (fundação) + índice de docs
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Índice mestre:** novo [`docs/INDICE.md`](../INDICE.md) — links de toda a
+  documentação + roteiro para recriar em outra linguagem.
+- **Modelo:** `Cliente` (nome único, unidade, ativo) + N:N `usuario_cliente`
+  (`Usuario.clientes_rel`). Coluna legada `Usuario.clientes` (CSV) aposentada.
+  Micro-migração cria a tabela nova no banco existente.
+- **API:** CRUD `/admin/clientes`; `UsuarioDetalhe.clientes` vira lista; update por
+  `cliente_ids`. (Fix: DELETE 204 sem `-> None` p/ não inferir response_model.)
+- **Frontend:** card **Clientes** com CRUD; edição de usuário com **clientes em
+  checkbox** (puxados do banco) → fecha o #U2. `tsc` OK.
+- **Testes:** `test_clientes_crud_e_associacao` → **62 passed**.
+- Docs: spec [`spec-etapa1-clientes.md`](specs/spec-etapa1-clientes.md), `MODELO_DADOS`,
+  `ARQUITETURA` (endpoints), `TESTES`, `BACKLOG`/`PLANEJAMENTO` atualizados.
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #D1/#D2 — Identidade visual IBSystems + tema claro/escuro
 
 **Branch:** `feat/fase-7-frontend`.
