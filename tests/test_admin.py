@@ -128,6 +128,39 @@ def test_estrategia_por_usuario_get_e_put(ctx):
     assert r2.json()["camadas"] == "simples,tecnica"
 
 
+def test_perfil_e_documentos_do_usuario(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    uid = ids["tec"]
+
+    # Atualiza campos de perfil/acesso.
+    r = client.patch(f"/admin/usuarios/{uid}", headers=admin,
+                     json={"unidade": "Matriz SP", "telefone": "11999",
+                           "clientes": "Shopping X", "acesso_expira_em": "2027-01-01"})
+    assert r.status_code == 200
+    assert r.json()["unidade"] == "Matriz SP"
+    assert r.json()["acesso_expira_em"] == "2027-01-01"
+
+    # Adiciona um documento com validade.
+    r = client.post(f"/admin/usuarios/{uid}/documentos", headers=admin,
+                    json={"nome": "NR-10", "validade": "2030-05-10"})
+    assert r.status_code == 201
+    docs = r.json()["documentos"]
+    assert len(docs) == 1 and docs[0]["nome"] == "NR-10"
+    doc_id = docs[0]["id"]
+
+    # GET reflete o documento.
+    r = client.get(f"/admin/usuarios/{uid}", headers=admin)
+    assert any(d["id"] == doc_id for d in r.json()["documentos"])
+
+    # Remove o documento.
+    r = client.delete(f"/admin/usuarios/{uid}/documentos/{doc_id}", headers=admin)
+    assert r.status_code == 200 and r.json()["documentos"] == []
+
+    # Documento inexistente → 404.
+    assert client.delete(f"/admin/usuarios/{uid}/documentos/9999", headers=admin).status_code == 404
+
+
 def test_auditoria_registra_consulta(ctx, monkeypatch):
     client, _ = ctx
     monkeypatch.setattr("app.main.buscar", lambda *a, **k: Recuperacao("q", [], True))

@@ -11,7 +11,7 @@ ao administrador (Fase 6) configurar a plataforma em runtime:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -24,6 +24,7 @@ from app.db import get_session
 from app.estrategias import ESTRATEGIAS
 from app.modelos import (
     ConfigEstrategia,
+    DocumentoTecnico,
     LogConsulta,
     Papel,
     Permissao,
@@ -49,6 +50,14 @@ class UsuarioAtualizar(BaseModel):
     ativo: bool | None = None
     papel: str | None = None
     senha: str | None = Field(None, min_length=4)
+    # Perfil / gestão de acesso (campos opcionais).
+    foto_url: str | None = None
+    telefone: str | None = None
+    cargo: str | None = None
+    unidade: str | None = None
+    clientes: str | None = None
+    observacoes: str | None = None
+    acesso_expira_em: date | None = None
 
 
 class UsuarioResumo(BaseModel):
@@ -58,6 +67,30 @@ class UsuarioResumo(BaseModel):
     ativo: bool
     papel: str | None = None
     permissoes_extra: list[str] = []
+
+
+class DocumentoIn(BaseModel):
+    nome: str
+    validade: date | None = None
+
+
+class DocumentoResumo(BaseModel):
+    id: int
+    nome: str
+    validade: date | None = None
+
+
+class UsuarioDetalhe(UsuarioResumo):
+    """Resumo + perfil/acesso + documentos (retornado no GET de um usuário)."""
+
+    foto_url: str | None = None
+    telefone: str | None = None
+    cargo: str | None = None
+    unidade: str | None = None
+    clientes: str | None = None
+    observacoes: str | None = None
+    acesso_expira_em: date | None = None
+    documentos: list[DocumentoResumo] = []
 
 
 class PermissoesExtraIn(BaseModel):
@@ -119,6 +152,19 @@ def _resumo_usuario(u: Usuario) -> UsuarioResumo:
         id=u.id, email=u.email, nome=u.nome, ativo=u.ativo,
         papel=u.papel.nome if u.papel else None,
         permissoes_extra=[p.chave for p in u.permissoes_extra],
+    )
+
+
+def _detalhe_usuario(u: Usuario) -> UsuarioDetalhe:
+    return UsuarioDetalhe(
+        id=u.id, email=u.email, nome=u.nome, ativo=u.ativo,
+        papel=u.papel.nome if u.papel else None,
+        permissoes_extra=[p.chave for p in u.permissoes_extra],
+        foto_url=u.foto_url, telefone=u.telefone, cargo=u.cargo, unidade=u.unidade,
+        clientes=u.clientes, observacoes=u.observacoes, acesso_expira_em=u.acesso_expira_em,
+        documentos=[
+            DocumentoResumo(id=d.id, nome=d.nome, validade=d.validade) for d in u.documentos
+        ],
     )
 
 
@@ -185,17 +231,17 @@ def criar_usuario(dados: UsuarioCriar,
     return _resumo_usuario(usuario)
 
 
-@router.get("/usuarios/{usuario_id}", response_model=UsuarioResumo)
+@router.get("/usuarios/{usuario_id}", response_model=UsuarioDetalhe)
 def obter_usuario(usuario_id: int,
                   _: Usuario = Depends(requer("gerir_usuarios")),
-                  sessao: Session = Depends(get_session)) -> UsuarioResumo:
-    return _resumo_usuario(_buscar_usuario(sessao, usuario_id))
+                  sessao: Session = Depends(get_session)) -> UsuarioDetalhe:
+    return _detalhe_usuario(_buscar_usuario(sessao, usuario_id))
 
 
-@router.patch("/usuarios/{usuario_id}", response_model=UsuarioResumo)
+@router.patch("/usuarios/{usuario_id}", response_model=UsuarioDetalhe)
 def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
                       _: Usuario = Depends(requer("gerir_usuarios")),
-                      sessao: Session = Depends(get_session)) -> UsuarioResumo:
+                      sessao: Session = Depends(get_session)) -> UsuarioDetalhe:
     usuario = _buscar_usuario(sessao, usuario_id)
     if dados.nome is not None:
         usuario.nome = dados.nome
@@ -205,9 +251,44 @@ def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
         usuario.papel = _papel_por_nome(sessao, dados.papel)
     if dados.senha is not None:
         usuario.hash_senha = hash_senha(dados.senha)
+    # Campos de perfil/acesso (atualizados quando enviados; "" limpa o campo).
+    for campo in ("foto_url", "telefone", "cargo", "unidade", "clientes", "observacoes"):
+        valor = getattr(dados, campo)
+        if valor is not None:
+            setattr(usuario, campo, valor or None)
+    if dados.acesso_expira_em is not None:
+        usuario.acesso_expira_em = dados.acesso_expira_em
     sessao.commit()
     sessao.refresh(usuario)
-    return _resumo_usuario(usuario)
+    return _detalhe_usuario(usuario)
+
+
+@router.post("/usuarios/{usuario_id}/documentos", response_model=UsuarioDetalhe,
+             status_code=status.HTTP_201_CREATED)
+def adicionar_documento(usuario_id: int, dados: DocumentoIn,
+                        _: Usuario = Depends(requer("gerir_usuarios")),
+                        sessao: Session = Depends(get_session)) -> UsuarioDetalhe:
+    usuario = _buscar_usuario(sessao, usuario_id)
+    if not dados.nome.strip():
+        raise HTTPException(status_code=400, detail="Nome do documento é obrigatório.")
+    usuario.documentos.append(DocumentoTecnico(nome=dados.nome.strip(), validade=dados.validade))
+    sessao.commit()
+    sessao.refresh(usuario)
+    return _detalhe_usuario(usuario)
+
+
+@router.delete("/usuarios/{usuario_id}/documentos/{doc_id}", response_model=UsuarioDetalhe)
+def remover_documento(usuario_id: int, doc_id: int,
+                      _: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> UsuarioDetalhe:
+    usuario = _buscar_usuario(sessao, usuario_id)
+    doc = sessao.get(DocumentoTecnico, doc_id)
+    if doc is None or doc.usuario_id != usuario_id:
+        raise HTTPException(status_code=404, detail="Documento não encontrado.")
+    sessao.delete(doc)
+    sessao.commit()
+    sessao.refresh(usuario)
+    return _detalhe_usuario(usuario)
 
 
 @router.put("/usuarios/{usuario_id}/permissoes-extra", response_model=UsuarioResumo)

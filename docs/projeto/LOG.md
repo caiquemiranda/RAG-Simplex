@@ -9,6 +9,27 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 9) — #2 Card de usuário: perfil + documentos com validade
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `Usuario` ganhou `foto_url, telefone, cargo, unidade, clientes,
+  observacoes, acesso_expira_em`; nova tabela `documento_tecnico` (nome + validade).
+  A micro-migração adicionou as colunas/tabela ao banco existente sem recriar.
+- **API ADM:** `GET/PATCH /usuarios/{id}` agora retornam `UsuarioDetalhe` (perfil +
+  documentos); novos `POST/DELETE /usuarios/{id}/documentos[/{doc_id}]`.
+- **Frontend:** card de edição com **foto** (upload → data URL), telefone, cargo,
+  **unidade** (local de trabalho), **clientes**, **validade de acesso**, observações;
+  seção de **documentos com validade** + badge de status (válido/vence em Nd/vencido)
+  e alerta "⚠️ N vencendo/vencido". 61 testes.
+
+**Pendente:** alerta global de vencimento na lista de usuários; #1 "exatidão/docs".
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx}`.
+
+---
+
 ## 2026-06-24 — Fase 8 (parte 8) — Painel ADM em cards + aba Cronograma; fixes
 
 **Branch:** `feat/fase-7-frontend`.

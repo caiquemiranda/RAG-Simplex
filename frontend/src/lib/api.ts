@@ -52,6 +52,19 @@ export type AdminUsuario = {
   permissoes_extra: string[]
 }
 
+export type DocumentoTecnico = { id: number; nome: string; validade: string | null }
+
+export type AdminUsuarioDetalhe = AdminUsuario & {
+  foto_url: string | null
+  telefone: string | null
+  cargo: string | null
+  unidade: string | null
+  clientes: string | null
+  observacoes: string | null
+  acesso_expira_em: string | null
+  documentos: DocumentoTecnico[]
+}
+
 export type AdminPapel = { nome: string; permissoes: string[] }
 export type AdminPermissao = { chave: string; descricao: string }
 
@@ -86,6 +99,13 @@ export type AtualizaUsuario = {
   ativo?: boolean
   papel?: string | null
   senha?: string
+  foto_url?: string | null
+  telefone?: string | null
+  cargo?: string | null
+  unidade?: string | null
+  clientes?: string | null
+  observacoes?: string | null
+  acesso_expira_em?: string | null
 }
 
 const TOKEN_KEY = 'rag_simplex_token'
@@ -193,12 +213,22 @@ export const api = {
 
   admin: {
     usuarios: () => request<AdminUsuario[]>('/admin/usuarios'),
+    obterUsuario: (id: number) => request<AdminUsuarioDetalhe>(`/admin/usuarios/${id}`),
     criarUsuario: (dados: NovoUsuario) =>
       request<AdminUsuario>('/admin/usuarios', { method: 'POST', body: JSON.stringify(dados) }),
     atualizarUsuario: (id: number, dados: AtualizaUsuario) =>
-      request<AdminUsuario>(`/admin/usuarios/${id}`, {
+      request<AdminUsuarioDetalhe>(`/admin/usuarios/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(dados),
+      }),
+    adicionarDocumento: (id: number, dados: { nome: string; validade: string | null }) =>
+      request<AdminUsuarioDetalhe>(`/admin/usuarios/${id}/documentos`, {
+        method: 'POST',
+        body: JSON.stringify(dados),
+      }),
+    removerDocumento: (id: number, docId: number) =>
+      request<AdminUsuarioDetalhe>(`/admin/usuarios/${id}/documentos/${docId}`, {
+        method: 'DELETE',
       }),
     definirPermissoesExtra: (id: number, permissoes: string[]) =>
       request<AdminUsuario>(`/admin/usuarios/${id}/permissoes-extra`, {

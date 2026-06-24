@@ -12,11 +12,12 @@ Usa SQLAlchemy 2.0 direto (sem SQLModel) — ver decisão D-016.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     Boolean,
     Column,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -91,11 +92,40 @@ class Usuario(Base):
     # Permissões concedidas diretamente a este usuário, além das do papel.
     permissoes_extra: Mapped[list[Permissao]] = relationship(secondary=usuario_permissao)
 
+    # --- Perfil / gestão de acesso (Fase 8) — todos opcionais ---
+    foto_url: Mapped[str | None] = mapped_column(Text, default=None)        # URL ou data URL
+    telefone: Mapped[str | None] = mapped_column(String(40), default=None)
+    cargo: Mapped[str | None] = mapped_column(String(80), default=None)
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local de trabalho
+    clientes: Mapped[str | None] = mapped_column(Text, default=None)        # CSV (placeholder)
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
+    acesso_expira_em: Mapped[date | None] = mapped_column(Date, default=None)
+
+    documentos: Mapped[list[DocumentoTecnico]] = relationship(
+        back_populates="usuario", cascade="all, delete-orphan"
+    )
+
     def tem_permissao(self, chave: str) -> bool:
         """Permissão efetiva = permissões do papel ∪ permissões extra do usuário."""
         if self.papel is not None and self.papel.tem_permissao(chave):
             return True
         return any(p.chave == chave for p in self.permissoes_extra)
+
+
+class DocumentoTecnico(Base):
+    """Documento exigido do técnico (ex.: NR-10, ASO, crachá de cliente) com validade.
+
+    Próximo do vencimento, o painel ADM destaca para o admin providenciar a renovação.
+    """
+
+    __tablename__ = "documento_tecnico"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    nome: Mapped[str] = mapped_column(String(120))
+    validade: Mapped[date | None] = mapped_column(Date, default=None)
+
+    usuario: Mapped[Usuario] = relationship(back_populates="documentos")
 
 
 class Provedor(Base):
