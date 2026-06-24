@@ -3,21 +3,30 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-23
+**Última atualização:** 2026-06-24
+
+> **Visão consolidada do que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md)
+> (módulos, endpoints, RBAC, frontend) e [`../TESTES.md`](../TESTES.md) (59 testes).
 
 ## 📍 Você está aqui
 
 - **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
 - **Fases 7, 8, 9 ✅:** frontend completo + Docker. Chat com **streaming (NDJSON)**,
-  markdown, citações split-screen, **feedback 👍/👎**; painel ADM com CRUD de
+  markdown, citações split-screen, **feedback 👍/👎**, **histórico persistente** e
+  **layout estilo ChatGPT** (sidebar em grupos: Consulta + abas Relatórios/Buscar
+  Equipamento/Documentos como placeholders). Painel ADM com CRUD de
   usuários/permissões, **estratégia por usuário** e **auditoria**. **Backend 59 testes**.
+- **Rodar nativo:** scripts em [`../../scripts/`](../../scripts/) (`run.ps1`,
+  `backend.ps1`, `frontend.ps1`); caches em `.cache/` (no D:).
 - **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
 
 ## ⏭️ Próximos passos
 
-1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou
-   nativo (uvicorn + `npm run dev`). Schema mudou (coluna `feedback`): no nativo,
-   recriar o `.db`; no Docker, volume novo. Ver `docs/DOCKER.md`.
+1. **Validar na máquina do dev:** `scripts\run.ps1` (nativo) ou `docker compose up
+   --build`. Schema mudou (coluna `feedback`): no nativo, recriar o `.db`; no Docker,
+   volume novo. Ver `docs/DOCKER.md`.
+2. **Conteúdo das abas novas:** Relatórios (métricas/feedback/auditoria), Buscar
+   Equipamento, Documentos — hoje placeholders.
 2. **Fase 11 (hardening):** cross-encoder reranker (D-020); avaliação RAGAS-lite;
    migrações Alembic (evitar recriar o banco a cada mudança de schema).
 3. **Fase 10 (fim):** estratégias de nuvem + arena — **requer API key**.
