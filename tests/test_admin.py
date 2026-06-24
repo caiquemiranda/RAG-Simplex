@@ -122,6 +122,26 @@ def test_auditoria_registra_consulta(ctx, monkeypatch):
     assert r.json()[0]["pergunta"] == "painel apitando"
 
 
+def test_catalogos_papeis_e_permissoes(ctx):
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+
+    papeis = client.get("/admin/papeis", headers=admin)
+    assert papeis.status_code == 200
+    nomes = {p["nome"] for p in papeis.json()}
+    assert {"Operador", "Tecnico", "Analista", "Admin"} <= nomes
+    admin_papel = next(p for p in papeis.json() if p["nome"] == "Admin")
+    assert "gerir_usuarios" in admin_papel["permissoes"]
+
+    perms = client.get("/admin/permissoes", headers=admin)
+    assert perms.status_code == 200
+    chaves = {p["chave"] for p in perms.json()}
+    assert "consultar" in chaves and "gerir_chaves" in chaves
+
+    # Não-admin é barrado.
+    assert client.get("/admin/papeis", headers=_login(client, "op@x.com")).status_code == 403
+
+
 def test_provedor_chave_nunca_em_claro(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

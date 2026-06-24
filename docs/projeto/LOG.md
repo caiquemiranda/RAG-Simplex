@@ -9,6 +9,32 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-23 — Fase 9 (parte 1) — Painel ADM: CRUD de usuários + permissões
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Pedido:** como admin, gerenciar usuários (CRUD) e setar suas permissões.
+
+**Feito (backend, testado):**
+- `admin.py`: `GET /admin/papeis` (com permissões de cada papel) e `GET /admin/permissoes`
+  (catálogo) — `requer("gerir_usuarios")`, para alimentar os seletores da UI.
+- `tests/test_admin.py`: catálogos + bloqueio de não-admin → `pytest` = **50 passed**.
+
+**Feito (frontend, não testado aqui):**
+- `pages/Admin.tsx`: lista de usuários (tabela), criar usuário, editar (nome, papel,
+  ativo, reset de senha) e **gerir permissões** — checkboxes; as do papel vêm
+  marcadas/“(papel)” e as demais são **extra** (PUT `/permissoes-extra`).
+- `lib/api.ts`: bloco `admin` (usuarios/criar/atualizar/permissoes-extra/papeis/permissoes).
+- Rota `/admin` + link "Admin" no `Layout` (só com `gerir_usuarios`); guarda na página.
+
+**Próximo:** validar UI no browser; atribuição de estratégia/persona e auditoria
+pela UI (resto da Fase 9). Depois: streaming/feedback (Fase 8), D-015, Docker.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{pages/Admin,lib/api,App,components/Layout}.tsx`.
+
+---
+
 ## 2026-06-23 — Fase 8 (parte 2) — Citações clicáveis + split-screen
 
 **Branch:** `feat/fase-7-frontend`.

@@ -64,6 +64,16 @@ class PermissoesExtraIn(BaseModel):
     permissoes: list[str]
 
 
+class PapelResumo(BaseModel):
+    nome: str
+    permissoes: list[str]
+
+
+class PermissaoResumo(BaseModel):
+    chave: str
+    descricao: str
+
+
 class ConfigIn(BaseModel):
     estrategia: str | None = None
     persona: str | None = None
@@ -214,6 +224,27 @@ def definir_permissoes_extra(usuario_id: int, dados: PermissoesExtraIn,
     sessao.commit()
     sessao.refresh(usuario)
     return _resumo_usuario(usuario)
+
+
+# --------------------------------------------------------------------------- #
+# Catálogos (papéis e permissões) — para os seletores do painel ADM            #
+# --------------------------------------------------------------------------- #
+@router.get("/papeis", response_model=list[PapelResumo])
+def listar_papeis(_: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> list[PapelResumo]:
+    return [
+        PapelResumo(nome=p.nome, permissoes=[perm.chave for perm in p.permissoes])
+        for p in sessao.scalars(select(Papel)).all()
+    ]
+
+
+@router.get("/permissoes", response_model=list[PermissaoResumo])
+def listar_permissoes(_: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> list[PermissaoResumo]:
+    return [
+        PermissaoResumo(chave=p.chave, descricao=p.descricao)
+        for p in sessao.scalars(select(Permissao)).all()
+    ]
 
 
 # --------------------------------------------------------------------------- #

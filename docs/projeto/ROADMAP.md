@@ -21,7 +21,7 @@ administrativo e controle de acesso por usuário**.
 | 6 | Painel ADM (API) | ❌ Não | ✅ |
 | 7 | Frontend React — base + autenticação + **Docker** (compose) | ❌ Não | 🔄 |
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | 🔄 |
-| 9 | Frontend — painel ADM | ❌ Não | ⬜ |
+| 9 | Frontend — painel ADM | ❌ Não | 🔄 |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
 | 11 | Avaliação de qualidade (RAGAS-lite) & hardening | parcial | ⬜ |
 
@@ -203,15 +203,19 @@ de nuvem entrarem na Fase 10 sem reescrever nada.
 
 ---
 
-## Fase 9 — Frontend: painel ADM ⬜
+## Fase 9 — Frontend: painel ADM 🔄
 
-- [ ] Gestão de usuários/papéis; atribuição de estratégia/persona por usuário
+- [x] **CRUD de usuários** (criar/editar, papel, ativo, reset de senha) — página `/admin`
+- [x] **Gestão de permissões**: papel + permissões **extra** por usuário (checkboxes)
+- [x] Catálogos no backend (`/admin/papeis`, `/admin/permissoes`) p/ os seletores
+- [x] Link "Admin" e página visíveis só com `gerir_usuarios`
+- [ ] Atribuição de estratégia/persona por usuário pela UI
 - [ ] Visualização da auditoria
 - [ ] (Arena e gestão de chaves entram quando a Fase 10 existir)
 
-**Testes:** [ ] admin troca estratégia pela UI e reflete no backend · [ ] telas ADM invisíveis a não-admin
+**Testes:** backend `/admin/papeis|permissoes` (50 passed); UI não testada aqui (npm bloqueado).
 
-**DoD:** administração de usuários/estratégias pela interface.
+**DoD:** administração de usuários/permissões pela interface (estratégia/auditoria pendentes).
 
 ---
 

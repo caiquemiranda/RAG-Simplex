@@ -27,6 +27,11 @@ export default function Layout() {
                 Consulta
               </Link>
             )}
+            {pode('gerir_usuarios') && (
+              <Link to="/admin" className="hover:underline">
+                Admin
+              </Link>
+            )}
             <span className="hidden text-muted-foreground sm:inline">
               {usuario?.email} · {usuario?.papel ?? '—'}
             </span>

@@ -34,6 +34,26 @@ export type Documento = {
   conteudo: string
 }
 
+export type AdminUsuario = {
+  id: number
+  email: string
+  nome: string
+  ativo: boolean
+  papel: string | null
+  permissoes_extra: string[]
+}
+
+export type AdminPapel = { nome: string; permissoes: string[] }
+export type AdminPermissao = { chave: string; descricao: string }
+
+export type NovoUsuario = { email: string; senha: string; nome?: string; papel?: string | null }
+export type AtualizaUsuario = {
+  nome?: string
+  ativo?: boolean
+  papel?: string | null
+  senha?: string
+}
+
 const TOKEN_KEY = 'rag_simplex_token'
 
 export function getToken(): string | null {
@@ -81,4 +101,22 @@ export const api = {
     }),
   documentos: () => request<string[]>('/documentos'),
   documento: (nome: string) => request<Documento>(`/documentos/${encodeURIComponent(nome)}`),
+
+  admin: {
+    usuarios: () => request<AdminUsuario[]>('/admin/usuarios'),
+    criarUsuario: (dados: NovoUsuario) =>
+      request<AdminUsuario>('/admin/usuarios', { method: 'POST', body: JSON.stringify(dados) }),
+    atualizarUsuario: (id: number, dados: AtualizaUsuario) =>
+      request<AdminUsuario>(`/admin/usuarios/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(dados),
+      }),
+    definirPermissoesExtra: (id: number, permissoes: string[]) =>
+      request<AdminUsuario>(`/admin/usuarios/${id}/permissoes-extra`, {
+        method: 'PUT',
+        body: JSON.stringify({ permissoes }),
+      }),
+    papeis: () => request<AdminPapel[]>('/admin/papeis'),
+    permissoes: () => request<AdminPermissao[]>('/admin/permissoes'),
+  },
 }
