@@ -9,6 +9,26 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Fase 8 (parte 4) — Histórico persistente + buscas fora da página
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Problema:** o histórico do chat vivia no estado local de `Consulta`; ao trocar de
+aba a página era desmontada e o histórico (e uma busca em andamento) se perdia.
+
+**Feito (frontend, não testado aqui além de typecheck):**
+- `chat/ChatContext.tsx` (novo): `ChatProvider` acima das rotas guarda `mensagens`
+  e roda `enviar`/`votar` (streaming incluso). Como não é desmontado ao navegar, o
+  histórico persiste e a busca **continua rodando em outra aba**. Persistência em
+  `localStorage` por usuário (`rag-historico-<id>`) → sobrevive a reload.
+- `main.tsx`: `<ChatProvider>` dentro de `<AuthProvider>`, em volta de `<App>`.
+- `pages/Consulta.tsx`: vira apresentacional (consome `useChat`); botão **Limpar**.
+- `tsc --noEmit` = OK.
+
+**Arquivos:** `frontend/src/{chat/ChatContext,pages/Consulta,main}.tsx`.
+
+---
+
 ## 2026-06-24 — Fase 9 (parte 2) — Estratégia por usuário + auditoria na UI
 
 **Branch:** `feat/fase-7-frontend`.

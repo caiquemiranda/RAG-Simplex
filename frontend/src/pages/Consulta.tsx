@@ -1,30 +1,17 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { api, queryStream, type Fonte } from '../lib/api'
-import { useAuth } from '../auth/AuthContext'
+import { type Fonte } from '../lib/api'
+import { useChat } from '../chat/ChatContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Markdown } from '../components/Markdown'
 import { DocumentoPanel } from '../components/DocumentoPanel'
 
-type Mensagem = {
-  autor: 'usuario' | 'assistente'
-  texto: string
-  fontes?: Fonte[]
-  camadas?: string[]
-  fallback?: boolean
-  logId?: number | null
-  voto?: number
-}
-
 type DocAberto = { nome: string; header: string }
 
 export default function Consulta() {
-  const { usuario } = useAuth()
-  const podeStream = usuario?.permissoes.includes('consultar_stream') ?? false
+  const { mensagens, carregando, enviar, votar, limpar } = useChat()
 
-  const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [pergunta, setPergunta] = useState('')
-  const [carregando, setCarregando] = useState(false)
   const [doc, setDoc] = useState<DocAberto | null>(null)
   const fimRef = useRef<HTMLDivElement>(null)
 
@@ -32,82 +19,16 @@ export default function Consulta() {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensagens, carregando])
 
-  // Atualiza a última mensagem (a do assistente em curso).
-  function patchUltima(patch: Partial<Mensagem>) {
-    setMensagens((prev) => {
-      const copia = [...prev]
-      const i = copia.length - 1
-      copia[i] = { ...copia[i], ...patch }
-      return copia
-    })
-  }
-  function appendUltima(delta: string) {
-    setMensagens((prev) => {
-      const copia = [...prev]
-      const i = copia.length - 1
-      copia[i] = { ...copia[i], texto: copia[i].texto + delta }
-      return copia
-    })
-  }
-
-  async function enviar(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const texto = pergunta.trim()
     if (!texto || carregando) return
-
-    setMensagens((m) => [
-      ...m,
-      { autor: 'usuario', texto },
-      { autor: 'assistente', texto: '', fontes: [], camadas: [], fallback: false, logId: null, voto: 0 },
-    ])
     setPergunta('')
-    setCarregando(true)
-    try {
-      if (podeStream) {
-        await queryStream(
-          texto,
-          (meta) =>
-            patchUltima({
-              fontes: meta.fontes,
-              camadas: meta.camadas_exibidas,
-              fallback: meta.fallback,
-              logId: meta.log_id,
-            }),
-          (delta) => appendUltima(delta),
-        )
-      } else {
-        const r = await api.query(texto)
-        patchUltima({
-          texto: r.resposta,
-          fontes: r.fontes,
-          camadas: r.camadas_exibidas,
-          fallback: r.fallback,
-          logId: r.log_id,
-        })
-      }
-    } catch (err) {
-      patchUltima({
-        texto: `**Erro:** ${err instanceof Error ? err.message : 'falha na consulta'}`,
-        fallback: true,
-      })
-    } finally {
-      setCarregando(false)
-    }
+    await enviar(texto)
   }
 
   function abrirFonte(f: Fonte) {
     if (f.fonte) setDoc({ nome: f.fonte, header: f.header ?? '' })
-  }
-
-  async function votar(idx: number, voto: number) {
-    const m = mensagens[idx]
-    if (!m.logId) return
-    try {
-      await api.feedback(m.logId, voto)
-      setMensagens((prev) => prev.map((x, i) => (i === idx ? { ...x, voto } : x)))
-    } catch {
-      /* silencioso: feedback é best-effort */
-    }
   }
 
   return (
@@ -123,7 +44,7 @@ export default function Consulta() {
                 </p>
                 <p className="mt-4 text-xs">
                   Clique em uma <span className="font-medium">fonte</span> para abrir o guia ao
-                  lado, no trecho exato.
+                  lado, no trecho exato. O histórico fica salvo mesmo se você trocar de aba.
                 </p>
               </div>
             )}
@@ -138,7 +59,7 @@ export default function Consulta() {
               ) : (
                 <div key={i} className="flex justify-start">
                   <div className="w-full rounded-2xl border bg-card px-4 py-3 shadow-sm">
-                    {!m.texto && carregando ? (
+                    {!m.texto && carregando && i === mensagens.length - 1 ? (
                       <p className="text-sm text-muted-foreground">Consultando a base…</p>
                     ) : (
                       <>
@@ -195,7 +116,7 @@ export default function Consulta() {
         </div>
 
         <div className="shrink-0 border-t bg-background">
-          <form onSubmit={enviar} className="mx-auto flex max-w-3xl gap-2 p-4">
+          <form onSubmit={onSubmit} className="mx-auto flex max-w-3xl items-center gap-2 p-4">
             <Input
               value={pergunta}
               onChange={(e) => setPergunta(e.target.value)}
@@ -205,6 +126,11 @@ export default function Consulta() {
             <Button type="submit" disabled={carregando || !pergunta.trim()}>
               Enviar
             </Button>
+            {mensagens.length > 0 && (
+              <Button type="button" variant="outline" onClick={limpar} disabled={carregando} title="Apagar o histórico">
+                Limpar
+              </Button>
+            )}
           </form>
         </div>
       </div>
