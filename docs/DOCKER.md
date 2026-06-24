@@ -23,7 +23,8 @@ Parar: `Ctrl+C` e `docker compose down` (use `-v` para apagar também os dados).
 
 ## Arquitetura dos containers
 - **backend**: FastAPI + ChromaDB embarcado + SQLite + e5 (modelo **pré-cacheado na
-  imagem** → sem download em runtime). Dados em volume `ragdata`.
+  imagem** → sem download em runtime). **PyTorch CPU-only** (sem libs CUDA ~2 GB —
+  app roda em CPU; mesmos resultados, imagem menor/build rápido). Dados em volume `ragdata`.
 - **frontend**: build Vite servido por **nginx**, que faz **proxy** de `/auth`,
   `/query`, `/admin`, `/documentos`, `/ingest`, `/health` para o `backend`. Origem
   única → **sem CORS**. Por isso a API base do front é relativa (`VITE_API_URL=""`).

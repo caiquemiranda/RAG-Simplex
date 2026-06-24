@@ -13,7 +13,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Instala o PyTorch CPU-only ANTES do requirements: evita baixar a build com CUDA
+# (~2 GB de libs NVIDIA inúteis num app CPU-only). Mesmos resultados, imagem menor
+# e build muito mais rápido. Para usar GPU no futuro, remova esta linha do índice
+# CPU e deixe o requirements puxar o torch padrão (com CUDA).
+RUN pip install --upgrade pip \
+    && pip install torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install -r requirements.txt
 
 # Pré-cacheia o modelo de embeddings na imagem (sem download em runtime).
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-small')"
