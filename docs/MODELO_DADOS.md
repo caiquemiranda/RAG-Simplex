@@ -17,6 +17,7 @@ erDiagram
   USUARIO ||--o{ LOG_CONSULTA : "1:N (usuario_id)"
   USUARIO ||--o{ VISITA : "1:N (técnico)"
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
+  USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
   PROVEDOR ||--o{ CONFIG_ESTRATEGIA : "0..1 (provedor_id)"
 
   PAPEL {
@@ -57,6 +58,21 @@ erDiagram
     string titulo "atividade"
     string status "agendada|concluida|cancelada"
     text observacoes
+  }
+  FERIADO {
+    int id PK
+    date data UK
+    string descricao
+  }
+  NOTIFICACAO {
+    int id PK
+    int usuario_id FK
+    string tipo
+    string titulo
+    text texto
+    int ref_id "entidade relacionada"
+    bool lida
+    datetime criado_em
   }
   DOCUMENTO_TECNICO {
     int id PK
@@ -115,6 +131,11 @@ mas não é mais usado pela API.
 Atividade agendada de um técnico (`usuario_id`) num dia (`data`), opcionalmente num
 cliente (`cliente_id`), com `status`. Técnico vê as próprias; admin vê todas. Ver
 [`FLUXOS.md`](FLUXOS.md) e o spec [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### Feriado / Notificacao
+`Feriado` (global): data única + descrição; destaca o dia no cronograma.
+`Notificacao`: mensagem para um usuário (`lida` controla o badge do sino); criada,
+p.ex., ao agendar uma atividade para o técnico. Cada usuário vê só as próprias.
 
 ### DocumentoTecnico
 Documento exigido do técnico (NR-10, ASO, crachá de cliente) com `validade`. O painel

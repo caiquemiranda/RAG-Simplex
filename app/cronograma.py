@@ -16,9 +16,20 @@ from sqlalchemy.orm import Session
 
 from app.auth import requer, usuario_atual
 from app.db import get_session
-from app.modelos import Cliente, Usuario, Visita
+from app.modelos import Cliente, Feriado, Notificacao, Usuario, Visita
 
 router = APIRouter(prefix="/cronograma", tags=["cronograma"])
+
+
+class FeriadoIn(BaseModel):
+    data: date
+    descricao: str
+
+
+class FeriadoResumo(BaseModel):
+    id: int
+    data: date
+    descricao: str
 
 
 class VisitaIn(BaseModel):
@@ -99,6 +110,14 @@ def criar(dados: VisitaIn,
         titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
     )
     sessao.add(v)
+    sessao.flush()
+    # #CR4: notifica o técnico vinculado à atividade.
+    local = f" — {v.cliente.nome}" if v.cliente else ""
+    sessao.add(Notificacao(
+        usuario_id=v.usuario_id, tipo="cronograma",
+        titulo=f"Nova atividade: {v.titulo}",
+        texto=f"{v.data.isoformat()}{local}", ref_id=v.id,
+    ))
     sessao.commit()
     sessao.refresh(v)
     return _resumo(v)
@@ -135,4 +154,43 @@ def remover(visita_id: int,
     if v is None:
         raise HTTPException(status_code=404, detail="Visita não encontrada.")
     sessao.delete(v)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Feriados (globais) — #CR3                                                    #
+# --------------------------------------------------------------------------- #
+@router.get("/feriados/intervalo", response_model=list[FeriadoResumo])
+def listar_feriados(
+    de: date = Query(...), ate: date = Query(...),
+    _: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[FeriadoResumo]:
+    rows = sessao.scalars(
+        select(Feriado).where(Feriado.data >= de, Feriado.data <= ate).order_by(Feriado.data)
+    )
+    return [FeriadoResumo(id=f.id, data=f.data, descricao=f.descricao) for f in rows]
+
+
+@router.post("/feriados", response_model=FeriadoResumo, status_code=status.HTTP_201_CREATED)
+def criar_feriado(dados: FeriadoIn,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> FeriadoResumo:
+    if sessao.scalar(select(Feriado).where(Feriado.data == dados.data)):
+        raise HTTPException(status_code=409, detail="Já existe um feriado nessa data.")
+    f = Feriado(data=dados.data, descricao=dados.descricao.strip() or "Feriado")
+    sessao.add(f)
+    sessao.commit()
+    sessao.refresh(f)
+    return FeriadoResumo(id=f.id, data=f.data, descricao=f.descricao)
+
+
+@router.delete("/feriados/{feriado_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_feriado(feriado_id: int,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)):
+    f = sessao.get(Feriado, feriado_id)
+    if f is None:
+        raise HTTPException(status_code=404, detail="Feriado não encontrado.")
+    sessao.delete(f)
     sessao.commit()

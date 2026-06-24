@@ -38,13 +38,12 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       dias de outros meses ficam **vazios** (sem número). *Frontend.*
 - [x] **#CR2 — Miniatura do dia**: cada dia mostra prévia compacta (avatar do técnico +
       atividade, cor por status). *Frontend.*
-- [~] **#CR3 — Feriados + fim de semana**: **sábado/domingo** com tom verde da logo
-      (`--brand-2`) ✅. **Falta:** marcar **feriado** num dia (tabela `feriado`
-      {data, descricao, escopo?} — decidir **global** vs **por unidade**).
-- [ ] **#CR4 — Notificações**: ao **criar atividade** para um usuário → **notificação**
-      (não lida) + **sino com contador** + **tela de notificações**. *Cross-cutting*
-      (fundação): tabela `notificacao` {usuario_id, tipo, titulo, texto, lida, ref_id,
-      criado_em} + endpoints (`GET /notificacoes`, `POST /notificacoes/{id}/lida`).
+- [x] **#CR3 — Feriados + fim de semana**: sábado/domingo em verde da logo +
+      **feriado global** (tabela `feriado`; marcar/remover no card do dia; destaque no
+      calendário). Decisão: **global**.
+- [x] **#CR4 — Notificações**: criar atividade → **notificação só para o técnico** +
+      **sino com badge** (Sidebar) + **tela `/notificacoes`** (marcar lida/todas).
+      Tabela `notificacao` + router `/notificacoes` + `NotificacoesProvider`.
 - [x] **#CR5 — "Onde cada um está" + avatar**: avatar do técnico (foto `foto_url` ou
       **iniciais** — Caíque Miranda → CM) no calendário e no card do dia; mostra o
       **cliente/local**. Componente **`Avatar`** reutilizável extraído (usado também na Sidebar).

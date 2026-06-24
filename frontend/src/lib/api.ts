@@ -76,6 +76,16 @@ export type NovaVisita = {
   status?: string
   observacoes?: string | null
 }
+export type Feriado = { id: number; data: string; descricao: string }
+export type Notificacao = {
+  id: number
+  tipo: string
+  titulo: string
+  texto: string | null
+  ref_id: number | null
+  lida: boolean
+  criado_em: string
+}
 
 export type AdminUsuarioDetalhe = AdminUsuario & {
   foto_url: string | null
@@ -285,5 +295,17 @@ export const api = {
     atualizar: (id: number, dados: Partial<NovaVisita>) =>
       request<Visita>(`/cronograma/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/cronograma/${id}`, { method: 'DELETE' }),
+    feriados: (de: string, ate: string) =>
+      request<Feriado[]>(`/cronograma/feriados/intervalo?de=${de}&ate=${ate}`),
+    criarFeriado: (dados: { data: string; descricao: string }) =>
+      request<Feriado>('/cronograma/feriados', { method: 'POST', body: JSON.stringify(dados) }),
+    removerFeriado: (id: number) => request<void>(`/cronograma/feriados/${id}`, { method: 'DELETE' }),
+  },
+  notificacoes: {
+    listar: (apenasNaoLidas = false) =>
+      request<Notificacao[]>(`/notificacoes${apenasNaoLidas ? '?apenas_nao_lidas=true' : ''}`),
+    marcarLida: (id: number) =>
+      request<Notificacao>(`/notificacoes/${id}/lida`, { method: 'POST' }),
+    marcarTodas: () => request<{ ok: boolean }>('/notificacoes/lidas', { method: 'POST' }),
   },
 }

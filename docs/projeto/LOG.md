@@ -9,6 +9,27 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Cronograma: #CR3 feriados (global) + #CR4 notificações
+
+**Branch:** `feat/fase-7-frontend`. **Decisões:** feriado **global**; notificar **só o técnico**.
+
+- **Modelo:** `Feriado` (data única, descrição) + `Notificacao` (usuario_id, tipo,
+  título, texto, ref_id, lida, criado_em). Tabelas novas via micro-migração.
+- **API:** feriados em `/cronograma/feriados[...]` (GET autenticado; POST/DELETE
+  `gerir_usuarios`); criar visita **gera notificação para o técnico**. Novo router
+  `/notificacoes` (GET próprias; marcar lida/todas). Registrados no `main.py`.
+- **Frontend:** `NotificacoesProvider` (badge + poll 60s); **sino** na Sidebar
+  (header + rail) com badge; página `/notificacoes`. Cronograma: feriado destaca o
+  dia (vermelho) + marcar/remover no card; fim de semana já em verde.
+- **Testes:** +2 (`test_feriado_crud`, `test_notificacao_ao_criar_atividade`) →
+  **68 passed**. `tsc` OK.
+
+**Arquivos:** `app/{modelos,cronograma,notificacoes,main}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,notificacoes/NotificacoesContext,pages/{Cronograma,Notificacoes},
+components/Sidebar,main,App}.tsx`, `docs/**`.
+
+---
+
 ## 2026-06-24 — Cronograma: #CR1/#CR2/#CR5 + fim de semana (#CR3 parcial)
 
 **Branch:** `feat/fase-7-frontend`.

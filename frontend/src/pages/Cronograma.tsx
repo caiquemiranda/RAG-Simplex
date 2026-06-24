@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type AdminCliente, type AdminUsuario, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type Feriado, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -21,6 +21,8 @@ export default function Cronograma() {
   const hoje = new Date()
   const [ref, setRef] = useState({ ano: hoje.getFullYear(), mes: hoje.getMonth() })
   const [visitas, setVisitas] = useState<Visita[]>([])
+  const [feriados, setFeriados] = useState<Record<string, Feriado>>({})
+  const [novoFeriado, setNovoFeriado] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [diaSel, setDiaSel] = useState<string | null>(null)
 
@@ -34,10 +36,29 @@ export default function Cronograma() {
 
   async function recarregar() {
     try {
-      setVisitas(await api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined))
+      const [vs, fs] = await Promise.all([
+        api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined),
+        api.cronograma.feriados(de, ate),
+      ])
+      setVisitas(vs)
+      setFeriados(Object.fromEntries(fs.map((f) => [f.data, f])))
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar o cronograma')
     }
+  }
+
+  async function marcarFeriado() {
+    if (!diaSel) return
+    try {
+      await api.cronograma.criarFeriado({ data: diaSel, descricao: novoFeriado.trim() || 'Feriado' })
+      setNovoFeriado('')
+      recarregar()
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao marcar feriado')
+    }
+  }
+  async function removerFeriado(id: number) {
+    try { await api.cronograma.removerFeriado(id); recarregar() } catch { /* ignore */ }
   }
 
   useEffect(() => {
@@ -130,7 +151,13 @@ export default function Cronograma() {
                 <button
                   key={i}
                   onClick={() => setDiaSel(c.iso)}
-                  style={c.fds ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' } : undefined}
+                  style={
+                    feriados[c.iso]
+                      ? { backgroundColor: 'hsl(var(--destructive) / 0.08)' }
+                      : c.fds
+                        ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' }
+                        : undefined
+                  }
                   className="min-h-[92px] border-b border-r p-1.5 text-left hover:bg-accent"
                 >
                   <div className="flex justify-end">
@@ -139,6 +166,11 @@ export default function Cronograma() {
                     </span>
                   </div>
                   <div className="mt-1 space-y-1">
+                    {feriados[c.iso] && (
+                      <div className="truncate rounded px-1 py-0.5 text-[10px] text-destructive" title={feriados[c.iso].descricao}>
+                        🎌 {feriados[c.iso].descricao}
+                      </div>
+                    )}
                     {c.evs.slice(0, 3).map((v) => (
                       <div
                         key={v.id}
@@ -175,6 +207,28 @@ export default function Cronograma() {
               </h2>
               <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={() => setDiaSel(null)}>✕</button>
             </div>
+
+            {/* Feriado (#CR3) */}
+            {(() => {
+              const fer = diaSel ? feriados[diaSel] : undefined
+              if (fer) {
+                return (
+                  <div className="mb-2 flex items-center justify-between rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">
+                    <span>🎌 Feriado: {fer.descricao}</span>
+                    {podeGerir && <button className="hover:underline" onClick={() => removerFeriado(fer.id)}>remover</button>}
+                  </div>
+                )
+              }
+              if (podeGerir) {
+                return (
+                  <div className="mb-2 flex gap-2">
+                    <Input className="h-8" value={novoFeriado} onChange={(e) => setNovoFeriado(e.target.value)} placeholder="Marcar feriado (descrição)" />
+                    <Button size="sm" variant="outline" onClick={marcarFeriado}>Feriado</Button>
+                  </div>
+                )
+              }
+              return null
+            })()}
 
             <div className="max-h-72 space-y-2 overflow-y-auto">
               {visitasDoDia.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}

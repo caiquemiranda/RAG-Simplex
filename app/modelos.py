@@ -157,6 +157,33 @@ class Visita(Base):
     cliente: Mapped[Cliente | None] = relationship()
 
 
+class Feriado(Base):
+    """Feriado (global) — destaca o dia no cronograma."""
+
+    __tablename__ = "feriado"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data: Mapped[date] = mapped_column(Date, unique=True)
+    descricao: Mapped[str] = mapped_column(String(120))
+
+
+class Notificacao(Base):
+    """Notificação para um usuário (ex.: nova atividade no cronograma)."""
+
+    __tablename__ = "notificacao"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(40), default="cronograma")
+    titulo: Mapped[str] = mapped_column(String(160))
+    texto: Mapped[str | None] = mapped_column(Text, default=None)
+    ref_id: Mapped[int | None] = mapped_column(default=None)  # id da entidade relacionada
+    lida: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
 class DocumentoTecnico(Base):
     """Documento exigido do técnico (ex.: NR-10, ASO, crachá de cliente) com validade.
 

@@ -98,3 +98,32 @@ def test_remover_visita(ctx):
     vid = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "X"}).json()["id"]
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 204
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 404
+
+
+def test_feriado_crud(ctx):
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    r = client.post("/cronograma/feriados", headers=admin, json={"data": "2026-07-09", "descricao": "Revolução"})
+    assert r.status_code == 201
+    fid = r.json()["id"]
+    assert client.post("/cronograma/feriados", headers=admin, json={"data": "2026-07-09", "descricao": "x"}).status_code == 409
+    vis = client.get("/cronograma/feriados/intervalo?de=2026-07-01&ate=2026-07-31", headers=admin).json()
+    assert any(f["id"] == fid for f in vis)
+    assert client.delete(f"/cronograma/feriados/{fid}", headers=admin).status_code == 204
+
+
+def test_notificacao_ao_criar_atividade(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "Manutenção"})
+
+    # O técnico recebe a notificação; o outro técnico não.
+    tec = _login(client, "tec@x.com")
+    notifs = client.get("/notificacoes", headers=tec).json()
+    assert len(notifs) == 1 and "Manutenção" in notifs[0]["titulo"] and notifs[0]["lida"] is False
+    assert client.get("/notificacoes", headers=_login(client, "tec2@x.com")).json() == []
+
+    # Marcar como lida.
+    nid = notifs[0]["id"]
+    assert client.post(f"/notificacoes/{nid}/lida", headers=tec).json()["lida"] is True
+    assert client.get("/notificacoes?apenas_nao_lidas=true", headers=tec).json() == []

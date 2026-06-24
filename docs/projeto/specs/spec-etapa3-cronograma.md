@@ -27,10 +27,16 @@ criada pela micro-migração no banco existente.
   - **Técnico:** vê só as próprias visitas do dia (onde estará + atividade).
 - `lib/api.ts`: tipos `Visita`/`NovaVisita` + `api.cronograma.{listar,criar,atualizar,remover}`.
 
+## Otimizações (#CR1–#CR5)
+- **#CR1** grade só do mês vigente; **#CR2/#CR5** avatar do técnico (foto/iniciais) no
+  dia e no card + “onde está”; **#CR3** fim de semana em verde + **feriado global**
+  (`Feriado`; marcar/remover no card do dia); **#CR4** ao criar atividade gera
+  **notificação só para o técnico** (router `/notificacoes`, sino com badge, tela).
+
 ## Testes
-`tests/test_cronograma.py` (4): admin cria + filtro por intervalo; técnico vê só as
-próprias; técnico não cria (403); remover (204/404). Suíte: **66 passed**.
+`tests/test_cronograma.py` (6): visitas (intervalo/RBAC/403/remover) + feriado CRUD +
+notificação ao criar atividade. Suíte: **68 passed**.
 
 ## Próximo (opcional)
 - Status “concluída” com histórico/observações ao fechar a visita.
-- Visão por **unidade/local** além de por técnico.
+- Feriado **por unidade** (hoje é global); visão por **unidade/local**.

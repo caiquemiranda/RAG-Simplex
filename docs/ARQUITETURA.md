@@ -76,6 +76,8 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário). |
 | GET | `/cronograma?de=&ate=&tecnico_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
+| GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
+| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
 | PUT | `/admin/config-global` | `gerir_estrategias` | Estratégia padrão global. |
 | GET | `/admin/auditoria` | `gerir_usuarios` | Log de consultas (com feedback). |

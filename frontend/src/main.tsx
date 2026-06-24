@@ -6,6 +6,7 @@ import './index.css'
 import { AuthProvider } from './auth/AuthContext'
 import { ChatProvider } from './chat/ChatContext'
 import { ThemeProvider } from './theme/ThemeContext'
+import { NotificacoesProvider } from './notificacoes/NotificacoesContext'
 
 // Aplica o tema salvo antes do render (evita "flash" do tema claro).
 {
@@ -19,9 +20,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <ChatProvider>
-            <App />
-          </ChatProvider>
+          <NotificacoesProvider>
+            <ChatProvider>
+              <App />
+            </ChatProvider>
+          </NotificacoesProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

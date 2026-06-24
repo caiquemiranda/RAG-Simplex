@@ -9,6 +9,7 @@ import Relatorios from './pages/Relatorios'
 import Equipamentos from './pages/Equipamentos'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
+import Notificacoes from './pages/Notificacoes'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/equipamentos" element={<Equipamentos />} />
           <Route path="/documentos" element={<Documentos />} />
           <Route path="/cronograma" element={<Cronograma />} />
+          <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/inicio" element={<Home />} />
           <Route path="/admin" element={<Admin />} />
         </Route>
