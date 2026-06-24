@@ -36,6 +36,21 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Refino 2: cores theme-aware + Avatar na edição
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Dark mode consistente:** badges de status (visita/documento) em `lib/format.ts` e
+  os alertas/mensagens âmbar/verde do Admin ganharam variantes `dark:` (legíveis no
+  tema escuro). Nenhuma cor de status fixa sem `dark:` restou.
+- **DRY:** a foto na edição de usuário passou a usar o componente **`Avatar`**
+  (foto ou iniciais) em vez de `<img>` + fallback manual.
+- `tsc` OK.
+
+**Arquivos:** `frontend/src/{lib/format.ts,pages/Admin.tsx}`.
+
+---
+
 ## 2026-06-24 — Refino: helpers DRY + spec da Etapa 0
 
 **Branch:** `feat/fase-7-frontend`.

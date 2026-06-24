@@ -317,7 +317,7 @@ export default function Admin() {
         </div>
 
         {erro && <p className="text-sm text-destructive">{erro}</p>}
-        {msg && <p className="text-sm text-green-700">{msg}</p>}
+        {msg && <p className="text-sm text-green-700 dark:text-green-400">{msg}</p>}
 
         {/* Hub de cards */}
         {secao === null && (
@@ -454,13 +454,11 @@ export default function Admin() {
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="space-y-1 text-center">
-                      <div className="h-20 w-20 overflow-hidden rounded-full border bg-muted">
-                        {perfil.foto_url ? (
-                          <img src={perfil.foto_url} alt="foto" className="h-full w-full object-cover" />
-                        ) : (
-                          <Avatar nome={form.nome || usuarios.find((u) => u.id === editId)?.email || '?'} className="h-full w-full text-lg" />
-                        )}
-                      </div>
+                      <Avatar
+                        nome={form.nome || usuarios.find((u) => u.id === editId)?.email || '?'}
+                        fotoUrl={perfil.foto_url || undefined}
+                        className="h-20 w-20 border text-lg"
+                      />
                       <label className="block cursor-pointer text-xs text-primary hover:underline">
                         alterar foto
                         <input type="file" accept="image/*" className="hidden" onChange={onFoto} />
@@ -534,7 +532,7 @@ export default function Admin() {
               <CardContent className="space-y-2">
                 {(() => {
                   const venc = documentos.filter((d) => d.validade && Math.ceil((new Date(d.validade + 'T00:00:00').getTime() - Date.now()) / 86400000) <= 30).length
-                  return venc > 0 ? <p className="text-xs font-medium text-amber-700">⚠️ {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
+                  return venc > 0 ? <p className="text-xs font-medium text-amber-700 dark:text-amber-300">⚠️ {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
                 })()}
                 {documentos.length === 0 && <p className="text-xs text-muted-foreground">Nenhum documento cadastrado.</p>}
                 {documentos.map((d) => {
@@ -648,7 +646,7 @@ export default function Admin() {
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium">{u.email}</span>
                         {u.docs_alerta > 0 && (
-                          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700" title="Documentos vencidos ou vencendo em até 30 dias">
+                          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-200" title="Documentos vencidos ou vencendo em até 30 dias">
                             ⚠️ {u.docs_alerta} doc.
                           </span>
                         )}
