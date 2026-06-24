@@ -13,6 +13,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { AuditoriaView } from '../components/AuditoriaView'
+import { Avatar } from '../components/Avatar'
 
 type FormEdicao = {
   nome: string
@@ -76,6 +77,11 @@ export default function Admin() {
   const [perfil, setPerfil] = useState<PerfilForm | null>(null)
   const [documentos, setDocumentos] = useState<DocumentoTecnico[]>([])
   const [novoDoc, setNovoDoc] = useState({ nome: '', validade: '' })
+  const [verSenha, setVerSenha] = useState(false)
+
+  function fecharEdicao() {
+    setEditId(null); setForm(null); setEstr(null); setPerfil(null); setVerSenha(false)
+  }
 
   async function carregar() {
     setErro(null)
@@ -370,320 +376,225 @@ export default function Admin() {
 
         {secao === 'auditoria' && <AuditoriaView emailPorId={emailPorId} />}
 
-        {secao === 'usuarios' && (
-          <>
-            <div className="flex justify-end">
-              <Button size="sm" onClick={() => setCriando((v) => !v)}>
-                {criando ? 'Cancelar' : '+ Novo usuário'}
-              </Button>
+        {secao === 'usuarios' && (form && editId != null ? (
+          /* ===================== #U2: edição como tela própria ===================== */
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={fecharEdicao}>← Voltar à lista</Button>
+              <h2 className="font-semibold">{usuarios.find((u) => u.id === editId)?.email}</h2>
             </div>
 
-            {criando && (
+            {/* 1. Perfil e gestão de acesso */}
+            {perfil && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Novo usuário</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label>E-mail</Label>
-                    <Input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Nome</Label>
-                    <Input value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Senha</Label>
-                    <Input type="password" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Papel</Label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                      value={novo.papel}
-                      onChange={(e) => setNovo({ ...novo, papel: e.target.value })}
-                    >
-                      <option value="">— sem papel —</option>
-                      {papeis.map((p) => (
-                        <option key={p.nome} value={p.nome}>{p.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Button size="sm" onClick={criarUsuario} disabled={!novo.email || !novo.senha}>
-                      Criar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardContent className="p-0">
-                <table className="w-full text-sm">
-                  <thead className="border-b text-left text-muted-foreground">
-                    <tr>
-                      <th className="p-3">E-mail</th>
-                      <th className="p-3">Nome</th>
-                      <th className="p-3">Papel</th>
-                      <th className="p-3">Ativo</th>
-                      <th className="p-3">Extra</th>
-                      <th className="p-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usuarios.map((u) => (
-                      <tr key={u.id} className="border-b last:border-0">
-                        <td className="p-3">{u.email}</td>
-                        <td className="p-3">{u.nome || '—'}</td>
-                        <td className="p-3">{u.papel ?? '—'}</td>
-                        <td className="p-3">{u.ativo ? 'sim' : 'não'}</td>
-                        <td className="p-3">{u.permissoes_extra.length || '—'}</td>
-                        <td className="p-3 text-right">
-                          <Button variant="outline" size="sm" onClick={() => abrirEdicao(u)}>
-                            Editar
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {usuarios.length === 0 && (
-                      <tr>
-                        <td className="p-3 text-muted-foreground" colSpan={6}>Nenhum usuário.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-
-            {form && editId != null && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    Editar: {usuarios.find((u) => u.id === editId)?.email}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Dados + permissões */}
-                  <div className="space-y-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label>Nome</Label>
-                        <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+                <CardHeader><CardTitle className="text-base">1. Perfil e gestão de acesso</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="space-y-1 text-center">
+                      <div className="h-20 w-20 overflow-hidden rounded-full border bg-muted">
+                        {perfil.foto_url ? (
+                          <img src={perfil.foto_url} alt="foto" className="h-full w-full object-cover" />
+                        ) : (
+                          <Avatar nome={form.nome || usuarios.find((u) => u.id === editId)?.email || '?'} className="h-full w-full text-lg" />
+                        )}
                       </div>
+                      <label className="block cursor-pointer text-xs text-primary hover:underline">
+                        alterar foto
+                        <input type="file" accept="image/*" className="hidden" onChange={onFoto} />
+                      </label>
+                      {perfil.foto_url && (
+                        <button type="button" className="text-xs text-destructive hover:underline" onClick={() => setPerfil({ ...perfil, foto_url: '' })}>remover</button>
+                      )}
+                    </div>
+                    <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-1"><Label>Nome</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
                       <div className="space-y-1">
                         <Label>Papel</Label>
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                          value={form.papel}
-                          onChange={(e) => setForm({ ...form, papel: e.target.value })}
-                        >
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.papel} onChange={(e) => setForm({ ...form, papel: e.target.value })}>
                           <option value="">— sem papel —</option>
-                          {papeis.map((p) => (
-                            <option key={p.nome} value={p.nome}>{p.nome}</option>
-                          ))}
+                          {papeis.map((p) => <option key={p.nome} value={p.nome}>{p.nome}</option>)}
                         </select>
                       </div>
+                      <div className="space-y-1"><Label>Cargo / função</Label><Input value={perfil.cargo} onChange={(e) => setPerfil({ ...perfil, cargo: e.target.value })} /></div>
+                      <div className="space-y-1"><Label>Telefone</Label><Input value={perfil.telefone} onChange={(e) => setPerfil({ ...perfil, telefone: e.target.value })} /></div>
                       <div className="space-y-1">
                         <Label>Nova senha (opcional)</Label>
-                        <Input
-                          type="password"
-                          value={form.senha}
-                          onChange={(e) => setForm({ ...form, senha: e.target.value })}
-                          placeholder="deixe em branco para não alterar"
-                        />
+                        <div className="relative">
+                          <Input type={verSenha ? 'text' : 'password'} className="pr-9" value={form.senha} placeholder="deixe em branco para não alterar" onChange={(e) => setForm({ ...form, senha: e.target.value })} />
+                          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground" title={verSenha ? 'Ocultar' : 'Mostrar'} onClick={() => setVerSenha((v) => !v)}>
+                            {verSenha ? '🙈' : '👁'}
+                          </button>
+                        </div>
                       </div>
                       <label className="flex items-center gap-2 self-end text-sm">
                         <input type="checkbox" checked={form.ativo} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
                         Ativo
                       </label>
-                    </div>
-
-                    <div>
-                      <Label>Permissões</Label>
-                      <p className="mb-2 text-xs text-muted-foreground">
-                        As “(papel)” vêm do papel; as demais são permissões extra deste usuário.
-                      </p>
-                      <div className="grid gap-1.5 sm:grid-cols-2">
-                        {permissoes.map((perm) => {
-                          const viaPapel = rolePerms.has(perm.chave)
-                          const marcada = viaPapel || form.extras.has(perm.chave)
-                          return (
-                            <label key={perm.chave} className="flex items-start gap-2 text-sm" title={perm.descricao}>
-                              <input
-                                type="checkbox"
-                                className="mt-0.5"
-                                disabled={viaPapel}
-                                checked={marcada}
-                                onChange={(e) => {
-                                  const extras = new Set(form.extras)
-                                  if (e.target.checked) extras.add(perm.chave)
-                                  else extras.delete(perm.chave)
-                                  setForm({ ...form, extras })
-                                }}
-                              />
-                              <span>
-                                {perm.chave}
-                                {viaPapel && <span className="text-muted-foreground"> (papel)</span>}
-                              </span>
-                            </label>
-                          )
-                        })}
+                      <div className="space-y-1"><Label>Local de trabalho / unidade</Label><Input value={perfil.unidade} onChange={(e) => setPerfil({ ...perfil, unidade: e.target.value })} /></div>
+                      <div className="space-y-1"><Label>Validade do acesso</Label><Input type="date" value={perfil.acesso_expira_em} onChange={(e) => setPerfil({ ...perfil, acesso_expira_em: e.target.value })} /></div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label>Clientes atendidos</Label>
+                        {clientes.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado — cadastre no card “Clientes”.</p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {clientes.map((c) => {
+                              const marcado = perfil.clienteIds.has(c.id)
+                              return (
+                                <label key={c.id} className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-sm ${marcado ? 'border-primary bg-accent' : ''}`}>
+                                  <input type="checkbox" checked={marcado} onChange={(e) => {
+                                    const ids = new Set(perfil.clienteIds)
+                                    if (e.target.checked) ids.add(c.id); else ids.delete(c.id)
+                                    setPerfil({ ...perfil, clienteIds: ids })
+                                  }} />
+                                  {c.nome}{c.unidade && <span className="text-muted-foreground"> · {c.unidade}</span>}
+                                </label>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-
-                    {/* Perfil / acesso / documentos */}
-                    {perfil && (
-                      <div className="space-y-4 border-t pt-4">
-                        <Label>Perfil e gestão de acesso</Label>
-                        <div className="flex items-start gap-4">
-                          <div className="space-y-1 text-center">
-                            <div className="h-20 w-20 overflow-hidden rounded-full border bg-muted">
-                              {perfil.foto_url ? (
-                                <img src={perfil.foto_url} alt="foto" className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[11px] text-muted-foreground">sem foto</div>
-                              )}
-                            </div>
-                            <label className="block cursor-pointer text-xs text-primary hover:underline">
-                              alterar foto
-                              <input type="file" accept="image/*" className="hidden" onChange={onFoto} />
-                            </label>
-                            {perfil.foto_url && (
-                              <button type="button" className="text-xs text-destructive hover:underline" onClick={() => setPerfil({ ...perfil, foto_url: '' })}>remover</button>
-                            )}
-                          </div>
-                          <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-1"><Label>Telefone</Label><Input value={perfil.telefone} onChange={(e) => setPerfil({ ...perfil, telefone: e.target.value })} /></div>
-                            <div className="space-y-1"><Label>Cargo / função</Label><Input value={perfil.cargo} onChange={(e) => setPerfil({ ...perfil, cargo: e.target.value })} /></div>
-                            <div className="space-y-1"><Label>Local de trabalho / unidade</Label><Input value={perfil.unidade} onChange={(e) => setPerfil({ ...perfil, unidade: e.target.value })} /></div>
-                            <div className="space-y-1"><Label>Validade do acesso</Label><Input type="date" value={perfil.acesso_expira_em} onChange={(e) => setPerfil({ ...perfil, acesso_expira_em: e.target.value })} /></div>
-                            <div className="space-y-1 sm:col-span-2">
-                              <Label>Clientes atendidos</Label>
-                              {clientes.length === 0 ? (
-                                <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado — cadastre no card “Clientes”.</p>
-                              ) : (
-                                <div className="flex flex-wrap gap-2">
-                                  {clientes.map((c) => {
-                                    const marcado = perfil.clienteIds.has(c.id)
-                                    return (
-                                      <label key={c.id} className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-sm ${marcado ? 'border-primary bg-accent' : ''}`}>
-                                        <input
-                                          type="checkbox"
-                                          checked={marcado}
-                                          onChange={(e) => {
-                                            const ids = new Set(perfil.clienteIds)
-                                            if (e.target.checked) ids.add(c.id)
-                                            else ids.delete(c.id)
-                                            setPerfil({ ...perfil, clienteIds: ids })
-                                          }}
-                                        />
-                                        {c.nome}
-                                        {c.unidade && <span className="text-muted-foreground"> · {c.unidade}</span>}
-                                      </label>
-                                    )
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                            <div className="space-y-1 sm:col-span-2">
-                              <Label>Observações</Label>
-                              <textarea className="min-h-[60px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={perfil.observacoes} onChange={(e) => setPerfil({ ...perfil, observacoes: e.target.value })} />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Documentos com validade */}
-                        <div className="space-y-2">
-                          <Label>Documentos exigidos (com validade)</Label>
-                          {(() => {
-                            const venc = documentos.filter((d) => d.validade && Math.ceil((new Date(d.validade + 'T00:00:00').getTime() - Date.now()) / 86400000) <= 30).length
-                            return venc > 0 ? <p className="text-xs font-medium text-amber-700">⚠️ {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
-                          })()}
-                          {documentos.length === 0 && <p className="text-xs text-muted-foreground">Nenhum documento cadastrado.</p>}
-                          {documentos.map((d) => {
-                            const s = statusDoc(d.validade)
-                            return (
-                              <div key={d.id} className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm">
-                                <span className="flex-1 truncate">{d.nome}</span>
-                                <span className="text-xs text-muted-foreground">{d.validade ?? '—'}</span>
-                                <span className={`rounded px-1.5 py-0.5 text-[11px] ${s.cls}`}>{s.label}</span>
-                                <button type="button" className="text-xs text-destructive hover:underline" onClick={() => removerDoc(d.id)}>remover</button>
-                              </div>
-                            )
-                          })}
-                          <div className="flex gap-2">
-                            <Input value={novoDoc.nome} onChange={(e) => setNovoDoc({ ...novoDoc, nome: e.target.value })} placeholder="Documento (ex.: NR-10, ASO, crachá Cliente X)" />
-                            <Input type="date" className="w-40" value={novoDoc.validade} onChange={(e) => setNovoDoc({ ...novoDoc, validade: e.target.value })} />
-                            <Button type="button" variant="outline" size="sm" onClick={adicionarDoc} disabled={!novoDoc.nome.trim()}>Adicionar</Button>
-                          </div>
-                        </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label>Observações</Label>
+                        <textarea className="min-h-[60px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={perfil.observacoes} onChange={(e) => setPerfil({ ...perfil, observacoes: e.target.value })} />
                       </div>
-                    )}
-
-                    <div className="flex gap-2 border-t pt-4">
-                      <Button size="sm" onClick={salvarEdicao}>Salvar usuário</Button>
-                      <Button variant="outline" size="sm" onClick={() => { setEditId(null); setForm(null); setEstr(null); setPerfil(null) }}>
-                        Fechar
-                      </Button>
                     </div>
                   </div>
-
-                  {/* Estratégia / camadas deste usuário */}
-                  {estr && (
-                    <div className="space-y-3 border-t pt-4">
-                      <Label>Estratégia e camadas deste usuário</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Sobrescreve o padrão global/por papel. Camadas vazias = padrão do papel.
-                      </p>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <Label>Estratégia</Label>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                            value={estr.estrategia}
-                            onChange={(e) => setEstr({ ...estr, estrategia: e.target.value })}
-                          >
-                            <option value="">— padrão (global/papel) —</option>
-                            {estrategias.map((s) => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label>Persona (opcional)</Label>
-                          <Input
-                            value={estr.persona}
-                            onChange={(e) => setEstr({ ...estr, persona: e.target.value })}
-                            placeholder="ex.: operador não-técnico"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-4">
-                        {CAMADAS.map((c) => (
-                          <label key={c} className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={estr.camadas.has(c)}
-                              onChange={(e) => {
-                                const camadas = new Set(estr.camadas)
-                                if (e.target.checked) camadas.add(c)
-                                else camadas.delete(c)
-                                setEstr({ ...estr, camadas })
-                              }}
-                            />
-                            {c === 'simples' ? '🟢 simples' : '🔧 técnica'}
-                          </label>
-                        ))}
-                      </div>
-                      <Button size="sm" onClick={salvarEstrategia}>Salvar estratégia</Button>
-                    </div>
-                  )}
+                  <Button size="sm" onClick={salvarEdicao}>Salvar perfil e permissões</Button>
                 </CardContent>
               </Card>
             )}
+
+            {/* 2. Documentos exigidos */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">2. Documentos exigidos (com validade)</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {(() => {
+                  const venc = documentos.filter((d) => d.validade && Math.ceil((new Date(d.validade + 'T00:00:00').getTime() - Date.now()) / 86400000) <= 30).length
+                  return venc > 0 ? <p className="text-xs font-medium text-amber-700">⚠️ {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
+                })()}
+                {documentos.length === 0 && <p className="text-xs text-muted-foreground">Nenhum documento cadastrado.</p>}
+                {documentos.map((d) => {
+                  const s = statusDoc(d.validade)
+                  return (
+                    <div key={d.id} className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm">
+                      <span className="flex-1 truncate">{d.nome}</span>
+                      <span className="text-xs text-muted-foreground">{d.validade ?? '—'}</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[11px] ${s.cls}`}>{s.label}</span>
+                      <button type="button" className="text-xs text-destructive hover:underline" onClick={() => removerDoc(d.id)}>remover</button>
+                    </div>
+                  )
+                })}
+                <div className="flex gap-2">
+                  <Input value={novoDoc.nome} onChange={(e) => setNovoDoc({ ...novoDoc, nome: e.target.value })} placeholder="Documento (ex.: NR-10, ASO, crachá Cliente X)" />
+                  <Input type="date" className="w-40" value={novoDoc.validade} onChange={(e) => setNovoDoc({ ...novoDoc, validade: e.target.value })} />
+                  <Button type="button" variant="outline" size="sm" onClick={adicionarDoc} disabled={!novoDoc.nome.trim()}>Adicionar</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 3. Permissões */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">3. Permissões</CardTitle></CardHeader>
+              <CardContent>
+                <p className="mb-2 text-xs text-muted-foreground">As “(papel)” vêm do papel; as demais são permissões extra deste usuário. Salvas junto com o perfil.</p>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {permissoes.map((perm) => {
+                    const viaPapel = rolePerms.has(perm.chave)
+                    const marcada = viaPapel || form.extras.has(perm.chave)
+                    return (
+                      <label key={perm.chave} className="flex items-start gap-2 text-sm" title={perm.descricao}>
+                        <input type="checkbox" className="mt-0.5" disabled={viaPapel} checked={marcada} onChange={(e) => {
+                          const extras = new Set(form.extras)
+                          if (e.target.checked) extras.add(perm.chave); else extras.delete(perm.chave)
+                          setForm({ ...form, extras })
+                        }} />
+                        <span>{perm.chave}{viaPapel && <span className="text-muted-foreground"> (papel)</span>}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 4. Estratégia e camadas */}
+            {estr && (
+              <Card>
+                <CardHeader><CardTitle className="text-base">4. Estratégia e camadas</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Sobrescreve o padrão global/por papel. Camadas vazias = padrão do papel.</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label>Estratégia</Label>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={estr.estrategia} onChange={(e) => setEstr({ ...estr, estrategia: e.target.value })}>
+                        <option value="">— padrão (global/papel) —</option>
+                        {estrategias.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1"><Label>Persona (opcional)</Label><Input value={estr.persona} onChange={(e) => setEstr({ ...estr, persona: e.target.value })} placeholder="ex.: operador não-técnico" /></div>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {CAMADAS.map((c) => (
+                      <label key={c} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={estr.camadas.has(c)} onChange={(e) => {
+                          const camadas = new Set(estr.camadas)
+                          if (e.target.checked) camadas.add(c); else camadas.delete(c)
+                          setEstr({ ...estr, camadas })
+                        }} />
+                        {c === 'simples' ? '🟢 simples' : '🔧 técnica'}
+                      </label>
+                    ))}
+                  </div>
+                  <Button size="sm" onClick={salvarEstrategia}>Salvar estratégia</Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : (
+          /* ===================== #U1: lista moderna ===================== */
+          <>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => setCriando((v) => !v)}>{criando ? 'Cancelar' : '+ Novo usuário'}</Button>
+            </div>
+
+            {criando && (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Novo usuário</CardTitle></CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1"><Label>E-mail</Label><Input type="email" value={novo.email} onChange={(e) => setNovo({ ...novo, email: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Nome</Label><Input value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Senha</Label><Input type="password" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} /></div>
+                  <div className="space-y-1">
+                    <Label>Papel</Label>
+                    <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={novo.papel} onChange={(e) => setNovo({ ...novo, papel: e.target.value })}>
+                      <option value="">— sem papel —</option>
+                      {papeis.map((p) => <option key={p.nome} value={p.nome}>{p.nome}</option>)}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2"><Button size="sm" onClick={criarUsuario} disabled={!novo.email || !novo.senha}>Criar</Button></div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardContent className="divide-y p-2">
+                {usuarios.map((u) => (
+                  <div key={u.id} className="flex items-center gap-3 py-2">
+                    <Avatar nome={u.nome || u.email} fotoUrl={u.foto_url} className="h-10 w-10" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{u.email}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {u.nome || '—'} · {u.cargo || u.papel || '—'}{!u.ativo && ' · inativo'}
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => abrirEdicao(u)}>Editar</Button>
+                  </div>
+                ))}
+                {usuarios.length === 0 && <p className="py-3 text-sm text-muted-foreground">Nenhum usuário.</p>}
+              </CardContent>
+            </Card>
           </>
-        )}
+        ))}
       </div>
     </div>
   )

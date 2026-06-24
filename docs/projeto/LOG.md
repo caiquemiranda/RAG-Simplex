@@ -9,6 +9,24 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — #U1 lista de usuários moderna + #U2 edição como tela
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#U1:** `UsuarioResumo` ganhou `cargo`/`foto_url`; a lista de "Gerenciar usuários"
+  virou linhas com **avatar** (foto/iniciais) + **email · nome · Cargo** (no lugar de
+  Papel), com sinal de inativo.
+- **#U2:** edição vira **tela própria** (substitui a lista, com "← Voltar"), em 4
+  seções: **1) Perfil e gestão de acesso** (nome, papel, cargo, **senha com 👁**,
+  **ativo**, **clientes em checkbox**, foto, telefone, unidade, validade, observações)
+  · **2) Documentos** · **3) Permissões** · **4) Estratégia e camadas**.
+- `tsc` OK; **68 testes** (UsuarioResumo com campos novos).
+- Docs: BACKLOG #U1/#U2 ✅, PLANEJAMENTO, spec-fase-9 (evolução).
+
+**Arquivos:** `app/admin.py`, `frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #D3 logo SVG (sem fundo) + #HOME dashboard
 
 **Branch:** `feat/fase-7-frontend`.

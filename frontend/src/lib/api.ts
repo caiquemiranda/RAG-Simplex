@@ -49,6 +49,8 @@ export type AdminUsuario = {
   nome: string
   ativo: boolean
   papel: string | null
+  cargo: string | null
+  foto_url: string | null
   permissoes_extra: string[]
 }
 

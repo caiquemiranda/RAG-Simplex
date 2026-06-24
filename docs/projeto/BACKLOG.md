@@ -82,13 +82,14 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       Dashboard com **atividades de hoje** (técnico: as próprias + “onde estará”; ADM:
       todas), **notificações** não lidas e **atalhos**. Reusa cronograma/notificações.
       *Futuro:* documentos vencendo do próprio técnico (precisa de `GET /me/documentos`).
-- [ ] **#U1 — Lista "Gerenciar usuários" moderna**: linha/card com **foto do técnico** como
-      1º item, depois **email · nome · Cargo** (no lugar de "Papel"). Visual moderno. dep: #D2 (estética).
-- [ ] **#U2 — Edição de usuário como TELA própria** (não card inline), seções de cima p/ baixo:
-      **1) Perfil e gestão de acesso · 2) Documentos exigidos (validade) · 3) Permissões ·
-      4) Estratégia e camadas**. Em *Perfil e gestão*: nome, **papel/cargo**, **nova senha com
-      mostrar/ocultar (👁)**, **ativo (checkbox)** e **clientes como checkbox** (puxados do banco).
-      dep: parte de **clientes** → entidade Cliente (Etapa 1); o resto é independente.
+- [x] **#U1 — Lista "Gerenciar usuários" moderna**: linha com **avatar** (foto/iniciais)
+      + **email · nome · Cargo** (no lugar de "Papel"); inativo sinalizado. `UsuarioResumo`
+      ganhou `cargo`/`foto_url`.
+- [x] **#U2 — Edição de usuário como TELA própria** (substitui a lista; “← Voltar”),
+      seções **1) Perfil e gestão de acesso · 2) Documentos exigidos · 3) Permissões ·
+      4) Estratégia e camadas**. Em *Perfil*: nome, papel, cargo, **nova senha com 👁
+      mostrar/ocultar**, **ativo**, **clientes em checkbox**, foto, telefone, unidade,
+      validade, observações.
 - [x] **#C1 — Cronograma: card do dia**: clicar num dia abre card central — ADM vê
       todos os técnicos (onde estão + atividade) e gerencia; técnico vê os próprios. ✅
 

@@ -86,6 +86,8 @@ class UsuarioResumo(BaseModel):
     nome: str
     ativo: bool
     papel: str | None = None
+    cargo: str | None = None
+    foto_url: str | None = None
     permissoes_extra: list[str] = []
 
 
@@ -171,6 +173,7 @@ def _resumo_usuario(u: Usuario) -> UsuarioResumo:
     return UsuarioResumo(
         id=u.id, email=u.email, nome=u.nome, ativo=u.ativo,
         papel=u.papel.nome if u.papel else None,
+        cargo=u.cargo, foto_url=u.foto_url,
         permissoes_extra=[p.chave for p in u.permissoes_extra],
     )
 
