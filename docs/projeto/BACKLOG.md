@@ -23,7 +23,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### B. Painel ADM — cards hoje placeholder
 - [x] **Clientes** (entidade + CRUD): cadastrar clientes; técnicos associados via
       `cliente_ids` na edição do usuário. ⚑ *Fundação* — spec [`specs/spec-etapa1-clientes.md`](specs/spec-etapa1-clientes.md).
-- [ ] **Gerenciar API keys**: UI sobre `/admin/provedores` (backend já cifra a chave).
+- [x] **Gerenciar API keys**: UI no card ADM (lista provedores + cadastrar/rotacionar
+      chave). Backend `/admin/provedores` (perm. `gerir_chaves`, chave **cifrada**/mascarada).
 - [ ] **Banco de dados**: status/backup/reindexação (definir escopo real).
 
 ### C. Cronograma
@@ -95,66 +96,46 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 
 ---
 
-## 2. Plano sequenciado (sem retrabalho)
+## 2. Plano sequenciado das PENDENTES (sem retrabalho)
 
-A regra de ouro: **construir as fundações de dados compartilhadas antes das telas
-que dependem delas.** Várias features (card Clientes, `Usuario.clientes`, Cronograma
-por cliente/local, documentos exigidos por cliente) dependem de uma entidade
-**Cliente**. Fazer as telas antes obrigaria a refazer quando a entidade existir.
+> A fundação (entidade Cliente) e a trilha Design já estão concluídas. Abaixo, só o
+> que **falta**, em ordem que evita retrabalho. Doc contínua (seção F) é transversal.
 
 ```
-Ordem recomendada
-═════════════════
-Trilha DESIGN (paralela — não depende de dados)
-  D1 • Identidade visual da empresa (#D1) ✅
-  D2 • Tema claro/escuro (#D2) ✅
-  D3 • Logo natural SVG/sem fundo/maior (#D3)  ⛔ aguarda asset SVG transparente
-  D4 • Home/Dashboard ao clicar no logo (#HOME)  — atividades do dia/cliente/infos
-  D5 • Lista de usuários moderna: foto+email+nome+cargo (#U1)
-  D6 • Edição de usuário como tela própria + seções (#U2, parte sem clientes)
+Ordem recomendada (pendentes)
+═════════════════════════════
+Etapa 0 — Independentes / sem schema novo  ◀ EM ANDAMENTO
+  0a • Gerenciar API keys (UI sobre /admin/provedores — backend pronto)  → destrava Fase 10
+  0b • Alerta global de documentos vencendo na lista de usuários
+       (add docs_alerta ao UsuarioResumo → badge na lista)
+  0c • Input centralizado no estado vazio do chat (frontend puro)
+  0d • GET /me/documentos → #HOME mostra documentos vencendo do próprio técnico
 
-Etapa 0 — Higiene rápida (independente, baixo custo)
-  • Alerta global de vencimento de documentos na lista de usuários
-  • Input centralizado no estado vazio do chat
-  • Gerenciar API keys (UI sobre /admin/provedores — backend pronto)
+Etapa 1 — Cronograma: fechamento + (decidir Unidade)
+  1a • Fechar visita (status concluída + observações no card do dia)
+  1b • DECISÃO: "local de trabalho" vira entidade Unidade? (D)
+       → se sim, criar Unidade ANTES da "visão por unidade" (senão refaz o filtro)
+  1c • Visão por unidade/local no cronograma
 
-Etapa 1 — FUNDAÇÃO: entidade Cliente  ⚑ destrava o resto
-  • Modelo Cliente (+ relação N:N usuario↔cliente)
-  • Endpoints /admin/clientes (CRUD) + associação técnico↔cliente
-  • Migrar Usuario.clientes (CSV) → relação
-  • Specs + testes + MODELO_DADOS atualizado
+Etapa 2 — Robustez/escala (depois que o schema acima estabilizar)
+  2a • Alembic (migrações versionadas) — substitui a micro-migração caseira
+  2b • Upload de foto via arquivo (substitui o data URL)
+  2c • Card "Banco de dados": status/backup/reindexação
 
-Etapa 2 — Card "Clientes" (UI)            dep: Etapa 1
-  • Listar/criar/editar clientes; atribuir técnicos
-  • Completa o #U2: clientes como CHECKBOX (puxados do banco)
-
-Etapa 3 — Cronograma (backend + real)     dep: Etapa 1
-  • Modelo Visita (técnico, cliente/local, data, status) + endpoints
-  • Calendário consome dados reais; visão por técnico/local
-  • Completa o #C1: card do dia com dados reais (ADM completo / técnico)
-
-Etapa 4 — Documentos exigidos POR cliente dep: Etapa 1
-  • Relacionar DocumentoTecnico ao cliente que o exige (opcional)
-
-Etapa 5 — Robustez/escala
-  • Alembic (migrações versionadas)
-  • Upload de foto via arquivo (em vez de data URL)
-  • Banco de dados (card): status/backup/reindexação
-
-Paralelo / quando houver API key
-  • Fase 10 (nuvem + arena) · Fase 11 (reranker, RAGAS-lite)
+Etapa 3 — Inteligência
+  3a • Fase 11 — reranker cross-encoder (D-020) + RAGAS-lite  (sem API key)
+  3b • Fase 10 — nuvem + arena  (requer API key + decisão D-006 do provedor)
+       usa as API keys cadastradas na Etapa 0a
 ```
-
-> **Cuidado de não-retrabalho:** o **#U2** e o **#C1** têm uma parte que entra agora
-> (tela/seções, card do dia com dados de exemplo) e uma parte que **só fecha depois da
-> Etapa 1/3** (clientes em checkbox; dados reais do dia). Construir já prevendo esses
-> encaixes (componentes que recebem a lista de clientes / eventos por props).
 
 **Por que esta ordem evita retrabalho**
-- A entidade **Cliente** é dependência de 4 frentes; criá-la primeiro evita refazer
-  UI e migrar dados duas vezes.
-- **API keys** e **alertas** são independentes → cabem na Etapa 0 sem bloquear nada.
-- **Alembic** entra depois que o schema estabilizar (senão migrações nascem e morrem).
+- **API keys (0a) antes da Fase 10 (3b):** a Fase 10 consome as chaves cadastradas.
+- **Alembic (2a) depois** de fechar as mudanças de schema da Etapa 1 (senão migrações
+  nascem e morrem).
+- **Decidir Unidade (1b) antes** da "visão por unidade" (1c) — senão constrói o filtro
+  no campo livre e refaz com a entidade.
+- **GET /me/documentos (0d)** habilita o bloco de documentos do #HOME sem tocar o resto.
+- **Fase 11 (3a)** é independente (núcleo RAG) — pode entrar a qualquer momento.
 
 ---
 

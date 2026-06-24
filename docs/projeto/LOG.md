@@ -9,6 +9,23 @@ Formato de cada entrada:
 
 ---
 
+## 2026-06-24 — Plano das pendentes + Etapa 0a: UI de API keys
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Plano:** `BACKLOG.md §2` reescrito só com as **pendentes**, em ordem sem
+  retrabalho (Etapa 0 independentes → 1 cronograma/Unidade → 2 robustez/Alembic →
+  3 inteligência). PLANEJAMENTO alinhado.
+- **0a — API keys (UI):** card ADM "Gerenciar API keys" agora lista provedores
+  (chave **mascarada**, ativo) e permite **cadastrar/rotacionar** a chave
+  (`PUT /admin/provedores/{nome}`, perm. `gerir_chaves`, cifrada). Gated por
+  `gerir_chaves`. `api.ts`: `AdminProvedor` + `provedores`/`salvarProvedor`.
+- `tsc` OK (backend já testado: `test_provedor_chave_nunca_em_claro`).
+
+**Arquivos:** `frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/projeto/{BACKLOG,PLANEJAMENTO,LOG}.md`.
+
+---
+
 ## 2026-06-24 — #U1 lista de usuários moderna + #U2 edição como tela
 
 **Branch:** `feat/fase-7-frontend`.

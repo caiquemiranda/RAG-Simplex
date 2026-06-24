@@ -4,6 +4,7 @@ import {
   type AdminCliente,
   type AdminPapel,
   type AdminPermissao,
+  type AdminProvedor,
   type AdminUsuario,
   type DocumentoTecnico,
 } from '../lib/api'
@@ -57,6 +58,7 @@ const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone:
 export default function Admin() {
   const { usuario } = useAuth()
   const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
+  const podeChaves = usuario?.permissoes.includes('gerir_chaves') ?? false
 
   const [secao, setSecao] = useState<Secao>(null)
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([])
@@ -65,6 +67,8 @@ export default function Admin() {
   const [estrategias, setEstrategias] = useState<string[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
   const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '' })
+  const [provedores, setProvedores] = useState<AdminProvedor[]>([])
+  const [novoProv, setNovoProv] = useState({ nome: '', api_key: '', ativo: true })
   const [erro, setErro] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
 
@@ -98,8 +102,23 @@ export default function Admin() {
       setPermissoes(pms)
       setEstrategias(es)
       setClientes(cs)
+      if (podeChaves) setProvedores(await api.admin.provedores())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar')
+    }
+  }
+
+  async function salvarProv() {
+    if (!novoProv.nome.trim() || !novoProv.api_key.trim()) return
+    setErro(null)
+    setMsg(null)
+    try {
+      await api.admin.salvarProvedor(novoProv.nome.trim(), { api_key: novoProv.api_key, ativo: novoProv.ativo })
+      setNovoProv({ nome: '', api_key: '', ativo: true })
+      setProvedores(await api.admin.provedores())
+      setMsg('Chave salva (armazenada cifrada).')
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao salvar a chave')
     }
   }
 
@@ -327,10 +346,62 @@ export default function Admin() {
 
         {/* Seções em construção */}
         {secao === 'apikeys' && (
-          <Card><CardContent className="p-6 text-sm text-muted-foreground">
-            🚧 Em construção: cadastro/rotação de <strong>API keys</strong> de provedores
-            (já há suporte no backend em <code>/admin/provedores</code>, com a chave cifrada).
-          </CardContent></Card>
+          !podeChaves ? (
+            <Card><CardContent className="p-6 text-sm text-destructive">
+              Você não tem a permissão <code>gerir_chaves</code>.
+            </CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-0">
+                  <table className="w-full text-sm">
+                    <thead className="border-b text-left text-muted-foreground">
+                      <tr><th className="p-3">Provedor</th><th className="p-3">Chave</th><th className="p-3">Ativo</th></tr>
+                    </thead>
+                    <tbody>
+                      {provedores.map((p) => (
+                        <tr key={p.nome} className="border-b last:border-0">
+                          <td className="p-3 font-medium">{p.nome}</td>
+                          <td className="p-3 font-mono text-xs text-muted-foreground">{p.tem_chave ? (p.chave_mascarada ?? '••••') : '— sem chave —'}</td>
+                          <td className="p-3">{p.ativo ? 'sim' : 'não'}</td>
+                        </tr>
+                      ))}
+                      {provedores.length === 0 && <tr><td className="p-3 text-muted-foreground" colSpan={3}>Nenhum provedor cadastrado.</td></tr>}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader><CardTitle className="text-base">Cadastrar / rotacionar chave</CardTitle></CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>Provedor</Label>
+                    <Input list="provedores-sugestoes" value={novoProv.nome} onChange={(e) => setNovoProv({ ...novoProv, nome: e.target.value })} placeholder="ex.: claude_nuvem" />
+                    <datalist id="provedores-sugestoes">
+                      <option value="claude_nuvem" />
+                      <option value="gemini_nuvem" />
+                      <option value="groq_nuvem" />
+                    </datalist>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>API key</Label>
+                    <Input type="password" value={novoProv.api_key} onChange={(e) => setNovoProv({ ...novoProv, api_key: e.target.value })} placeholder="cole a chave (será cifrada)" />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={novoProv.ativo} onChange={(e) => setNovoProv({ ...novoProv, ativo: e.target.checked })} />
+                    Ativo
+                  </label>
+                  <div className="sm:col-span-2">
+                    <Button size="sm" onClick={salvarProv} disabled={!novoProv.nome.trim() || !novoProv.api_key.trim()}>Salvar chave</Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:col-span-2">
+                    🔒 A chave é armazenada <strong>cifrada</strong> e nunca retornada em claro (só mascarada). Uso real na <strong>Fase 10</strong> (estratégias de nuvem).
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )
         )}
         {secao === 'banco' && (
           <Card><CardContent className="p-6 text-sm text-muted-foreground">

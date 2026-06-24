@@ -102,6 +102,12 @@ export type AdminUsuarioDetalhe = AdminUsuario & {
 
 export type AdminPapel = { nome: string; permissoes: string[] }
 export type AdminPermissao = { chave: string; descricao: string }
+export type AdminProvedor = {
+  nome: string
+  ativo: boolean
+  tem_chave: boolean
+  chave_mascarada: string | null
+}
 
 export type AdminConfig = {
   escopo: string
@@ -273,6 +279,12 @@ export const api = {
     papeis: () => request<AdminPapel[]>('/admin/papeis'),
     permissoes: () => request<AdminPermissao[]>('/admin/permissoes'),
     estrategias: () => request<string[]>('/admin/estrategias'),
+    provedores: () => request<AdminProvedor[]>('/admin/provedores'),
+    salvarProvedor: (nome: string, dados: { api_key: string; ativo: boolean }) =>
+      request<AdminProvedor>(`/admin/provedores/${encodeURIComponent(nome)}`, {
+        method: 'PUT',
+        body: JSON.stringify(dados),
+      }),
     estrategiaUsuario: (id: number) =>
       request<AdminConfig | null>(`/admin/usuarios/${id}/estrategia`),
     definirEstrategiaUsuario: (id: number, dados: ConfigUsuarioIn) =>
