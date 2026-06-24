@@ -36,6 +36,23 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #CR6/#CR7: calendário por cliente + editar atividade + layout
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Backend:** `VisitaResumo` ganhou `cliente_cor`/`cliente_logo` (do `Cliente`).
+- **#CR6:** a célula do calendário **agrupa por cliente** — card-miniatura com cor/logo
+  do cliente + **avatares dos técnicos empilhados** (2+ técnicos no mesmo cliente = um
+  card). No **card do dia**, admin **edita** a atividade (título, técnico, cliente) além
+  de status/observações; técnico segue só fechando a própria.
+- **#CR7:** **número do dia grande** no topo da célula; hoje em destaque; fds/feriado
+  coloridos.
+- `tsc` OK; **75 passed**. Docs: BACKLOG #CR6/#CR7 ✅.
+
+**Arquivos:** `app/cronograma.py`, `frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #R1: Relatórios = cards de clientes + grupo na sidebar
 
 **Branch:** `feat/fase-7-frontend`.

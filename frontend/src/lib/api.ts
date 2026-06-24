@@ -74,6 +74,8 @@ export type Visita = {
   tecnico_foto: string | null
   cliente_id: number | null
   cliente_nome: string | null
+  cliente_cor: string | null
+  cliente_logo: string | null
   unidade: string | null
   data: string
   titulo: string

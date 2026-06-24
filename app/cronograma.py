@@ -56,6 +56,8 @@ class VisitaResumo(BaseModel):
     tecnico_foto: str | None = None
     cliente_id: int | None = None
     cliente_nome: str | None = None
+    cliente_cor: str | None = None
+    cliente_logo: str | None = None
     unidade: str | None = None
     data: date
     titulo: str
@@ -70,6 +72,8 @@ def _resumo(v: Visita) -> VisitaResumo:
         tecnico_foto=v.usuario.foto_url,
         cliente_id=v.cliente_id,
         cliente_nome=v.cliente.nome if v.cliente else None,
+        cliente_cor=v.cliente.cor if v.cliente else None,
+        cliente_logo=v.cliente.logo_url if v.cliente else None,
         unidade=v.cliente.unidade if v.cliente else None,
         data=v.data, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
     )

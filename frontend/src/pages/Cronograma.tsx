@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type AdminCliente, type AdminUsuario, type Feriado, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -8,6 +8,23 @@ import { STATUS_VISITA, isoData as fmt } from '../lib/format'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STATUS_COR = STATUS_VISITA
+
+type GrupoCliente = { key: string; nome: string; cor: string | null; logo: string | null; visitas: Visita[] }
+
+/** Agrupa as visitas do dia por cliente (2+ técnicos do mesmo cliente → um card). */
+function agruparPorCliente(evs: Visita[]): GrupoCliente[] {
+  const m = new Map<string, GrupoCliente>()
+  for (const v of evs) {
+    const key = v.cliente_id != null ? `c${v.cliente_id}` : 'sem'
+    let g = m.get(key)
+    if (!g) {
+      g = { key, nome: v.cliente_nome ?? v.titulo, cor: v.cliente_cor, logo: v.cliente_logo, visitas: [] }
+      m.set(key, g)
+    }
+    g.visitas.push(v)
+  }
+  return [...m.values()]
+}
 
 export default function Cronograma() {
   const { usuario } = useAuth()
@@ -112,7 +129,7 @@ export default function Cronograma() {
   async function remover(id: number) {
     try { await api.cronograma.remover(id); recarregar() } catch { /* ignore */ }
   }
-  async function atualizarVisita(id: number, dados: { status?: string; observacoes?: string }) {
+  async function atualizarVisita(id: number, dados: Partial<NovaVisita>) {
     try { await api.cronograma.atualizar(id, dados); recarregar() }
     catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao atualizar a visita') }
   }
@@ -157,30 +174,41 @@ export default function Cronograma() {
                         ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' }
                         : undefined
                   }
-                  className="min-h-[92px] border-b border-r p-1.5 text-left hover:bg-accent"
+                  className="min-h-[100px] border-b border-r p-1.5 text-left hover:bg-accent"
                 >
                   <div className="flex justify-end">
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${c.ehHoje ? 'bg-primary font-semibold text-primary-foreground' : c.fds ? 'font-medium text-brand-2' : ''}`}>
+                    <span className={`flex h-7 min-w-[28px] items-center justify-center rounded-full px-1 text-base font-bold ${c.ehHoje ? 'bg-primary text-primary-foreground' : c.fds ? 'text-brand-2' : 'text-foreground'}`}>
                       {c.data.getDate()}
                     </span>
                   </div>
                   <div className="mt-1 space-y-1">
                     {feriados[c.iso] && (
-                      <div className="truncate rounded px-1 py-0.5 text-[10px] text-destructive" title={feriados[c.iso].descricao}>
+                      <div className="truncate rounded px-1 py-0.5 text-[10px] font-medium text-destructive" title={feriados[c.iso].descricao}>
                         🎌 {feriados[c.iso].descricao}
                       </div>
                     )}
-                    {c.evs.slice(0, 3).map((v) => (
+                    {agruparPorCliente(c.evs).slice(0, 2).map((g) => (
                       <div
-                        key={v.id}
-                        className={`flex items-center gap-1 rounded px-1 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}
-                        title={`${v.tecnico_nome} — ${v.titulo}${v.cliente_nome ? ' @ ' + v.cliente_nome : ''}`}
+                        key={g.key}
+                        className="rounded border-l-2 bg-muted/50 px-1 py-0.5"
+                        style={{ borderColor: g.cor ?? 'hsl(var(--brand))' }}
+                        title={g.visitas.map((v) => `${v.tecnico_nome} — ${v.titulo}`).join('\n')}
                       >
-                        {podeGerir && <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-5 w-5" />}
-                        <span className="truncate">{v.titulo}</span>
+                        <div className="flex items-center gap-1">
+                          {(g.logo || g.cor) && <Avatar nome={g.nome} fotoUrl={g.logo} cor={g.cor} className="h-4 w-4 text-[7px]" />}
+                          <span className="truncate text-[11px] font-medium">{g.nome}</span>
+                        </div>
+                        <div className="mt-0.5 flex -space-x-1">
+                          {g.visitas.slice(0, 4).map((v) => (
+                            <Avatar key={v.id} nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-4 w-4 border border-card text-[7px]" title={v.tecnico_nome} />
+                          ))}
+                          {g.visitas.length > 4 && <span className="pl-1.5 text-[9px] text-muted-foreground">+{g.visitas.length - 4}</span>}
+                        </div>
                       </div>
                     ))}
-                    {c.evs.length > 3 && <div className="px-1 text-[11px] text-muted-foreground">+{c.evs.length - 3}</div>}
+                    {agruparPorCliente(c.evs).length > 2 && (
+                      <div className="px-1 text-[10px] text-muted-foreground">+{agruparPorCliente(c.evs).length - 2} cliente(s)</div>
+                    )}
                   </div>
                 </button>
               ) : (
@@ -236,7 +264,15 @@ export default function Cronograma() {
                   <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{v.titulo}</span>
+                      {podeGerir ? (
+                        <input
+                          defaultValue={v.titulo}
+                          onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
+                          className="min-w-0 flex-1 rounded border bg-background px-2 py-0.5 text-sm font-medium"
+                        />
+                      ) : (
+                        <span className="font-medium">{v.titulo}</span>
+                      )}
                       <select
                         value={v.status}
                         onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
@@ -247,10 +283,23 @@ export default function Cronograma() {
                         <option value="cancelada">cancelada</option>
                       </select>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {podeGerir && <>{v.tecnico_nome} · </>}
-                      📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
-                    </div>
+                    {podeGerir ? (
+                      <div className="grid grid-cols-2 gap-1">
+                        <select className="h-8 rounded border bg-background px-1 text-xs" value={v.usuario_id}
+                                onChange={(e) => atualizarVisita(v.id, { usuario_id: Number(e.target.value) })}>
+                          {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
+                        </select>
+                        <select className="h-8 rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
+                                onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
+                          <option value="">sem cliente</option>
+                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">
+                        📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
+                      </div>
+                    )}
                     <textarea
                       defaultValue={v.observacoes ?? ''}
                       rows={1}

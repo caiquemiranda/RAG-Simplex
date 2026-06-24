@@ -116,13 +116,12 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [x] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): `GET /clientes`
       (visível por papel); página Relatórios com **cards** (avatar cor/logo) → `/relatorios/:id`
       (shell do relatório); sidebar com **grupo "Relatórios"** colapsável listando os clientes.
-- [ ] **#CR6 — Calendário: atividade + cliente na célula** (item 3): mostrar **atividade
-      e cliente** no dia; se **2+ técnicos** no mesmo cliente, **agrupar num único card
-      miniatura**. **Editar** atividade agendada (admin: título/cliente/data/técnico).
-      dep: Cliente ✅ + **#CLIV** (cor/logo no card).
-- [ ] **#CR7 — Layout do calendário (estilo referência, img-1)** (item 5): **número do dia
-      grande** no canto superior; célula no estilo da referência. *Fazer junto do #CR6
-      (mesma célula) p/ não mexer duas vezes.*
+- [x] **#CR6 — Calendário: atividade + cliente na célula** (item 3): célula agrupa por
+      **cliente** (card-miniatura com **cor/logo** do cliente + avatares dos técnicos
+      empilhados; 2+ técnicos → um card). **Editar** atividade no card do dia (admin:
+      título/técnico/cliente). `VisitaResumo` ganhou `cliente_cor`/`cliente_logo`.
+- [x] **#CR7 — Layout do calendário**: **número do dia grande** no canto superior; hoje
+      em destaque; fim de semana/feriado coloridos.
 - [ ] **#DOC1 — Documentos: cards Empresa + Marcas** (item 2): card **Empresa (IBSystems,
       com logo)** e card **Marcas** (Simplex, Notifier…) com docs dos equipamentos
       (manuais, datasheets). **CRUD por card**: upload, download, **editar nome**, **ocultar**,
