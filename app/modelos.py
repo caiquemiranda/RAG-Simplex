@@ -187,6 +187,22 @@ class Notificacao(Base):
     )
 
 
+class DocumentoEquipamento(Base):
+    """Documento de equipamento/empresa (manual, datasheet…). Só admin sobe; #DOC1."""
+
+    __tablename__ = "documento_equipamento"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    categoria: Mapped[str] = mapped_column(String(20))           # empresa | marca
+    marca: Mapped[str] = mapped_column(String(80), default="")   # IBSystems / Simplex / Notifier…
+    nome: Mapped[str] = mapped_column(String(160))               # nome de exibição (editável)
+    url: Mapped[str] = mapped_column(Text)                       # /arquivos/...
+    oculto: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
 class DocumentoTecnico(Base):
     """Documento exigido do técnico (ex.: NR-10, ASO, crachá de cliente) com validade.
 

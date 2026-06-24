@@ -3,6 +3,9 @@
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
+/** URL absoluta de um arquivo servido pelo backend (ex.: `/arquivos/...`). */
+export const urlArquivo = (caminho: string) => `${BASE}${caminho}`
+
 export type Usuario = {
   id: number
   email: string
@@ -91,6 +94,7 @@ export type NovaVisita = {
   observacoes?: string | null
 }
 export type Feriado = { id: number; data: string; descricao: string }
+export type DocEquip = { id: number; categoria: string; marca: string; nome: string; url: string; oculto: boolean }
 export type Notificacao = {
   id: number
   tipo: string
@@ -351,6 +355,32 @@ export const api = {
     criarFeriado: (dados: { data: string; descricao: string }) =>
       request<Feriado>('/cronograma/feriados', { method: 'POST', body: JSON.stringify(dados) }),
     removerFeriado: (id: number) => request<void>(`/cronograma/feriados/${id}`, { method: 'DELETE' }),
+  },
+  biblioteca: {
+    listar: (categoria?: string) =>
+      request<DocEquip[]>(`/biblioteca${categoria ? `?categoria=${categoria}` : ''}`),
+    criar: async (file: File, categoria: string, marca = '', nome = '') => {
+      const token = getToken()
+      const fd = new FormData()
+      fd.append('arquivo', file)
+      fd.append('categoria', categoria)
+      fd.append('marca', marca)
+      fd.append('nome', nome)
+      const res = await fetch(`${BASE}/biblioteca`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      })
+      if (!res.ok) {
+        let d = res.statusText
+        try { d = (await res.json()).detail ?? d } catch { /* */ }
+        throw new Error(d)
+      }
+      return res.json() as Promise<DocEquip>
+    },
+    atualizar: (id: number, dados: { nome?: string; marca?: string; oculto?: boolean }) =>
+      request<DocEquip>(`/biblioteca/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    remover: (id: number) => request<void>(`/biblioteca/${id}`, { method: 'DELETE' }),
   },
   notificacoes: {
     listar: (apenasNaoLidas = false) =>

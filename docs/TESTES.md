@@ -1,9 +1,9 @@
 # Testes — RAG-Simplex
 
-**75 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**78 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
 perfil, documentos, **clientes**), **cronograma** (visitas, **feriados**,
-**notificações**), streaming e feedback.
+**notificações**), **arquivos/biblioteca**, streaming e feedback.
 
 ## Princípios
 
@@ -98,6 +98,11 @@ pytest
 - `test_upload_salva_e_devolve_url` — upload salva no disco e devolve `/arquivos/…`.
 - `test_upload_exige_admin` — sem `gerir_usuarios` → 403.
 - `test_remover_arquivo` — remoção segura (não apaga fora da pasta).
+
+### `test_biblioteca.py` (3) — documentos de equipamentos (#DOC1)
+- `test_upload_listar_renomear_ocultar_excluir` — fluxo completo; admin vê oculto, operador não.
+- `test_empresa_default_marca_ibsystems` — categoria empresa → marca IBSystems.
+- `test_categoria_invalida_e_op_nao_sobe` — 400 (categoria) e 403 (operador).
 
 ### `test_cronograma.py` (9) — cronograma, clientes visíveis, feriados, notificações
 - `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.

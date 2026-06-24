@@ -54,6 +54,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados globais. |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
+| `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
 | `db.py` | Engine/Session; `criar_tabelas` (create_all + micro-migração); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
@@ -83,6 +84,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
 | GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
+| GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos de empresa/marcas (manuais, datasheets); `oculto` só p/ admin. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
 | PUT | `/admin/config-global` | `gerir_estrategias` | Estratégia padrão global. |
 | GET | `/admin/auditoria` | `gerir_usuarios` | Log de consultas (com feedback). |

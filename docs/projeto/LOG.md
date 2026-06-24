@@ -36,6 +36,25 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #DOC1: biblioteca de documentos (empresa + marcas)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `DocumentoEquipamento` (categoria empresa|marca, marca, nome, url,
+  oculto, criado_em). Migração automática.
+- **API:** router `/biblioteca` (GET leitura por papel — oculto só admin; POST multipart
+  upload, PATCH renomear/ocultar, DELETE remove registro+arquivo). Reusa `salvar_upload`
+  com **subpastas aninhadas** (corrigido o sanitizador para preservar `biblioteca/marca`).
+- **Frontend:** `pages/Documentos.tsx` com card **Empresa** (logo) + **Marcas** (agrupado);
+  upload/renomear/ocultar/excluir (admin) e download (link). `api.biblioteca.*` + `urlArquivo`.
+- **Testes:** `test_biblioteca.py` (3) → **78 passed**. Spec
+  [`spec-doc1-biblioteca.md`](specs/spec-doc1-biblioteca.md); ARQUITETURA/MODELO_DADOS/TESTES/INDICE.
+
+**Arquivos:** `app/{modelos,biblioteca,main,arquivos}.py`, `tests/test_biblioteca.py`,
+`frontend/src/{lib/api.ts,pages/Documentos.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #CR6/#CR7: calendário por cliente + editar atividade + layout
 
 **Branch:** `feat/fase-7-frontend`.

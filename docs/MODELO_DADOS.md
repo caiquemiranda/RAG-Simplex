@@ -82,6 +82,15 @@ erDiagram
     string nome "ex.: NR-10, ASO, crachá"
     date validade
   }
+  DOCUMENTO_EQUIPAMENTO {
+    int id PK
+    string categoria "empresa|marca"
+    string marca "IBSystems/Simplex/Notifier"
+    string nome
+    text url "/arquivos/..."
+    bool oculto
+    datetime criado_em
+  }
   LOG_CONSULTA {
     int id PK
     int usuario_id FK

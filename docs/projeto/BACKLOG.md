@@ -122,10 +122,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       título/técnico/cliente). `VisitaResumo` ganhou `cliente_cor`/`cliente_logo`.
 - [x] **#CR7 — Layout do calendário**: **número do dia grande** no canto superior; hoje
       em destaque; fim de semana/feriado coloridos.
-- [ ] **#DOC1 — Documentos: cards Empresa + Marcas** (item 2): card **Empresa (IBSystems,
-      com logo)** e card **Marcas** (Simplex, Notifier…) com docs dos equipamentos
-      (manuais, datasheets). **CRUD por card**: upload, download, **editar nome**, **ocultar**,
-      excluir. Só **admin** sobe; arquivos numa **pasta na raiz**. dep: **#FILES**.
+- [x] **#DOC1 — Documentos: cards Empresa + Marcas** (item 2): `DocumentoEquipamento` +
+      router `/biblioteca`; página com card **Empresa (logo)** e **Marcas** (agrupado);
+      **CRUD** (upload/download/renomear/ocultar/excluir), só admin sobe; arquivos em
+      `/arquivos/biblioteca/...`. Spec [`specs/spec-doc1-biblioteca.md`](specs/spec-doc1-biblioteca.md).
 
 ---
 

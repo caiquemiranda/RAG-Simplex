@@ -30,16 +30,23 @@ def _nome_seguro(nome: str) -> str:
 
 
 def salvar_upload(upload: UploadFile, subpasta: str = "") -> str:
-    """Salva o arquivo em ``arquivos_dir/subpasta`` e devolve a URL pública ``/arquivos/…``."""
+    """Salva o arquivo em ``arquivos_dir/subpasta`` e devolve a URL pública ``/arquivos/…``.
+
+    ``subpasta`` pode ser aninhada (``biblioteca/marca``); cada segmento é sanitizado
+    e ``..`` é descartado (sem path traversal).
+    """
     dados = upload.file.read()
     if len(dados) > _TAM_MAX:
         raise HTTPException(status_code=413, detail="Arquivo maior que 10 MB.")
-    sub = _SEGURO.sub("_", subpasta).strip("_")
-    destino = settings.arquivos_dir / sub if sub else settings.arquivos_dir
+    segmentos = [
+        s for s in (_SEGURO.sub("_", t).strip("_") for t in subpasta.replace("\\", "/").split("/"))
+        if s and s != ".."
+    ]
+    destino = settings.arquivos_dir.joinpath(*segmentos) if segmentos else settings.arquivos_dir
     destino.mkdir(parents=True, exist_ok=True)
     nome = f"{uuid.uuid4().hex[:8]}_{_nome_seguro(upload.filename or 'arquivo')}"
     (destino / nome).write_bytes(dados)
-    return "/" + "/".join(p for p in ("arquivos", sub, nome) if p)
+    return "/" + "/".join(("arquivos", *segmentos, nome))
 
 
 def remover_arquivo(url: str) -> None:
