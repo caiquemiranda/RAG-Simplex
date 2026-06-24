@@ -36,6 +36,24 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Etapa 1: fechamento de visita + decisão Unidade (D-021)
+
+**Branch:** `feat/fase-7-frontend`. **Decisão:** Unidade vira **entidade** (D-021).
+
+- **Backend:** `PATCH /cronograma/{id}` agora via `usuario_atual` com RBAC — admin
+  edita tudo; **técnico fecha a PRÓPRIA** visita (só `status`/`observacoes`); status
+  validado. Teste `test_tecnico_fecha_propria_visita`.
+- **Frontend:** card do dia com **status editável** (select) + **observações**
+  (textarea, salva no blur) por visita.
+- **Decisão D-021:** "local de trabalho" → entidade `Unidade` (criar antes da "visão
+  por unidade"). Registrada em `DECISOES.md`.
+- `tsc` OK; **71 passed**. Docs: BACKLOG, spec-etapa3, TESTES.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/pages/Cronograma.tsx`, `docs/projeto/{DECISOES,BACKLOG,specs/spec-etapa3,LOG}.md`, `docs/TESTES.md`.
+
+---
+
 ## 2026-06-24 — Refino 2: cores theme-aware + Avatar na edição
 
 **Branch:** `feat/fase-7-frontend`.

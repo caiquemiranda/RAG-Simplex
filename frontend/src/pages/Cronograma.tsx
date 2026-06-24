@@ -112,6 +112,10 @@ export default function Cronograma() {
   async function remover(id: number) {
     try { await api.cronograma.remover(id); recarregar() } catch { /* ignore */ }
   }
+  async function atualizarVisita(id: number, dados: { status?: string; observacoes?: string }) {
+    try { await api.cronograma.atualizar(id, dados); recarregar() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao atualizar a visita') }
+  }
 
   const visitasDoDia = diaSel ? porDia[diaSel] ?? [] : []
 
@@ -230,17 +234,32 @@ export default function Cronograma() {
               {visitasDoDia.map((v) => (
                 <div key={v.id} className="flex gap-2 rounded-lg border p-2 text-sm">
                   <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{v.titulo}</span>
-                      <span className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                      <select
+                        value={v.status}
+                        onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
+                        className={`rounded border px-1 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}
+                      >
+                        <option value="agendada">agendada</option>
+                        <option value="concluida">concluída</option>
+                        <option value="cancelada">cancelada</option>
+                      </select>
                     </div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {podeGerir && <>{v.tecnico_nome} · </>}
                       📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
                     </div>
+                    <textarea
+                      defaultValue={v.observacoes ?? ''}
+                      rows={1}
+                      placeholder="observações do fechamento…"
+                      onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
+                      className="w-full rounded border bg-background px-2 py-1 text-xs"
+                    />
                     {podeGerir && (
-                      <button className="mt-1 text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover</button>
+                      <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover</button>
                     )}
                   </div>
                 </div>

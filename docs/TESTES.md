@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**70 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**71 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
 perfil, documentos, **clientes**), **cronograma** (visitas, **feriados**,
 **notificações**), streaming e feedback.

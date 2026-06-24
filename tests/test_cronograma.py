@@ -100,6 +100,24 @@ def test_remover_visita(ctx):
     assert client.delete(f"/cronograma/{vid}", headers=admin).status_code == 404
 
 
+def test_tecnico_fecha_propria_visita(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    vid = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec"], "data": "2026-07-10", "titulo": "X"}).json()["id"]
+    tec = _login(client, "tec@x.com")
+
+    # Técnico fecha a própria visita (status + observações).
+    r = client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "concluida", "observacoes": "feito"})
+    assert r.status_code == 200 and r.json()["status"] == "concluida"
+    # Técnico não pode alterar título.
+    assert client.patch(f"/cronograma/{vid}", headers=tec, json={"titulo": "Y"}).status_code == 403
+    # Status inválido → 400.
+    assert client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "xpto"}).status_code == 400
+    # Visita de outro técnico → 403.
+    vid2 = client.post("/cronograma", headers=admin, json={"usuario_id": ids["tec2"], "data": "2026-07-10", "titulo": "Z"}).json()["id"]
+    assert client.patch(f"/cronograma/{vid2}", headers=tec, json={"status": "concluida"}).status_code == 403
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

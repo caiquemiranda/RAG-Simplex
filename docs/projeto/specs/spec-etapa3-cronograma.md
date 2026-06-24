@@ -33,10 +33,15 @@ criada pela micro-migração no banco existente.
   (`Feriado`; marcar/remover no card do dia); **#CR4** ao criar atividade gera
   **notificação só para o técnico** (router `/notificacoes`, sino com badge, tela).
 
-## Testes
-`tests/test_cronograma.py` (6): visitas (intervalo/RBAC/403/remover) + feriado CRUD +
-notificação ao criar atividade. Suíte: **68 passed**.
+## Fechamento de visita (2026-06-24)
+No card do dia: **status** editável (agendada/concluída/cancelada) + **observações**.
+`PATCH /cronograma/{id}` com RBAC — admin edita tudo; **técnico fecha a PRÓPRIA** visita
+(só `status`/`observacoes`). Status validado (`agendada|concluida|cancelada`).
 
-## Próximo (opcional)
-- Status “concluída” com histórico/observações ao fechar a visita.
-- Feriado **por unidade** (hoje é global); visão por **unidade/local**.
+## Testes
+`tests/test_cronograma.py` (7): visitas (intervalo/RBAC/403/remover) + **fechamento pelo
+técnico** + feriado CRUD + notificação ao criar atividade. Suíte: **71 passed**.
+
+## Próximo
+- **Visão por unidade/local** — depende da entidade **`Unidade`** (D-021).
+- Feriado **por unidade** (hoje é global).

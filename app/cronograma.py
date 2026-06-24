@@ -123,19 +123,33 @@ def criar(dados: VisitaIn,
     return _resumo(v)
 
 
+_STATUS_VALIDOS = {"agendada", "concluida", "cancelada"}
+
+
 @router.patch("/{visita_id}", response_model=VisitaResumo)
 def atualizar(visita_id: int, dados: VisitaAtualizar,
-              _: Usuario = Depends(requer("gerir_usuarios")),
+              usuario: Usuario = Depends(usuario_atual),
               sessao: Session = Depends(get_session)) -> VisitaResumo:
+    """Atualiza uma visita. Admin (`gerir_usuarios`) edita tudo; o técnico **fecha a
+    própria** visita (apenas `status` + `observacoes`)."""
     v = sessao.get(Visita, visita_id)
     if v is None:
         raise HTTPException(status_code=404, detail="Visita não encontrada.")
-    if dados.cliente_id is not None:
+    admin = usuario.tem_permissao("gerir_usuarios")
+    if not admin:
+        if v.usuario_id != usuario.id:
+            raise HTTPException(status_code=403, detail="Sem acesso a esta visita.")
+        if dados.cliente_id is not None or dados.data is not None or dados.titulo is not None:
+            raise HTTPException(status_code=403, detail="Técnico só altera status e observações.")
+    if dados.status is not None and dados.status not in _STATUS_VALIDOS:
+        raise HTTPException(status_code=400, detail="status inválido.")
+
+    if admin and dados.cliente_id is not None:
         _buscar_cliente(sessao, dados.cliente_id)
         v.cliente_id = dados.cliente_id
-    if dados.data is not None:
+    if admin and dados.data is not None:
         v.data = dados.data
-    if dados.titulo is not None:
+    if admin and dados.titulo is not None:
         v.titulo = dados.titulo.strip()
     if dados.status is not None:
         v.status = dados.status

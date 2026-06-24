@@ -33,7 +33,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       + endpoints CRUD (`/cronograma`). Spec [`specs/spec-etapa3-cronograma.md`](specs/spec-etapa3-cronograma.md).
 - [x] Calendário com **dados reais** + **card do dia** (#C1): ADM vê todos os técnicos
       e gerencia; técnico vê os próprios.
-- [ ] Visão por **unidade/local** (além de por técnico) e fechamento com histórico.
+- [x] **Fechamento de visita**: no card do dia, **status** editável (agendada/concluída/
+      cancelada) + **observações**. Técnico **fecha a própria** visita; admin edita todas.
+      `PATCH /cronograma/{id}` com RBAC (técnico: só status/observações da própria).
+- [ ] **Visão por unidade/local** — dep: **entidade `Unidade`** (decisão **D-021**:
+      vira cadastro). Criar `Unidade` antes do filtro para não retrabalhar.
 
 #### Otimizações do cronograma (2026-06-24)
 - [x] **#CR1 — Grade só do mês vigente**: renderiza apenas as semanas com dias do mês;
