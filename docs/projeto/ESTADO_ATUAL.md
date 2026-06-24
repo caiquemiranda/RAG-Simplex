@@ -5,57 +5,49 @@
 
 **Última atualização:** 2026-06-24
 
-> **Visão consolidada do que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md)
-> (módulos, endpoints, RBAC, frontend) e [`../TESTES.md`](../TESTES.md) (59 testes).
+> **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
+> tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
+> [`../MODELO_DADOS.md`](../MODELO_DADOS.md), [`../FLUXOS.md`](../FLUXOS.md),
+> [`../TECNOLOGIAS.md`](../TECNOLOGIAS.md), [`../TESTES.md`](../TESTES.md).
+> **O que falta:** [`BACKLOG.md`](BACKLOG.md).
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
-- **Fases 7, 8, 9 ✅:** frontend completo + Docker. Chat com **streaming (NDJSON)**,
-  markdown, citações split-screen, **feedback 👍/👎**, **histórico persistente** e
-  **layout estilo ChatGPT** (sidebar em grupos: Consulta + abas Relatórios/Buscar
-  Equipamento/Documentos como placeholders). Painel ADM com CRUD de
-  usuários/permissões, **estratégia por usuário** e **auditoria**. **Backend 59 testes**.
-- **Rodar nativo:** scripts em [`../../scripts/`](../../scripts/) (`run.ps1`,
-  `backend.ps1`, `frontend.ps1`); caches em `.cache/` (no D:).
-- **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
+- **Branch:** `feat/fase-7-frontend`. **Backend: 61 testes** passando.
+- **Fases 0–9 ✅** (tudo **sem API key e sem custo**):
+  - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
+  - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática** de schema.
+  - **Chat (estilo ChatGPT):** streaming NDJSON, citações split-screen, feedback 👍/👎,
+    **histórico persistente**, sidebar **responsiva** (drawer no mobile).
+  - **Painel ADM em cards:** Gerenciar usuários (com **perfil + foto + documentos com
+    validade/alertas**), Auditoria; cards **API keys / Banco de dados / Clientes** (placeholder).
+  - **Cronograma:** aba com **calendário mensal** (eventos de exemplo).
+- **Rodar:** `scripts\run.ps1` (nativo, caches em `.cache/`) ou `docker compose up --build`.
+  Login da 1ª execução: **admin@local / admin123**.
 
-## ⏭️ Próximos passos
+## ⏭️ Próximo passo (ver plano completo em [`PLANEJAMENTO.md`](PLANEJAMENTO.md))
 
-1. **Validar na máquina do dev:** `scripts\run.ps1` (nativo) ou `docker compose up
-   --build`. Schema mudou (coluna `feedback`): no nativo, recriar o `.db`; no Docker,
-   volume novo. Ver `docs/DOCKER.md`.
-2. **Conteúdo das abas novas:** Relatórios (métricas/feedback/auditoria), Buscar
-   Equipamento, Documentos — hoje placeholders.
-2. **Fase 11 (hardening):** cross-encoder reranker (D-020); avaliação RAGAS-lite;
-   migrações Alembic (evitar recriar o banco a cada mudança de schema).
-3. **Fase 10 (fim):** estratégias de nuvem + arena — **requer API key**.
+Ordem **sem retrabalho** (detalhe em [`BACKLOG.md`](BACKLOG.md) §2):
+1. **Etapa 0** (rápido, independente): alerta global de vencimento na lista de
+   usuários · UI de **API keys** (backend `/admin/provedores` pronto).
+2. **Etapa 1 — fundação `Cliente`** (entidade + relação técnico↔cliente). Destrava
+   card Clientes, Cronograma real e troca do `Usuario.clientes` (CSV) por relação.
+3. **Etapas 2–4:** card Clientes · Cronograma backend · documentos por cliente.
+4. **Depois:** Fase 11 (reranker D-020, RAGAS-lite, **Alembic**) · Fase 10 (nuvem, **requer API key**).
 
-> Rodar tudo: `docker compose up --build` **ou** uvicorn + `npm run dev`.
+## 🔧 Para rodar na sua máquina
 
-> Tudo até a Fase 9 é **sem API key e sem custo**.
-
-## 🧱 Base já existente
-
-- **Fases 0–2:** pipeline RAG; `local_extrativa`; `ClaudeNuvem` inerte até a Fase 10;
-  embeddings `e5-small` (D-014); trecho do guia em `fontes[].trecho`.
-- **Fase 3:** `app/{modelos,db,seed,cripto,preferencias}.py`.
-- **Fase 4:** `app/auth.py` + endpoints de auth no `main.py`.
-
-## 🔧 Para rodar na sua máquina (Fases 3–4)
-```bash
-pip install -r requirements.txt   # +SQLAlchemy +cryptography +PyJWT +argon2 +email-validator
-python -m app.cripto              # gera RAG_SECRET_KEY (serve p/ cifra E JWT; cole no .env)
-python -m app.db --init           # cria tabelas + semeia papéis/permissões
-python -m app.auth --criar-admin admin@exemplo.com "SuaSenhaForte"
-uvicorn app.main:app --reload     # /docs → POST /auth/login → use o Bearer token
+```powershell
+# tudo de uma vez (cria .venv, instala, migra o banco, sobe backend + frontend)
+powershell -ExecutionPolicy Bypass -File scripts\run.ps1
 ```
+Frontend: http://localhost:5173 · API: http://127.0.0.1:8000/docs · login: admin@local / admin123.
+Detalhe e flags em [`../../scripts/README.md`](../../scripts/README.md).
 
-## 🎯 Decisões
+## 🎯 Decisões em aberto
 
-- **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
-  frontend). Dev segue nativo até lá.
-- **D-015 ✅** — busca híbrida (bônus léxico) corrigiu o ranking; limiar 0.78.
 - **D-020 🔄** — cross-encoder reranker p/ fallback robusto (Fase 11).
 - **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
-- **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.
+- **Migrações:** hoje há micro-migração caseira (coluna nullable); **Alembic** entra
+  quando o schema estabilizar (ver [`BACKLOG.md`](BACKLOG.md) §2, Etapa 5).
+- Decisões fechadas: ver [`DECISOES.md`](DECISOES.md).

@@ -1,0 +1,95 @@
+# Planejamento Mestre — RAG-Simplex
+
+Visão única de **onde estamos** e **para onde vamos**. Consolida o status das fases
+([`ROADMAP.md`](ROADMAP.md)) e o backlog/sequência ([`BACKLOG.md`](BACKLOG.md)).
+Para o que já existe, ver [`../ARQUITETURA.md`](../ARQUITETURA.md).
+
+**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 61 testes ✅
+
+---
+
+## 1. Snapshot — onde estamos
+
+**Fases 0–9 concluídas** (tudo **sem API key, sem custo**). O produto já é usável de
+ponta a ponta: o técnico pergunta, recebe resposta ancorada em dupla camada (com
+streaming, citações e feedback), e o admin gerencia usuários/acessos.
+
+| Bloco | Estado |
+| --- | --- |
+| Núcleo RAG (ingestão, recuperação 0.78, extrativo) | ✅ |
+| Plataforma (auth JWT, RBAC, persistência, migração) | ✅ |
+| Chat (streaming, citações, feedback, histórico, responsivo) | ✅ |
+| Painel ADM em cards (usuários+perfil+documentos, auditoria) | ✅ |
+| Cronograma (calendário mensal, dados de exemplo) | ✅ (UI) |
+| Cards ADM: API keys / Banco / Clientes | ⬜ placeholder |
+| Fase 10 (nuvem + arena) | ⬜ requer API key |
+| Fase 11 (reranker, RAGAS-lite, Alembic) | ⬜ |
+
+## 2. Status das fases
+
+| Fase | Tema | Status |
+| --- | --- | --- |
+| 0–2 | Pipeline RAG · extrativo · dupla camada | ✅ |
+| 3 | Persistência (ORM, seed, cripto) | ✅ |
+| 4 | Autenticação (JWT) | ✅ |
+| 5 | RBAC (papéis/permissões/camadas) | ✅ |
+| 6 | Painel ADM (backend) | ✅ |
+| 7 | Frontend base + Docker | ✅ |
+| 8 | Chat (streaming, citações, feedback, histórico, layout, perfil) | ✅ |
+| 9 | Painel ADM (frontend) | ✅ |
+| 10 | Estratégias de nuvem + arena | ⬜ (API key) |
+| 11 | Hardening (reranker D-020, RAGAS-lite, Alembic) | ⬜ |
+
+## 3. Plano de execução (sequência sem retrabalho)
+
+Regra: **fundações de dados compartilhadas antes das telas que dependem delas.**
+A entidade **`Cliente`** é dependência de 4 frentes → vem antes.
+
+```mermaid
+flowchart TD
+  E0["Etapa 0 — Higiene (independente)<br/>alerta de vencimento · UI API keys · input centralizado"]
+  E1["Etapa 1 — FUNDAÇÃO Cliente ⚑<br/>entidade + relação técnico↔cliente + migrar Usuario.clientes"]
+  E2["Etapa 2 — Card Clientes (UI)"]
+  E3["Etapa 3 — Cronograma backend<br/>modelo Visita + dados reais"]
+  E4["Etapa 4 — Documentos exigidos por cliente"]
+  E5["Etapa 5 — Robustez<br/>Alembic · upload de foto · card Banco de dados"]
+  F10["Fase 10 — Nuvem + arena (API key)"]
+  F11["Fase 11 — Reranker D-020 · RAGAS-lite"]
+
+  E0 --> E1
+  E1 --> E2
+  E1 --> E3
+  E1 --> E4
+  E2 --> E5
+  E3 --> E5
+  F11 -.paralelo.-> E5
+  F10 -.requer API key.-> E5
+```
+
+### Marcos (milestones)
+- **M1 — Fundação de clientes:** Etapa 1 entregue (entidade + relação + migração + specs/testes/docs).
+- **M2 — Gestão operacional:** Etapas 2–3 (card Clientes + Cronograma real).
+- **M3 — Robustez:** Etapa 5 (Alembic, storage de foto, banco de dados).
+- **M4 — Inteligência avançada:** Fase 11 (reranker/avaliação) e, com chave, Fase 10 (nuvem).
+
+## 4. Dependências e riscos
+
+| Item | Depende de | Risco se invertido |
+| --- | --- | --- |
+| Card Clientes | entidade Cliente | refazer UI + migrar dados 2× |
+| Cronograma real | Cliente/Unidade | eventos sem vínculo correto |
+| `Usuario.clientes` → relação | entidade Cliente | acoplamento ao CSV provisório |
+| Alembic | schema estável | migrações que nascem e morrem |
+| Fase 10 (nuvem) | API key + decisão D-006 | custo; bloqueia se feito cedo |
+
+## 5. Definição de pronto (DoD)
+
+Cada entrega só fecha com: código + **testes** (backend) / `tsc` (frontend) + **spec**
+(se módulo novo) + **docs atualizadas** (`ARQUITETURA`/`MODELO_DADOS`/`FLUXOS` conforme
+o caso) + entrada no [`LOG.md`](LOG.md) + atualização deste arquivo e do [`BACKLOG.md`](BACKLOG.md).
+
+## 6. Como retomar numa sessão nova
+1. Ler este `PLANEJAMENTO.md` (onde estamos) e o [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
+2. Pegar o próximo item no [`BACKLOG.md`](BACKLOG.md) respeitando a sequência da §3.
+3. Consultar [`../ARQUITETURA.md`](../ARQUITETURA.md)/[`../MODELO_DADOS.md`](../MODELO_DADOS.md)/[`../FLUXOS.md`](../FLUXOS.md) para o desenho.
+4. Implementar com testes + docs; registrar no `LOG.md` e atualizar este plano.
