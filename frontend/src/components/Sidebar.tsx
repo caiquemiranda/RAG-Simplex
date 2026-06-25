@@ -166,8 +166,8 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
           </div>
         )}
 
-        {/* Outras abas */}
-        <div className="pt-2">
+        {/* Outras abas — mesmo espaçamento do grupo Consulta (space-y uniforme) */}
+        <div className="space-y-0.5">
           {/* Grupo Relatórios (clientes) */}
           <button className={`${itemBase} ${naRel ? 'font-medium' : ''}`} onClick={() => setGrupoRel((v) => !v)}>
             <Chevron aberto={grupoRel} />

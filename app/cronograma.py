@@ -269,7 +269,7 @@ def criar(dados: VisitaIn,
     return _resumo(v)
 
 
-_STATUS_VALIDOS = {"agendada", "concluida", "cancelada"}
+_STATUS_VALIDOS = {"agendada", "pendente", "concluida", "cancelada"}
 
 
 @router.patch("/{visita_id}", response_model=VisitaResumo)

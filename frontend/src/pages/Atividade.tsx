@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { STATUS_VISITA } from '../lib/format'
 
-const STATUS = ['agendada', 'concluida', 'cancelada']
+const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 
 /** Página da atividade (#ATV-1): status, técnicos, galeria de imagens e comentários. */
 export default function Atividade() {
@@ -17,6 +17,7 @@ export default function Atividade() {
   const [atv, setAtv] = useState<VisitaDetalhe | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [texto, setTexto] = useState('')
+  const [zoom, setZoom] = useState<string | null>(null)   // imagem aberta no lightbox
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Pode gerir = admin ou técnico atribuído (o backend também valida).
@@ -111,9 +112,9 @@ export default function Atividade() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {atv.anexos.map((a) => (
                 <div key={a.id} className="group relative overflow-hidden rounded-lg border">
-                  <a href={urlArquivo(a.url)} target="_blank" rel="noreferrer">
+                  <button type="button" className="block w-full" onClick={() => setZoom(urlArquivo(a.url))} title="Ampliar">
                     <img src={urlArquivo(a.url)} alt={a.nome} className="h-32 w-full object-cover" />
-                  </a>
+                  </button>
                   {podeGerir && (
                     <button className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white opacity-0 group-hover:opacity-100"
                             title="Remover" onClick={() => removerAnexo(a.id)}>✕</button>
@@ -145,6 +146,14 @@ export default function Atividade() {
           )}
         </CardContent>
       </Card>
+
+      {/* Lightbox: imagem ampliada na mesma página, com X para fechar. */}
+      {zoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setZoom(null)}>
+          <button className="absolute right-4 top-4 rounded-full bg-white/10 px-3 py-1 text-lg text-white hover:bg-white/20" onClick={() => setZoom(null)} aria-label="Fechar">✕</button>
+          <img src={zoom} alt="" className="max-h-full max-w-full rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   )
 }

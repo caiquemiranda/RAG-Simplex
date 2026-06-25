@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type Visita } from '../lib/api'
 import { Avatar } from '../components/Avatar'
+import { MultiFiltro } from '../components/MultiFiltro'
 import { STATUS_VISITA, isoData } from '../lib/format'
+
+const STATUS_ALL = ['agendada', 'pendente', 'concluida', 'cancelada']
+const BAR: Record<string, string> = {
+  agendada: 'bg-blue-500', pendente: 'bg-amber-500', concluida: 'bg-emerald-500', cancelada: 'bg-rose-500',
+}
 
 /** Prazo da atividade em relação a hoje: faltam N dias / atrasada há N / hoje. */
 function prazo(data: string, status: string): { label: string; cls: string } {
@@ -16,51 +22,103 @@ function prazo(data: string, status: string): { label: string; cls: string } {
   return { label: `faltam ${dias} dia(s)`, cls: 'text-muted-foreground' }
 }
 
-/** Tela "Atividades" (sidebar Cronograma → Atividades): resumo + prazo de cada atividade. */
+/** Tela "Atividades": filtros (status/cliente/técnico) + gráfico por status + lista com prazo. */
 export default function Atividades() {
   const [itens, setItens] = useState<Visita[]>([])
   const [erro, setErro] = useState<string | null>(null)
+  const [statusSel, setStatusSel] = useState<Set<string>>(new Set())
+  const [clienteSel, setClienteSel] = useState<Set<number>>(new Set())
+  const [tecnicoSel, setTecnicoSel] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     api.cronograma.atividades().then(setItens)
       .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar atividades'))
   }, [])
 
-  // Pendentes (agendadas) primeiro, ordenadas por data; concluídas/canceladas ao final.
-  const ordenadas = useMemo(() => {
-    const peso = (s: string) => (s === 'agendada' ? 0 : 1)
-    return [...itens].sort((a, b) => peso(a.status) - peso(b.status) || a.data.localeCompare(b.data))
+  // Opções de cliente/técnico derivadas das próprias atividades (sem exigir permissões extra).
+  const clienteOpts = useMemo(() => {
+    const m = new Map<number, string>()
+    itens.forEach((v) => { if (v.cliente_id != null) m.set(v.cliente_id, v.cliente_nome ?? `#${v.cliente_id}`) })
+    return [...m].map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [itens])
+  const tecnicoOpts = useMemo(() => {
+    const m = new Map<number, string>()
+    itens.forEach((v) => v.tecnicos.forEach((t) => m.set(t.id, t.nome)))
+    return [...m].map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome))
   }, [itens])
 
+  const filtradas = useMemo(() => {
+    const peso = (s: string) => (s === 'agendada' || s === 'pendente' ? 0 : 1)
+    return itens
+      .filter((v) =>
+        (statusSel.size === 0 || statusSel.has(v.status)) &&
+        (clienteSel.size === 0 || (v.cliente_id != null && clienteSel.has(v.cliente_id))) &&
+        (tecnicoSel.size === 0 || v.tecnicos.some((t) => tecnicoSel.has(t.id))),
+      )
+      .sort((a, b) => peso(a.status) - peso(b.status) || a.data.localeCompare(b.data))
+  }, [itens, statusSel, clienteSel, tecnicoSel])
+
+  // Gráfico: contagem por status (sobre a lista filtrada).
+  const contagem = STATUS_ALL.map((s) => ({ s, n: filtradas.filter((v) => v.status === s).length }))
+  const maxN = Math.max(1, ...contagem.map((c) => c.n))
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold">Atividades</h1>
-      {erro && <p className="text-sm text-destructive">{erro}</p>}
-      {ordenadas.length === 0 && !erro && <p className="text-sm text-muted-foreground">Nenhuma atividade.</p>}
-      <div className="space-y-2">
-        {ordenadas.map((v) => {
-          const p = prazo(v.data, v.status)
-          return (
-            <Link key={v.id} to={`/cronograma/atividade/${v.id}`}
-                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium">{v.titulo}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-3xl space-y-4 p-4">
+        <h1 className="text-lg font-semibold">Atividades</h1>
+        {erro && <p className="text-sm text-destructive">{erro}</p>}
+
+        {/* Filtros */}
+        <div className="flex flex-wrap items-center gap-2">
+          <MultiFiltro label="Status" todosLabel="Todos os status" sel={statusSel} setSel={setStatusSel}
+                       opcoes={STATUS_ALL.map((s) => ({ id: s, nome: s }))} />
+          <MultiFiltro label="Clientes" todosLabel="Todos os clientes" sel={clienteSel} setSel={setClienteSel} opcoes={clienteOpts} />
+          <MultiFiltro label="Técnicos" todosLabel="Todos os técnicos" sel={tecnicoSel} setSel={setTecnicoSel} opcoes={tecnicoOpts} />
+        </div>
+
+        {/* Gráfico por status */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Por status ({filtradas.length})</div>
+          <div className="space-y-1.5">
+            {contagem.map(({ s, n }) => (
+              <div key={s} className="flex items-center gap-2">
+                <span className="w-20 shrink-0 text-xs">{s}</span>
+                <div className="h-3 flex-1 overflow-hidden rounded bg-muted">
+                  <div className={`h-full ${BAR[s]}`} style={{ width: `${(n / maxN) * 100}%` }} />
                 </div>
-                <div className="truncate text-xs text-muted-foreground">
-                  📅 {v.data}{v.cliente_nome ? ` · 📍 ${v.cliente_nome}` : ''}
+                <span className="w-6 shrink-0 text-right text-xs tabular-nums">{n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lista */}
+        {filtradas.length === 0 && !erro && <p className="text-sm text-muted-foreground">Nenhuma atividade.</p>}
+        <div className="space-y-2">
+          {filtradas.map((v) => {
+            const p = prazo(v.data, v.status)
+            return (
+              <Link key={v.id} to={`/cronograma/atividade/${v.id}`}
+                    className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium">{v.titulo}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    📅 {v.data}{v.cliente_nome ? ` · 📍 ${v.cliente_nome}` : ''}
+                  </div>
                 </div>
-              </div>
-              <div className="flex -space-x-2">
-                {v.tecnicos.slice(0, 4).map((t) => (
-                  <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-7 w-7 border-2 border-background text-[9px]" />
-                ))}
-              </div>
-              <span className={`whitespace-nowrap text-xs ${p.cls}`}>{p.label}</span>
-            </Link>
-          )
-        })}
+                <div className="flex -space-x-2">
+                  {v.tecnicos.slice(0, 4).map((t) => (
+                    <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-7 w-7 border-2 border-background text-[9px]" />
+                  ))}
+                </div>
+                <span className={`whitespace-nowrap text-xs ${p.cls}`}>{p.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

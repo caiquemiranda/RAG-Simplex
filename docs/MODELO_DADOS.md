@@ -78,7 +78,7 @@ erDiagram
     int cliente_id FK "opcional"
     date data
     string titulo "atividade"
-    string status "agendada|concluida|cancelada"
+    string status "agendada|pendente|concluida|cancelada"
     text observacoes
   }
   EQUIPAMENTO {

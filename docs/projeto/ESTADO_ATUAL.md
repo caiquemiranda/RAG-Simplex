@@ -46,6 +46,9 @@ Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **#EQP-2** — sidebar "Equipamentos" (Buscar/Sobre/Lista) + lista por cliente.
 - ✅ **Melhorias UI:** modal do dia em 2 colunas (#CR-DIA) · sidebar Cronograma→Atividades
   (#CR-ATV, com "faltam N / atrasada há N") · fix da auditoria com colunas cortadas (#FIX-AUDIT).
+- ✅ **Mais melhorias:** filtros (status multi/cliente/técnico) + **gráfico por status** na tela
+  Atividades · status **pendente** · **lightbox** da imagem na atividade · sidebar com
+  espaçamento simétrico e `<main>` com scroll (não quebra mais).
 
 **Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
 

@@ -120,6 +120,8 @@ def test_tecnico_fecha_propria_visita(ctx):
     vid = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "X"}).json()["id"]
     tec = _login(client, "tec@x.com")
 
+    # Status "pendente" é válido (novo status).
+    assert client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "pendente"}).json()["status"] == "pendente"
     # Técnico fecha a própria visita (status + observações).
     r = client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "concluida", "observacoes": "feito"})
     assert r.status_code == 200 and r.json()["status"] == "concluida"

@@ -21,7 +21,18 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       **backfill** dos existentes via migração Alembic `5c77258e6fc6`. Teste
       `test_email_case_insensitive`.
 
-**Cronograma (melhorias do Lote 5):**
+**Melhorias do Lote 5 (UI/UX):**
+- [x] **#ATV-FILTROS — filtros + gráfico na tela Atividades**: filtros multi **Status**
+      (agendada/pendente/concluída/cancelada), **Clientes** e **Técnicos** (opções derivadas
+      das atividades) + **gráfico de barras por status** (`MultiFiltro` agora componente
+      compartilhado e genérico).
+- [x] **#ATV-STATUS — status "pendente"** + **lightbox** da imagem: novo status `pendente`
+      (válido no backend, cor âmbar); na página da atividade, a imagem **amplia na própria
+      página** (overlay) com **X** para fechar (antes abria em nova aba).
+- [x] **#SB-ESPACO — espaçamento simétrico da sidebar**: grupos de abas em `space-y-0.5`
+      uniforme (removido o `pt-2` que criava distância desigual).
+- [x] **#SB-QUEBRA — sidebar quebrando em algumas páginas**: `<main>` ganhou
+      `overflow-y-auto` (conteúdo rola dentro do main; não empurra mais a sidebar).
 - [x] **#CR-DIA — modal do dia em 2 colunas**: ao abrir o dia, **esquerda** = equipe e onde
       cada um está; **direita** = **cards das atividades** (avatares dos técnicos, status,
       editar, abrir). Modal alargado (`max-w-4xl`).

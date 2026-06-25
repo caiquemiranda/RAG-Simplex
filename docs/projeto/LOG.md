@@ -4,6 +4,26 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (7): filtros+gráfico em Atividades, status pendente, lightbox, sidebar
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#ATV-FILTROS:** tela Atividades com filtros multi **Status/Clientes/Técnicos** (opções
+  derivadas das atividades) + **gráfico de barras por status**. `MultiFiltro` extraído para
+  `components/MultiFiltro.tsx` (genérico `string|number`); Cronograma reusa.
+- **#ATV-STATUS:** novo status **`pendente`** (`_STATUS_VALIDOS`, cor âmbar em `format.ts`,
+  selects do Cronograma e da Atividade). **Lightbox**: imagem da atividade amplia na própria
+  página (overlay com X) em vez de abrir nova aba.
+- **#SB-ESPACO:** sidebar — abas em `space-y-0.5` uniforme (removido `pt-2`).
+- **#SB-QUEBRA:** `<main>` (Layout) ganhou `overflow-y-auto` → conteúdo rola dentro do main,
+  não empurra/quebra mais a sidebar (corrige as páginas novas sem wrapper `h-full`).
+- **Teste:** status `pendente` coberto em `test_tecnico_fecha_propria_visita`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{components/{Layout,Sidebar,MultiFiltro,AuditoriaView}.tsx,lib/format.ts,pages/{Atividades,Atividade,Cronograma}.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (6): melhorias UI — modal do dia, Atividades, fix auditoria
 
 **Branch:** `feat/lote5-fixes`.
