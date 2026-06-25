@@ -357,6 +357,7 @@ export const api = {
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
   unidadesVisiveis: () => request<UnidadeVisivel[]>('/unidades'),
+  equipamentosCliente: (clienteId: number) => request<Equipamento[]>(`/clientes/${clienteId}/equipamentos`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',

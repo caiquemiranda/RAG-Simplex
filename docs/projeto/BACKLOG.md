@@ -48,10 +48,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       /admin/clientes/{id}` (detalhe + equipamentos); página `pages/ClienteAdmin.tsx`
       (`/admin/cliente/:id`) com dados, logo, **import CSV** e lista de equipamentos.
       Teste `test_cliente_detalhe_e_campos`.
-- [ ] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): renomear *"Buscar equipamento"*
-      para **grupo "Equipamentos"** com sub-abas **[Buscar equipamento · Sobre equipamento ·
-      Lista de equipamentos]**; em *Lista*, **card por cliente** → abre a lista daquele cliente
-      (espelha Relatórios/Documentos). dep: #EQP-1 (lista por cliente).
+- [x] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): grupo colapsável **Equipamentos**
+      com sub-abas **Buscar · Sobre · Lista**; em *Lista*, **card por cliente** → lista daquele
+      cliente (`/equipamentos/lista[/:id]`, página `EquipamentosLista.tsx`). Endpoint visível
+      `GET /clientes/{id}/equipamentos` (RBAC). Teste `test_equipamentos_visiveis_por_papel`.
 
 > **Sequência sem retrabalho:** (1) #FIX-TOKEN + #FIX-EMAIL → (2) #FER-1 → (3) #ATV-1 →
 > (4) **#EQP-1** (fundação) → #CLI-PG → #EQP-2. Equipamento vem **antes** das telas que o

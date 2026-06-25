@@ -221,6 +221,22 @@ def test_equipamentos_import_csv(ctx):
     assert client.get(f"/admin/clientes/{cid}/equipamentos", headers=_login(client, "op@x.com")).status_code == 403
 
 
+def test_equipamentos_visiveis_por_papel(ctx):
+    """#EQP-2: GET /clientes/{id}/equipamentos — admin vê; técnico só dos seus clientes."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli E"}).json()["id"]
+    client.post(f"/admin/clientes/{cid}/equipamentos/importar", headers=admin,
+                files={"arquivo": ("e.csv", b"painel,loop,add,type,model\n4100,1,1,smoke,X\n", "text/csv")})
+
+    assert len(client.get(f"/clientes/{cid}/equipamentos", headers=admin).json()) == 1
+    # Técnico sem vínculo → 403.
+    assert client.get(f"/clientes/{cid}/equipamentos", headers=_login(client, "tec@x.com")).status_code == 403
+    # Vinculado → vê.
+    client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_ids": [cid]})
+    assert len(client.get(f"/clientes/{cid}/equipamentos", headers=_login(client, "tec@x.com")).json()) == 1
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx

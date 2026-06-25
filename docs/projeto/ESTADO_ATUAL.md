@@ -14,7 +14,7 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
-  **Backend: 95 testes** passando.
+  **Backend: 96 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -36,18 +36,20 @@
     comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Lote 5 (em andamento, branch `feat/lote5-fixes`)
+## ⏭️ PRÓXIMO PASSO — Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
 
-Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
-- ✅ Lote 4 mergeado: #FIX-TOKEN, #FIX-EMAIL, #FER-1.
-- ✅ **#ATV-1** — página de atividade (status, técnicos, **galeria de imagens**, **comentários**).
+Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **#CR-FILTROS** — filtros Equipe/Clientes (multi) + #ALOC só seg–sex.
-- ✅ **#EQP-1** (backend) — entidade `Equipamento` + import CSV por cliente.
-- ✅ **#CLI-PG** — página do cliente (`/admin/cliente/:id`) com endereço/contatos + import CSV.
-- ⏭️ **#EQP-2** — sidebar "Equipamentos" (grupo) com sub-abas [Buscar · Sobre · Lista] + lista por cliente.
+- ✅ **#ATV-1** — página de atividade (status, técnicos, galeria de imagens, comentários).
+- ✅ **#EQP-1** — entidade `Equipamento` + import CSV por cliente.
+- ✅ **#CLI-PG** — página do cliente (`/admin/cliente/:id`) com endereço/contatos + CSV.
+- ✅ **#EQP-2** — sidebar "Equipamentos" (Buscar/Sobre/Lista) + lista por cliente.
 
-**Depois do Lote 5:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
-*requer API key*) · #1 (alinhamento ChatGPT).
+**Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
+
+**Depois do Lote 5:** equipamentos fase b/c (colunas últ. manutenção/teste; histórico do
+painel — *adiado pelo usuário*) · Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) ·
+Fase 10 (nuvem, *requer API key*) · #1 (alinhamento ChatGPT).
 
 ## 🔧 Para rodar na sua máquina
 

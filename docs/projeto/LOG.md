@@ -4,6 +4,23 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (5): #EQP-2 — sidebar "Equipamentos" + lista por cliente
+
+**Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp2-cli-pg.md`](specs/spec-eqp2-cli-pg.md).
+
+- **API visível:** `GET /clientes/{id}/equipamentos` (`EquipamentoPublico`) — admin todos;
+  técnico só dos seus clientes (403 caso contrário).
+- **Sidebar:** "Buscar Equipamento" → **grupo "Equipamentos"** (Buscar/Sobre/Lista).
+- **Frontend:** `pages/EquipamentosLista.tsx` (`/equipamentos/lista[/:id]`) — cards de
+  clientes → tabela de equipamentos do cliente; `/equipamentos/sobre` placeholder.
+  `api.equipamentosCliente(id)`.
+- **Teste** `test_equipamentos_visiveis_por_papel`. **96 passed**; `tsc` OK. **Lote 5 completo.**
+
+**Arquivos:** `app/main.py`, `tests/test_admin.py`,
+`frontend/src/{App.tsx,lib/api.ts,components/Sidebar.tsx,pages/EquipamentosLista.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (4): #CLI-PG — página do cliente (endereço/contatos + equipamentos)
 
 **Branch:** `feat/lote5-fixes`.

@@ -83,6 +83,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST | `/admin/clientes/{id}/equipamentos[/importar]` · DELETE `/admin/equipamentos/{id}` | `gerir_usuarios` | **Equipamentos** do cliente (#EQP-1): listar + **import CSV** (`painel,loop,add,type,model`; `substituir`). |
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
+| GET | `/clientes/{id}/equipamentos` | autenticado | **Equipamentos do cliente** (#EQP-2): admin todos; técnico só dos seus clientes (403). |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |

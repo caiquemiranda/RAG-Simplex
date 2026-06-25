@@ -47,6 +47,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   const [grupo, setGrupo] = useState(true)
   const [grupoRel, setGrupoRel] = useState(false)
   const [grupoDoc, setGrupoDoc] = useState(false)
+  const [grupoEqp, setGrupoEqp] = useState(false)
   const [clientesRel, setClientesRel] = useState<ClienteVisivel[]>([])
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
@@ -184,7 +185,19 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
               {clientesRel.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">Nenhum cliente.</p>}
             </div>
           )}
-          <NavLink to="/equipamentos" className={linkCls} onClick={navegou}><IconEquipamento /> Buscar Equipamento</NavLink>
+          {/* Grupo Equipamentos (Buscar/Sobre/Lista) — #EQP-2 */}
+          <button className={`${itemBase} ${local.pathname.startsWith('/equipamentos') ? 'font-medium' : ''}`} onClick={() => setGrupoEqp((v) => !v)}>
+            <Chevron aberto={grupoEqp} />
+            <IconEquipamento />
+            <span className="flex-1 text-left">Equipamentos</span>
+          </button>
+          {grupoEqp && (
+            <div className="ml-3 space-y-0.5 border-l pl-2">
+              <NavLink to="/equipamentos" end className={linkCls} onClick={navegou}>Buscar equipamento</NavLink>
+              <NavLink to="/equipamentos/sobre" className={linkCls} onClick={navegou}>Sobre equipamento</NavLink>
+              <NavLink to="/equipamentos/lista" className={linkCls} onClick={navegou}>Lista de equipamentos</NavLink>
+            </div>
+          )}
           {/* Grupo Documentos (Empresa/Clientes/Marcas) */}
           <button className={`${itemBase} ${local.pathname === '/documentos' ? 'font-medium' : ''}`} onClick={() => setGrupoDoc((v) => !v)}>
             <Chevron aberto={grupoDoc} />
