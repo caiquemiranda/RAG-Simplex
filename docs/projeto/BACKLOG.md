@@ -14,11 +14,12 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 
 **Correções rápidas (independentes, baixo risco):**
-- [ ] **#FIX-TOKEN — token de acesso dura 1 dia** (item 4): `access_token_expira_min`
-      60 → **1440**. Estava expirando rápido demais.
-- [ ] **#FIX-EMAIL — login/cadastro de e-mail case-insensitive** (item 2): normalizar
-      (`strip().lower()`) o e-mail **no login** e **na criação/edição** do usuário; backfill
-      dos existentes (lower). Evita falha de login por maiúscula/minúscula.
+- [x] **#FIX-TOKEN — token de acesso dura 1 dia** (item 4): `access_token_expira_min`
+      60 → **1440**.
+- [x] **#FIX-EMAIL — login/cadastro de e-mail case-insensitive** (item 2): helper
+      `normalizar_email` (`strip().lower()`) no **login** e na **criação** (API + CLI admin);
+      **backfill** dos existentes via migração Alembic `5c77258e6fc6`. Teste
+      `test_email_case_insensitive`.
 
 **Cronograma:**
 - [ ] **#FER-1 — feriado sem atividades** (item 1): no dia de **feriado** o cronograma

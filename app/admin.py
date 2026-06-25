@@ -19,7 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import cripto
-from app.auth import hash_senha, requer
+from app.auth import hash_senha, normalizar_email, requer
 from app.db import get_session
 from app.estrategias import ESTRATEGIAS
 from app.modelos import (
@@ -288,9 +288,12 @@ def listar_usuarios(_: Usuario = Depends(requer("gerir_usuarios")),
 def criar_usuario(dados: UsuarioCriar,
                   _: Usuario = Depends(requer("gerir_usuarios")),
                   sessao: Session = Depends(get_session)) -> UsuarioResumo:
-    if sessao.scalar(select(Usuario).where(Usuario.email == dados.email)):
+    email = normalizar_email(dados.email)
+    if not email:
+        raise HTTPException(status_code=400, detail="E-mail é obrigatório.")
+    if sessao.scalar(select(Usuario).where(Usuario.email == email)):
         raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
-    usuario = Usuario(email=dados.email, nome=dados.nome, ativo=True,
+    usuario = Usuario(email=email, nome=dados.nome, ativo=True,
                       hash_senha=hash_senha(dados.senha))
     if dados.papel:
         usuario.papel = _papel_por_nome(sessao, dados.papel)

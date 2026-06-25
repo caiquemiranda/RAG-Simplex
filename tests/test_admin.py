@@ -78,6 +78,26 @@ def test_admin_lista_e_cria_usuario(ctx):
         "email": "novo@x.com", "senha": "senha123", "nome": "Novo", "papel": "Operador"})
     assert novo.status_code == 201
     assert novo.json()["papel"] == "Operador"
+
+
+def test_email_case_insensitive(ctx):
+    """#FIX-EMAIL: e-mail é normalizado (minúsculo) no cadastro e no login."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Cadastro com maiúsculas/espaço → armazenado em minúsculo.
+    r = client.post("/admin/usuarios", headers=admin, json={
+        "email": "  Joao.Silva@X.COM ", "senha": "senha123", "nome": "João"})
+    assert r.status_code == 201 and r.json()["email"] == "joao.silva@x.com"
+
+    # Duplicado só muda a caixa → 409.
+    dup = client.post("/admin/usuarios", headers=admin, json={
+        "email": "JOAO.SILVA@x.com", "senha": "outra123", "nome": "Outro"})
+    assert dup.status_code == 409
+
+    # Login com caixa diferente funciona.
+    ok = client.post("/auth/login", json={"email": "JOAO.silva@X.com", "senha": "senha123"})
+    assert ok.status_code == 200 and ok.json().get("access_token")
     assert len(client.get("/admin/usuarios", headers=admin).json()) == 4
 
 
