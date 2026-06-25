@@ -8,125 +8,131 @@ código bruto em inglês ("HEAD MISSING") — e responde com um procedimento de
 correção **ancorado na documentação oficial**, em duas camadas: linguagem simples
 para operadores e resolução técnica para campo/engenharia.
 
-> Documento de requisitos: [`docs/prd_sistema_rag_simplex.md`](docs/prd_sistema_rag_simplex.md).
-> Base de conhecimento: [`docs/guia_falhas_simplex_ptbr.md`](docs/guia_falhas_simplex_ptbr.md).
+> **Por dentro:** [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) (módulos, endpoints,
+> RBAC, frontend) · [`docs/MODELO_DADOS.md`](docs/MODELO_DADOS.md) (ER) ·
+> [`docs/FLUXOS.md`](docs/FLUXOS.md) (diagramas) · [`docs/TECNOLOGIAS.md`](docs/TECNOLOGIAS.md)
+> (stack + equivalentes p/ portar) · [`docs/TESTES.md`](docs/TESTES.md) ·
+> [`docs/projeto/BACKLOG.md`](docs/projeto/BACKLOG.md) (tarefas + plano) ·
+> [`docs/prd_sistema_rag_simplex.md`](docs/prd_sistema_rag_simplex.md) (requisitos) ·
+> [`docs/projeto/`](docs/projeto/) (governança por fase).
 
-## Arquitetura
+## Destaques
+
+- **Funciona sem API key e sem custo:** a estratégia padrão `local_extrativa` monta
+  a resposta de forma **extrativa** (sem LLM). Estratégias de nuvem (Claude) são
+  opcionais e só entram na Fase 10.
+- **Chat estilo ChatGPT** (frontend React): streaming, citações clicáveis com
+  split-screen no trecho exato, feedback 👍/👎, histórico de consultas persistente.
+- **Autenticação + RBAC:** JWT, papéis (Operador/Técnico/Analista/Admin) e camadas
+  de resposta filtradas por papel.
+- **Painel ADM:** usuários, permissões, estratégia por usuário e auditoria.
+
+## Arquitetura (resumo)
 
 ```
 docs/guia_falhas_simplex_ptbr.md      base de conhecimento (Markdown)
-        │  ingestao.py    chunking por header ###  +  metadados  +  embeddings
+        │  ingestao.py    chunking por header ###  +  metadados  +  embeddings (e5)
         ▼
    ChromaDB (cosseno)     data/processed/chroma/
-        │  recuperacao.py  busca semântica  +  limiar 0.78  +  filtro de metadados
+        │  recuperacao.py  busca semântica + bônus léxico  +  limiar 0.78
         ▼
-   geracao.py             API Claude (claude-opus-4-8) → resposta em dupla camada
-        │
+   estrategias.py         LocalExtrativa (dupla camada, sem LLM)   ← padrão
         ▼
-   main.py                FastAPI: /health  /ingest  /query  /query/stream
+   main.py                FastAPI: /query  /query/stream  /feedback  /admin/*  ...
+        ▼
+   frontend (React)       chat + painel ADM
 ```
 
-**Stack:** ChromaDB (vetorial, distância de cosseno) · `sentence-transformers`
-(embeddings multilíngues PT/EN, locais) · Anthropic SDK / Claude `claude-opus-4-8`
-(geração) · FastAPI (API).
+Detalhe completo em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
 ## Pré-requisitos
 
-- Python 3.10+
-- Uma chave de API da Anthropic ([console.anthropic.com](https://console.anthropic.com/))
+- **Python 3.10+** e **Node.js 18+** (frontend).
+- Nenhuma chave de API é necessária para o funcionamento padrão. (Chave da
+  Anthropic só para as estratégias de nuvem da Fase 10 — ver
+  [`docs/CONFIGURAR_APIKEYS.md`](docs/CONFIGURAR_APIKEYS.md).)
 
-## Instalação
+## Como rodar
+
+### Nativo (Windows / PowerShell) — recomendado
+
+Scripts em [`scripts/`](scripts/) sobem tudo, com caches em `.cache/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run.ps1        # backend + frontend
+# ou separados:
+powershell -ExecutionPolicy Bypass -File scripts\backend.ps1
+powershell -ExecutionPolicy Bypass -File scripts\frontend.ps1
+```
+
+- Frontend: <http://localhost:5173> · API (Swagger): <http://127.0.0.1:8000/docs>
+- Login criado na 1ª execução: **admin@local / admin123**.
+
+### Docker
+
+```bash
+docker compose up --build      # backend :8000 · frontend :8080
+```
+
+Ver [`docs/DOCKER.md`](docs/DOCKER.md).
+
+### Manual (sem scripts)
 
 ```bash
 pip install -r requirements.txt
-
-cp .env.example .env          # Windows: copy .env.example .env
-# edite .env e preencha ANTHROPIC_API_KEY
+python -m app.db --init                       # tabelas + papéis/permissões
+python -m app.auth --criar-admin admin@local "admin123"
+python -m app.ingestao --reset                # indexa o guia (baixa o modelo e5)
+uvicorn app.main:app --reload                 # API
+# frontend:  cd frontend && npm install && npm run dev
 ```
 
-A primeira execução baixa o modelo de embeddings (~120 MB) automaticamente.
-
-## Uso
-
-### 1. Indexar a base de conhecimento
-
-```bash
-python -m app.ingestao --reset
-```
-
-Quebra o guia em blocos autocontidos (um por falha, header `###`), anexa os
-metadados `{sistema, severidade, idioma_erro, termo_en, ...}` e grava os vetores
-no ChromaDB.
-
-### 2. Subir a API
-
-```bash
-uvicorn app.main:app --reload
-```
-
-Documentação interativa em <http://127.0.0.1:8000/docs>.
-
-### Endpoints
+## Endpoints (principais)
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET`  | `/health` | Saúde + nº de blocos indexados + config. |
-| `POST` | `/ingest` | (Re)indexa o guia padrão. |
-| `POST` | `/query` | Pergunta → resposta em dupla camada + fontes. |
-| `POST` | `/query/stream` | Mesma resposta, em streaming. |
+| `POST` | `/auth/login` · `/auth/refresh` · `GET /auth/me` | Sessão (JWT). |
+| `GET`  | `/health` | Saúde + nº de blocos indexados. |
+| `POST` | `/ingest` | (Re)indexa o guia (perm. `ingerir`). |
+| `POST` | `/query` | Pergunta → dupla camada + fontes + `log_id`. |
+| `POST` | `/query/stream` | Mesma resposta em **NDJSON** (streaming). |
+| `POST` | `/feedback` | Registra 👍/👎 numa consulta. |
+| `GET`  | `/documentos[/{nome}]` | Guias indexados (split-screen). |
+| `*`    | `/admin/*` | Usuários, permissões, estratégias, auditoria. |
 
-Exemplo:
-
-```bash
-curl -X POST http://127.0.0.1:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"pergunta": "HEAD MISSING no loop do 4100", "persona": "técnico de campo"}'
-```
-
-### Uso por linha de comando (sem API)
-
-```bash
-python -m app.recuperacao "painel apitando luz vermelha piscando"   # só recuperação
-python -m app.geracao "HEAD MISSING no loop do 4100"                # pipeline completo
-```
+Tabela completa em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md#endpoints).
 
 ## Garantias do sistema (do PRD)
 
 - **Limiar de similaridade 0.78** (§6.1): abaixo disso, *fallback gracioso* —
-  o assistente informa que a falha não consta na base e direciona ao suporte,
-  **sem improvisar** procedimento (sistema de segurança de vida).
-- **Ancoragem total** (§2.2): responde apenas com os blocos recuperados; zero
+  informa que a falha não consta na base, **sem improvisar** (segurança de vida).
+- **Ancoragem total** (§2.2): responde só com os blocos recuperados; zero
   alucinação; nunca mistura outras marcas.
 - **Resposta em dupla camada** (§5.2) + **gatilho de segurança** no topo quando há
   risco elétrico, bypass de supressão ou manipulação de fonte primária.
-- **Latência < 3s** (§2.2): geração sem extended thinking.
+- **Latência < 3s** (§2.2).
 
 ## Testes
 
 ```bash
-pytest
+pytest          # 59 testes; sem rede nem download de modelo
 ```
 
-Os testes de parsing, classificação de metadados, filtros e fallback rodam sem
-chave de API nem rede. Testes que dependem do guia são pulados se ele não existir.
+Inventário e cobertura em [`docs/TESTES.md`](docs/TESTES.md). O frontend é validado
+por `tsc --noEmit` (typecheck estrito).
 
 ## Estrutura
 
 ```
 RAG-simplex/
-├── .claude/            memória/regras do projeto (CLAUDE.md, settings.json, rules/)
-├── app/
-│   ├── config.py       configuração central
-│   ├── ingestao.py     chunking + vetorização
-│   ├── recuperacao.py  busca semântica
-│   ├── geracao.py      geração via Claude
-│   └── main.py         API FastAPI
-├── data/
-│   ├── raw/            documentos originais (PDF/TXT)
-│   └── processed/      ChromaDB persistido (gerado)
-├── docs/               PRD + base de conhecimento + originais
-├── tests/
-├── .env.example
-├── requirements.txt
-└── README.md
+├── .claude/            memória/regras do projeto (CLAUDE.md, rules/)
+├── app/                backend FastAPI (config, ingestao, recuperacao,
+│                       estrategias, geracao, auth, admin, modelos, db, seed, ...)
+├── frontend/           SPA React (Vite + Tailwind): chat + painel ADM
+├── scripts/            runners nativos (run/backend/frontend .ps1)
+├── data/processed/     ChromaDB + SQLite (gerados)
+├── docs/               ARQUITETURA, TESTES, PRD, base de conhecimento, projeto/
+├── tests/              suíte pytest (59)
+├── docker-compose.yml · Dockerfile
+└── requirements.txt
 ```

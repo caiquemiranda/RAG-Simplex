@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     chroma_dir: Path = BASE_DIR / "data" / "processed" / "chroma"
     collection_name: str = "simplex_falhas"
 
+    # --- Arquivos enviados (logos, documentos de equipamentos…) na raiz do projeto ---
+    arquivos_dir: Path = BASE_DIR / "arquivos"
+
     # --- Banco relacional (usuários, papéis, config, auditoria) ---
     database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'processed' / 'ragsimplex.db').as_posix()}"
     # Chave Fernet p/ cifrar chaves de provedor em repouso (uso na Fase 10).

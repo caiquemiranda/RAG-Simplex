@@ -128,6 +128,93 @@ def test_estrategia_por_usuario_get_e_put(ctx):
     assert r2.json()["camadas"] == "simples,tecnica"
 
 
+def test_perfil_e_documentos_do_usuario(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    uid = ids["tec"]
+
+    # Atualiza campos de perfil/acesso. A foto é gravada como URL de arquivo
+    # (caminho /arquivos/...), não como data URL pesado no banco.
+    r = client.patch(f"/admin/usuarios/{uid}", headers=admin,
+                     json={"unidade": "Matriz SP", "telefone": "11999",
+                           "clientes": "Shopping X", "acesso_expira_em": "2027-01-01",
+                           "foto_url": "/arquivos/usuarios/joao.jpg"})
+    assert r.status_code == 200
+    assert r.json()["unidade"] == "Matriz SP"
+    assert r.json()["acesso_expira_em"] == "2027-01-01"
+    assert r.json()["foto_url"] == "/arquivos/usuarios/joao.jpg"
+
+    # Adiciona um documento com validade.
+    r = client.post(f"/admin/usuarios/{uid}/documentos", headers=admin,
+                    json={"nome": "NR-10", "validade": "2030-05-10"})
+    assert r.status_code == 201
+    docs = r.json()["documentos"]
+    assert len(docs) == 1 and docs[0]["nome"] == "NR-10"
+    doc_id = docs[0]["id"]
+
+    # GET reflete o documento.
+    r = client.get(f"/admin/usuarios/{uid}", headers=admin)
+    assert any(d["id"] == doc_id for d in r.json()["documentos"])
+
+    # Remove o documento.
+    r = client.delete(f"/admin/usuarios/{uid}/documentos/{doc_id}", headers=admin)
+    assert r.status_code == 200 and r.json()["documentos"] == []
+
+    # Documento inexistente → 404.
+    assert client.delete(f"/admin/usuarios/{uid}/documentos/9999", headers=admin).status_code == 404
+
+
+def test_me_documentos(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    client.post(f"/admin/usuarios/{ids['tec']}/documentos", headers=admin, json={"nome": "ASO", "validade": "2030-01-01"})
+    # O técnico vê os próprios documentos; o admin vê os dele (nenhum).
+    docs = client.get("/me/documentos", headers=_login(client, "tec@x.com")).json()
+    assert len(docs) == 1 and docs[0]["nome"] == "ASO"
+    assert client.get("/me/documentos", headers=admin).json() == []
+
+
+def test_lista_marca_documento_vencendo(ctx):
+    from datetime import date, timedelta
+
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    venc = (date.today() + timedelta(days=10)).isoformat()
+    client.post(f"/admin/usuarios/{ids['tec']}/documentos", headers=admin, json={"nome": "NR-10", "validade": venc})
+    lst = client.get("/admin/usuarios", headers=admin).json()
+    tec = next(u for u in lst if u["id"] == ids["tec"])
+    assert tec["docs_alerta"] == 1
+
+
+def test_clientes_crud_e_associacao(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Cria cliente (com identidade visual #CLIV).
+    r = client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X", "unidade": "SP", "cor": "#16C0CC"})
+    assert r.status_code == 201
+    cid = r.json()["id"]
+    assert r.json()["cor"] == "#16C0CC"
+    # Atualiza o logo (URL vinda do /upload).
+    assert client.patch(f"/admin/clientes/{cid}", headers=admin, json={"logo_url": "/arquivos/clientes/x.png"}).json()["logo_url"] == "/arquivos/clientes/x.png"
+    # Nome duplicado → 409.
+    assert client.post("/admin/clientes", headers=admin, json={"nome": "Shopping X"}).status_code == 409
+
+    # Lista contém o cliente.
+    r = client.get("/admin/clientes", headers=admin)
+    assert any(c["id"] == cid for c in r.json())
+
+    # Associa ao técnico via cliente_ids e confere no detalhe do usuário.
+    r = client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_ids": [cid]})
+    assert r.status_code == 200
+    assert [c["id"] for c in r.json()["clientes"]] == [cid]
+
+    # Atualiza e remove o cliente.
+    assert client.patch(f"/admin/clientes/{cid}", headers=admin, json={"ativo": False}).json()["ativo"] is False
+    assert client.delete(f"/admin/clientes/{cid}", headers=admin).status_code == 204
+    assert client.delete(f"/admin/clientes/{cid}", headers=admin).status_code == 404
+
+
 def test_auditoria_registra_consulta(ctx, monkeypatch):
     client, _ = ctx
     monkeypatch.setattr("app.main.buscar", lambda *a, **k: Recuperacao("q", [], True))

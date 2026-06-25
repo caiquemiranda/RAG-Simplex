@@ -4,7 +4,8 @@ import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Card, CardContent, CardHeader } from '../components/ui/card'
+import { Logo } from '../components/Logo'
 
 export default function Login() {
   const { entrar } = useAuth()
@@ -31,8 +32,9 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>RAG-Simplex — Entrar</CardTitle>
+        <CardHeader className="items-center space-y-2 text-center">
+          <Logo className="h-9" />
+          <p className="text-sm text-muted-foreground">Assistente técnico — entrar</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">

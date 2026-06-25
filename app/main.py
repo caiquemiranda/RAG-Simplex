@@ -21,12 +21,17 @@ import re
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import __version__
 from app.admin import router as admin_router
+from app.arquivos import router as arquivos_router
+from app.biblioteca import router as biblioteca_router
+from app.cronograma import router as cronograma_router
+from app.notificacoes import router as notificacoes_router
 from app.auth import (
     TokenInvalido,
     criar_access_token,
@@ -41,7 +46,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import LogConsulta, Usuario
+from app.modelos import Cliente, LogConsulta, Unidade, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -51,6 +56,14 @@ app = FastAPI(
     version=__version__,
 )
 app.include_router(admin_router)
+app.include_router(cronograma_router)
+app.include_router(notificacoes_router)
+app.include_router(arquivos_router)
+app.include_router(biblioteca_router)
+
+# Arquivos enviados (logos, documentos…) servidos em /arquivos.
+settings.arquivos_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/arquivos", StaticFiles(directory=settings.arquivos_dir), name="arquivos")
 
 # CORS para o frontend React (origens configuráveis via RAG_CORS_ORIGINS).
 app.add_middleware(
@@ -179,6 +192,67 @@ def me(usuario: Usuario = Depends(usuario_atual)) -> UsuarioOut:
         papel=usuario.papel.nome if usuario.papel else None,
         permissoes=[p.chave for p in usuario.papel.permissoes] if usuario.papel else [],
     )
+
+
+class MeuDocumento(BaseModel):
+    id: int
+    nome: str
+    validade: str | None = None
+
+
+@app.get("/me/documentos", response_model=list[MeuDocumento])
+def meus_documentos(usuario: Usuario = Depends(usuario_atual)) -> list[MeuDocumento]:
+    """Documentos (com validade) do próprio usuário — para o dashboard."""
+    return [
+        MeuDocumento(id=d.id, nome=d.nome, validade=d.validade.isoformat() if d.validade else None)
+        for d in usuario.documentos
+    ]
+
+
+class ClientePublico(BaseModel):
+    id: int
+    nome: str
+    unidade: str | None = None
+    unidade_id: int | None = None
+    cor: str | None = None
+    logo_url: str | None = None
+
+
+class UnidadePublica(BaseModel):
+    id: int
+    nome: str
+    cidade: str | None = None
+
+
+@app.get("/clientes", response_model=list[ClientePublico])
+def clientes_visiveis(
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[ClientePublico]:
+    """Clientes ativos visíveis (Relatórios/sidebar): admin vê todos; técnico vê os seus."""
+    if usuario.tem_permissao("gerir_usuarios"):
+        clientes = sessao.scalars(
+            select(Cliente).where(Cliente.ativo.is_(True)).order_by(Cliente.nome)
+        ).all()
+    else:
+        clientes = sorted((c for c in usuario.clientes_rel if c.ativo), key=lambda c: c.nome)
+    return [
+        ClientePublico(id=c.id, nome=c.nome, unidade=c.unidade, unidade_id=c.unidade_id,
+                       cor=c.cor, logo_url=c.logo_url)
+        for c in clientes
+    ]
+
+
+@app.get("/unidades", response_model=list[UnidadePublica])
+def unidades_visiveis(
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[UnidadePublica]:
+    """Unidades ativas (para o seletor da 'visão por unidade' do cronograma)."""
+    unidades = sessao.scalars(
+        select(Unidade).where(Unidade.ativo.is_(True)).order_by(Unidade.nome)
+    ).all()
+    return [UnidadePublica(id=u.id, nome=u.nome, cidade=u.cidade) for u in unidades]
 
 
 # --------------------------------------------------------------------------- #

@@ -1,6 +1,7 @@
 # --- API / servidor ---
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
+python-multipart==0.0.20    # uploads (UploadFile) — infra de arquivos (#FILES)
 pydantic==2.10.4
 pydantic-settings==2.7.1
 # Exigido pelos modelos OpenAPI do FastAPI (Contact.email = EmailStr)

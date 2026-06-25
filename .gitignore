@@ -25,3 +25,6 @@ frontend/dist/
 .cache/
 .DS_Store
 Thumbs.db
+
+# Arquivos enviados pelo app (logos, documentos de equipamentos)
+arquivos/

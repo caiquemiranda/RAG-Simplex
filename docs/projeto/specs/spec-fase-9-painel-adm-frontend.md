@@ -2,6 +2,15 @@
 
 **Status:** ✅ Implementado · **Data:** 2026-06-24
 
+> **Acesso:** com o layout estilo ChatGPT (Fase 8), o painel ADM (`/admin`) é
+> alcançado pelo menu do usuário no rodapé da sidebar (só com `gerir_usuarios`).
+>
+> **Evolução (2026-06-24):** o ADM virou **hub de cards** (Gerenciar usuários, API keys,
+> Banco de dados, Clientes, Auditoria). **#U1** lista de usuários moderna (avatar +
+> email · nome · Cargo). **#U2** edição como **tela própria** com seções **1) Perfil e
+> gestão · 2) Documentos · 3) Permissões · 4) Estratégia** (senha 👁, ativo, clientes em
+> checkbox). Ver [`../LOG.md`](../LOG.md).
+
 ## Objetivo
 
 Dar ao administrador uma interface web para gerir usuários, acessos, estratégia

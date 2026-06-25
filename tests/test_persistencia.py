@@ -107,3 +107,25 @@ def test_cifrar_sem_chave_erro_claro():
             cripto.cifrar("x")
     finally:
         settings.secret_key = chave_original
+
+
+def test_migrar_colunas_adiciona_faltante():
+    """A micro-migração adiciona ao banco antigo a coluna nova do modelo."""
+    from sqlalchemy import inspect, text
+
+    from app.db import _migrar_colunas
+
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    # Simula um banco antigo: log_consulta sem a coluna feedback.
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE log_consulta (id INTEGER PRIMARY KEY, pergunta TEXT)"))
+
+    adicionadas = _migrar_colunas(engine)
+    colunas = {c["name"] for c in inspect(engine).get_columns("log_consulta")}
+
+    assert "feedback" in colunas
+    assert "log_consulta.feedback" in adicionadas
+    # Idempotente: rodar de novo não adiciona nada.
+    assert _migrar_colunas(engine) == []

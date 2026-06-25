@@ -3,50 +3,59 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-23
+**Última atualização:** 2026-06-24
+
+> **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
+> tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
+> [`../MODELO_DADOS.md`](../MODELO_DADOS.md), [`../FLUXOS.md`](../FLUXOS.md),
+> [`../TECNOLOGIAS.md`](../TECNOLOGIAS.md), [`../TESTES.md`](../TESTES.md).
+> **O que falta:** [`BACKLOG.md`](BACKLOG.md).
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-7-frontend` (push via `http.sslBackend schannel`).
-- **Fases 7, 8, 9 ✅:** frontend completo + Docker. Chat com **streaming (NDJSON)**,
-  markdown, citações split-screen, **feedback 👍/👎**; painel ADM com CRUD de
-  usuários/permissões, **estratégia por usuário** e **auditoria**. **Backend 59 testes**.
-- **D-015 ✅:** busca híbrida (bônus léxico) corrigiu o ranking.
+- **Branch:** `feat/fase-7-frontend`. **Backend: 82 testes** passando.
+- **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
+  - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
+  - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática**, **infra de
+    arquivos** (`/upload` + `/arquivos`, #FILES).
+  - **Marca/tema:** identidade **IBSystems**, **tema claro/escuro**, **logo SVG** clicável.
+  - **Chat:** streaming NDJSON, citações split-screen, feedback, histórico, sidebar responsiva.
+  - **Dashboard (#HOME):** atividades do dia, onde estará, notificações, seus documentos.
+  - **Painel ADM (cards):** Gerenciar usuários (edição em tela própria; **foto por arquivo**;
+    cliente fixo #ALOC; **unidade base**; alerta ⚠️ docs); **Clientes e unidades** (CRUD +
+    **cor/logo**, técnico↔cliente, **unidade** D-021); **API keys** (cifrada); Auditoria.
+  - **Relatórios:** **cards de clientes** + grupo na sidebar (#R1).
+  - **Documentos:** biblioteca **Empresa / Clientes / Marcas** (cards + grupo na sidebar +
+    **busca**), CRUD de arquivos (#DOC1–#DOC4).
+  - **Cronograma (real):** visitas com **vários técnicos** (#CR8), **card do dia** por papel,
+    **fechamento**, **cliente fixo + relocação** (#ALOC), **visão por unidade** (D-021),
+    agrupamento por **cliente** (cor/logo + avatares), **editar**, feriados, **notificações**.
+- **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ Próximos passos
+## ⏭️ PRÓXIMO PASSO
 
-1. **Validar na máquina do dev:** `docker compose up --build` (front :8080) — ou
-   nativo (uvicorn + `npm run dev`). Schema mudou (coluna `feedback`): no nativo,
-   recriar o `.db`; no Docker, volume novo. Ver `docs/DOCKER.md`.
-2. **Fase 11 (hardening):** cross-encoder reranker (D-020); avaliação RAGAS-lite;
-   migrações Alembic (evitar recriar o banco a cada mudança de schema).
-3. **Fase 10 (fim):** estratégias de nuvem + arena — **requer API key**.
+A fila da sessão anterior foi concluída (**foto por arquivo** ✅ e **entidade Unidade /
+visão por unidade** ✅). Próximos candidatos, em ordem sem retrabalho:
 
-> Rodar tudo: `docker compose up --build` **ou** uvicorn + `npm run dev`.
+1. **Robustez:** **Alembic** (migrações versionadas — schema já estabilizou) · card
+   **"Banco de dados"** (status/backup/reindexação).
+2. **Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite, *sem key*) · **Fase 10**
+   (nuvem, *requer API key* + decisão D-006).
+3. Pequena: **#1** alinhamento fino ao ChatGPT (precisa confirmar escopo com o usuário).
 
-> Tudo até a Fase 9 é **sem API key e sem custo**.
+## 🔧 Para rodar na sua máquina
 
-## 🧱 Base já existente
-
-- **Fases 0–2:** pipeline RAG; `local_extrativa`; `ClaudeNuvem` inerte até a Fase 10;
-  embeddings `e5-small` (D-014); trecho do guia em `fontes[].trecho`.
-- **Fase 3:** `app/{modelos,db,seed,cripto,preferencias}.py`.
-- **Fase 4:** `app/auth.py` + endpoints de auth no `main.py`.
-
-## 🔧 Para rodar na sua máquina (Fases 3–4)
-```bash
-pip install -r requirements.txt   # +SQLAlchemy +cryptography +PyJWT +argon2 +email-validator
-python -m app.cripto              # gera RAG_SECRET_KEY (serve p/ cifra E JWT; cole no .env)
-python -m app.db --init           # cria tabelas + semeia papéis/permissões
-python -m app.auth --criar-admin admin@exemplo.com "SuaSenhaForte"
-uvicorn app.main:app --reload     # /docs → POST /auth/login → use o Bearer token
+```powershell
+# tudo de uma vez (cria .venv, instala, migra o banco, sobe backend + frontend)
+powershell -ExecutionPolicy Bypass -File scripts\run.ps1
 ```
+Frontend: http://localhost:5173 · API: http://127.0.0.1:8000/docs · login: admin@local / admin123.
+Detalhe e flags em [`../../scripts/README.md`](../../scripts/README.md).
 
-## 🎯 Decisões
+## 🎯 Decisões em aberto
 
-- **D-017 ✅** — Docker entra na **Fase 7** (com o frontend); compose enxuto (backend +
-  frontend). Dev segue nativo até lá.
-- **D-015 ✅** — busca híbrida (bônus léxico) corrigiu o ranking; limiar 0.78.
 - **D-020 🔄** — cross-encoder reranker p/ fallback robusto (Fase 11).
 - **D-006 🔄** — provedor grátis de nuvem (Gemini vs Groq): Fase 10.
-- **D-010 🔄** — stack do frontend (Vite + React + TS + Tailwind): Fase 7.
+- **Migrações:** hoje há micro-migração caseira (coluna nullable); **Alembic** entra
+  quando o schema estabilizar (ver [`BACKLOG.md`](BACKLOG.md) §2, Etapa 5).
+- Decisões fechadas: ver [`DECISOES.md`](DECISOES.md).

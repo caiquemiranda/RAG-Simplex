@@ -4,8 +4,610 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Entidade Unidade + "visão por unidade" no cronograma (D-021)
+
+**Branch:** `feat/fase-7-frontend`. Spec: [`specs/spec-unidade.md`](specs/spec-unidade.md).
+
+- **Modelo:** `Unidade` (nome único/cidade/ativo); `Usuario.unidade_id` e
+  `Cliente.unidade_id` (+ `unidade_rel`). Texto legado mantido como fallback. Micro-migração
+  genérica criou a tabela + colunas (banco real migrado).
+- **API:** CRUD `/admin/unidades` (DELETE 409 se em uso; nome duplicado 409); `GET /unidades`
+  (ativas); `unidade_id` em criar/atualizar cliente e usuário (valida → 404); `ClienteResumo`/
+  `UsuarioDetalhe` com `unidade_id`/`unidade_nome`. Cronograma: filtro `?unidade_id=` (pela
+  unidade do cliente; respeita virtuais #ALOC); `VisitaResumo.unidade_id`.
+- **Frontend:** tipos/métodos em `api.ts`; Admin card "Clientes e unidades" (gestão de
+  unidades + seletor por cliente/linha/perfil de usuário); dropdown de unidade no Cronograma.
+- **Teste** `test_unidade_crud_e_visao_por_unidade`. **82 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin,main,cronograma}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx,pages/Cronograma.tsx}`, `docs/**`,
+`specs/spec-unidade.md`.
+
+---
+
+## 2026-06-25 — Foto do usuário por arquivo (tira data URL do banco)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- Frontend Admin: `onFoto` deixa de usar `FileReader`/data URL e passa a fazer
+  **upload real** via `uploadArquivo(file, "usuarios")` (#FILES) → grava a **URL**
+  (`/arquivos/usuarios/...`) em `foto_url`. Banco fica leve; `Avatar` já resolve o path.
+- Backend já aceitava `foto_url` string (sem mudança de schema). Comentário do modelo
+  atualizado; data URL legado continua tolerado na exibição.
+- Teste `test_perfil_e_documentos_do_usuario` agora afirma `foto_url=/arquivos/...`. **81 passed**; `tsc` OK.
+
+**Arquivos:** `frontend/src/pages/Admin.tsx`, `app/modelos.py`, `tests/test_admin.py`.
+
 Formato de cada entrada:
 `## AAAA-MM-DD — Fase N — título` · o que foi feito · decisões · arquivos.
+
+---
+
+## 2026-06-24 — Etapa 0d: GET /me/documentos + bloco no dashboard
+
+**Branch:** `feat/fase-7-frontend`. Fecha a **Etapa 0**.
+
+- **Backend:** `GET /me/documentos` (documentos do próprio usuário; `usuario_atual`).
+  Teste `test_me_documentos`. **70 testes**.
+- **Frontend:** dashboard (#HOME) ganhou card **"Seus documentos"** com status de
+  validade (válido/vence em Nd/vencido); `api.meusDocumentos()`.
+
+**Arquivos:** `app/main.py`, `tests/test_admin.py`, `frontend/src/{lib/api.ts,pages/Home}.tsx`.
+
+---
+
+## 2026-06-24 — Etapa 0b/0c: alerta de documentos + input centralizado
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **0b:** `UsuarioResumo.docs_alerta` (documentos vencidos/≤30 dias) → **badge
+  ⚠️ N doc.** na lista de "Gerenciar usuários". Teste `test_lista_marca_documento_vencendo`.
+- **0c:** estado vazio do chat com **título + campo centralizados** (estilo "O que
+  tem na agenda"); campo de envio reaproveitado (`campoEnvio`). `tsc` OK; **69 testes**.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`, `frontend/src/{lib/api.ts,
+pages/{Admin,Consulta}.tsx}`.
+
+---
+
+## 2026-06-24 — Lote 3 Documentos: cliente (#DOC3) + cards/sidebar (#DOC2) + busca (#DOC4)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#DOC3:** `DocumentoEquipamento.cliente_id` + categoria `cliente`; upload exige
+  `cliente_id`; `_resumo` traz `cliente_nome`. Migração automática.
+- **#DOC4:** `GET /biblioteca?busca=` (ilike) + filtros `categoria`/`cliente_id`; campo
+  de busca na página (filtro por nome).
+- **#DOC2:** página Documentos reescrita — seções **Empresa/Clientes/Marcas**, **card por
+  cliente** (avatar cor/logo) como Relatórios; sidebar com **grupo "Documentos"**
+  (`?cat=`). `api.biblioteca` atualizado (listar com params; criar com opts/cliente_id).
+- **81 passed**; `tsc` OK. Docs: MODELO_DADOS, ARQUITETURA, TESTES, spec-doc1, BACKLOG.
+
+**Arquivos:** `app/{modelos,biblioteca}.py`, `tests/test_biblioteca.py`,
+`frontend/src/{lib/api.ts,pages/Documentos.tsx,components/Sidebar.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #ALOC: cliente fixo por técnico + #DOC2/3/4 no backlog
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#ALOC:** `Usuario.cliente_padrao_id` (cliente fixo). `GET /cronograma` injeta
+  **alocações virtuais** (`fixo=true`, id=0) para técnicos fixos nos dias **sem** visita;
+  visita real **sobrescreve**. Editável em *Perfil e gestão*; card do dia mostra fixos
+  read-only com aviso de relocação. Migração automática. Teste `test_cliente_fixo_alocacao`.
+- **Backlog (lote 3 §J):** **#DOC2** (Documentos como grupo na sidebar + cards),
+  **#DOC3** (documentos de cliente), **#DOC4** (busca em documentos).
+- **80 passed**; `tsc` OK. Docs: MODELO_DADOS, spec-etapa3, TESTES, BACKLOG.
+
+**Arquivos:** `app/{modelos,admin,cronograma}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/{Cronograma,Admin}.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #CR8: múltiplos técnicos por atividade (Visita N:N)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** N:N `visita_tecnico` + `Visita.tecnicos`; `usuario_id` vira o responsável
+  (1º). Backfill em `db.criar_tabelas` (`_backfill_visita_tecnicos`).
+- **API:** `VisitaIn.usuario_ids` (1+); `VisitaResumo.tecnicos[]` (mantém `tecnico_nome/
+  foto` do 1º p/ o dashboard). `GET` filtra por **atribuição**; criar **notifica todos**;
+  **qualquer atribuído** fecha; admin reatribui via `usuario_ids`.
+- **Frontend:** criar atividade com **checkbox** de técnicos; célula agrupa por cliente
+  mostrando **todos** os técnicos (dedup); card do dia edita técnicos por checkbox.
+- **Testes:** `test_multiplos_tecnicos_por_atividade` → **79 passed**. `tsc` OK.
+  Docs: MODELO_DADOS, spec-etapa3, TESTES, BACKLOG (#CR8 ✅).
+
+**Arquivos:** `app/{modelos,cronograma,db}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — Backlog lote 2 + auditoria de docs
+
+- **Backlog §I (lote 2):** **#CR8** múltiplos técnicos por atividade (Visita → N:N;
+  refactor core, fazer antes de #ALOC) · **#ALOC** alocação fixa de técnicos a clientes
+  (decidir visual × recorrente) · **#DOC2** Documentos como grupo na sidebar (sub-abas).
+  Sequência: #CR8 → #ALOC; #DOC2 independente.
+- **Auditoria:** `ESTADO_ATUAL` e `PLANEJAMENTO` estavam em "70 testes" e com próximos
+  passos já feitos → atualizados para o estado real (**78 testes**; #FILES/#CLIV/#R1/
+  #DOC1/#CR6-7 marcados). Snapshot do PLANEJAMENTO completado.
+
+---
+
+## 2026-06-24 — #DOC1: biblioteca de documentos (empresa + marcas)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `DocumentoEquipamento` (categoria empresa|marca, marca, nome, url,
+  oculto, criado_em). Migração automática.
+- **API:** router `/biblioteca` (GET leitura por papel — oculto só admin; POST multipart
+  upload, PATCH renomear/ocultar, DELETE remove registro+arquivo). Reusa `salvar_upload`
+  com **subpastas aninhadas** (corrigido o sanitizador para preservar `biblioteca/marca`).
+- **Frontend:** `pages/Documentos.tsx` com card **Empresa** (logo) + **Marcas** (agrupado);
+  upload/renomear/ocultar/excluir (admin) e download (link). `api.biblioteca.*` + `urlArquivo`.
+- **Testes:** `test_biblioteca.py` (3) → **78 passed**. Spec
+  [`spec-doc1-biblioteca.md`](specs/spec-doc1-biblioteca.md); ARQUITETURA/MODELO_DADOS/TESTES/INDICE.
+
+**Arquivos:** `app/{modelos,biblioteca,main,arquivos}.py`, `tests/test_biblioteca.py`,
+`frontend/src/{lib/api.ts,pages/Documentos.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #CR6/#CR7: calendário por cliente + editar atividade + layout
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Backend:** `VisitaResumo` ganhou `cliente_cor`/`cliente_logo` (do `Cliente`).
+- **#CR6:** a célula do calendário **agrupa por cliente** — card-miniatura com cor/logo
+  do cliente + **avatares dos técnicos empilhados** (2+ técnicos no mesmo cliente = um
+  card). No **card do dia**, admin **edita** a atividade (título, técnico, cliente) além
+  de status/observações; técnico segue só fechando a própria.
+- **#CR7:** **número do dia grande** no topo da célula; hoje em destaque; fds/feriado
+  coloridos.
+- `tsc` OK; **75 passed**. Docs: BACKLOG #CR6/#CR7 ✅.
+
+**Arquivos:** `app/cronograma.py`, `frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #R1: Relatórios = cards de clientes + grupo na sidebar
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Backend:** `GET /clientes` (autenticado) — admin vê todos os ativos; técnico vê só
+  os seus (`clientes_rel`). `ClientePublico` (id, nome, unidade, cor, logo_url).
+- **Frontend:** `pages/Relatorios.tsx` (grid de **cards** com avatar cor/logo) →
+  `pages/RelatorioCliente.tsx` (`/relatorios/:id`, shell do relatório). **Sidebar**:
+  "Relatórios" vira **grupo colapsável** listando os clientes (avatar) + "Visão geral".
+  `api.clientesVisiveis`.
+- **Testes:** `test_clientes_visiveis_por_papel` → **75 passed**. `tsc` OK.
+
+**Arquivos:** `app/main.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,components/Sidebar.tsx,pages/{Relatorios,RelatorioCliente}.tsx,App.tsx}`,
+`docs/**`.
+
+---
+
+## 2026-06-24 — #CLIV: cor + logo por cliente (fundação visual)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `Cliente` ganha `cor` (hex) e `logo_url` (`/arquivos/...`). Migração
+  automática. API ADM (`ClienteIn/Atualizar/Resumo` + `_resumo_cliente`) expõe/aceita.
+- **Frontend:** card Clientes com **seletor de cor** (`<input type=color>`) e **upload
+  de logo** (via `uploadArquivo` → `/upload`); lista mostra **avatar** (logo ou iniciais
+  na cor do cliente). `Avatar` ganhou prop `cor`. `api.ts`: `uploadArquivo` + tipos.
+- **Reuso:** fundação de **#R1** (cards de cliente) e **#CR6** (miniatura no calendário).
+- `tsc` OK; **74 passed** (test_clientes cobre cor/logo).
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,components/Avatar.tsx,pages/Admin.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #FILES: infra de upload/arquivos (keystone)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **`app/arquivos.py`:** `salvar_upload`/`remover_arquivo` (nome único+sanitizado,
+  10 MB, guarda de path traversal) + `POST /upload` (multipart, perm. `gerir_usuarios`).
+  `main.py`: monta `StaticFiles` em `/arquivos`; cria a pasta no startup.
+- **Config:** `settings.arquivos_dir = BASE_DIR/'arquivos'` (gitignorada). Dep nova
+  `python-multipart==0.0.20` (requirements + instalada).
+- **Reuso:** destrava logo do cliente (#CLIV), documentos (#DOC1) e foto-por-arquivo.
+- **Testes:** `test_arquivos.py` (3) → **74 passed**. Spec
+  [`spec-files-arquivos.md`](specs/spec-files-arquivos.md); ARQUITETURA/TESTES/INDICE/BACKLOG.
+
+**Arquivos:** `app/{arquivos,main,config}.py`, `requirements.txt`, `.gitignore`,
+`tests/test_arquivos.py`, `docs/**`.
+
+---
+
+## 2026-06-24 — Backlog: novas solicitações (clientes visuais, documentos, calendário)
+
+Adicionadas ao [`BACKLOG.md`](BACKLOG.md) §H + sequência §2 (foco em não-retrabalho):
+- **#FILES** ⚑ infra de upload/arquivos (pasta na raiz) — keystone de #DOC1 / logo do
+  cliente / foto-por-arquivo.
+- **#CLIV** ⚑ cor + logo por cliente (`Cliente.cor/logo_url`) — fundação de #R1 e #CR6.
+- **#R1** Relatórios = cards de clientes + grupo na sidebar.
+- **#CR6+#CR7** calendário: atividade+cliente na célula, agrupar 2+ técnicos por
+  cliente num card, **editar** atividade, layout (número grande, estilo referência).
+- **#DOC1** Documentos: cards Empresa (logo) + Marcas, CRUD de arquivos (upload/download/
+  renomear/ocultar/excluir), só admin.
+
+Ordem sem retrabalho: **#FILES → #CLIV → (#R1, #CR6/#CR7, #DOC1)**.
+
+---
+
+## 2026-06-24 — Etapa 1: fechamento de visita + decisão Unidade (D-021)
+
+**Branch:** `feat/fase-7-frontend`. **Decisão:** Unidade vira **entidade** (D-021).
+
+- **Backend:** `PATCH /cronograma/{id}` agora via `usuario_atual` com RBAC — admin
+  edita tudo; **técnico fecha a PRÓPRIA** visita (só `status`/`observacoes`); status
+  validado. Teste `test_tecnico_fecha_propria_visita`.
+- **Frontend:** card do dia com **status editável** (select) + **observações**
+  (textarea, salva no blur) por visita.
+- **Decisão D-021:** "local de trabalho" → entidade `Unidade` (criar antes da "visão
+  por unidade"). Registrada em `DECISOES.md`.
+- `tsc` OK; **71 passed**. Docs: BACKLOG, spec-etapa3, TESTES.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/pages/Cronograma.tsx`, `docs/projeto/{DECISOES,BACKLOG,specs/spec-etapa3,LOG}.md`, `docs/TESTES.md`.
+
+---
+
+## 2026-06-24 — Refino 2: cores theme-aware + Avatar na edição
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Dark mode consistente:** badges de status (visita/documento) em `lib/format.ts` e
+  os alertas/mensagens âmbar/verde do Admin ganharam variantes `dark:` (legíveis no
+  tema escuro). Nenhuma cor de status fixa sem `dark:` restou.
+- **DRY:** a foto na edição de usuário passou a usar o componente **`Avatar`**
+  (foto ou iniciais) em vez de `<img>` + fallback manual.
+- `tsc` OK.
+
+**Arquivos:** `frontend/src/{lib/format.ts,pages/Admin.tsx}`.
+
+---
+
+## 2026-06-24 — Refino: helpers DRY + spec da Etapa 0
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **DRY:** helpers de UI duplicados (cores de status, validade de documento, data ISO)
+  centralizados em `frontend/src/lib/format.ts` (`isoData`, `STATUS_VISITA`, `statusDoc`);
+  `Cronograma`, `Home` e `Admin` passam a importar (sem duplicação/drift).
+- **Doc:** novo [`spec-etapa0-apikeys-perfil.md`](specs/spec-etapa0-apikeys-perfil.md)
+  (API keys, alerta `docs_alerta`, `/me/documentos`, input centralizado) + INDICE.
+  Backlog §F: specs de módulos novos = ✅ (falta só Banco de dados).
+- `tsc` OK; **70 passed**.
+
+**Arquivos:** `frontend/src/{lib/format.ts,pages/{Admin,Cronograma,Home}.tsx}`,
+`docs/projeto/specs/spec-etapa0-apikeys-perfil.md`, `docs/INDICE.md`.
+
+---
+
+## 2026-06-24 — Plano das pendentes + Etapa 0a: UI de API keys
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Plano:** `BACKLOG.md §2` reescrito só com as **pendentes**, em ordem sem
+  retrabalho (Etapa 0 independentes → 1 cronograma/Unidade → 2 robustez/Alembic →
+  3 inteligência). PLANEJAMENTO alinhado.
+- **0a — API keys (UI):** card ADM "Gerenciar API keys" agora lista provedores
+  (chave **mascarada**, ativo) e permite **cadastrar/rotacionar** a chave
+  (`PUT /admin/provedores/{nome}`, perm. `gerir_chaves`, cifrada). Gated por
+  `gerir_chaves`. `api.ts`: `AdminProvedor` + `provedores`/`salvarProvedor`.
+- `tsc` OK (backend já testado: `test_provedor_chave_nunca_em_claro`).
+
+**Arquivos:** `frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/projeto/{BACKLOG,PLANEJAMENTO,LOG}.md`.
+
+---
+
+## 2026-06-24 — #U1 lista de usuários moderna + #U2 edição como tela
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#U1:** `UsuarioResumo` ganhou `cargo`/`foto_url`; a lista de "Gerenciar usuários"
+  virou linhas com **avatar** (foto/iniciais) + **email · nome · Cargo** (no lugar de
+  Papel), com sinal de inativo.
+- **#U2:** edição vira **tela própria** (substitui a lista, com "← Voltar"), em 4
+  seções: **1) Perfil e gestão de acesso** (nome, papel, cargo, **senha com 👁**,
+  **ativo**, **clientes em checkbox**, foto, telefone, unidade, validade, observações)
+  · **2) Documentos** · **3) Permissões** · **4) Estratégia e camadas**.
+- `tsc` OK; **68 testes** (UsuarioResumo com campos novos).
+- Docs: BACKLOG #U1/#U2 ✅, PLANEJAMENTO, spec-fase-9 (evolução).
+
+**Arquivos:** `app/admin.py`, `frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #D3 logo SVG (sem fundo) + #HOME dashboard
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#D3:** `Logo.tsx` virou **SVG embutido** (wordmark "IBSystems" no gradiente da
+  marca, **fundo transparente**, maior, escalável). Prefere `/logo.svg` se houver o
+  logo oficial transparente. Resolve o "fundo cinza ao redor".
+- **#HOME:** logo **clicável** (Sidebar + header mobile) → `/inicio`. `Home.tsx`
+  reescrita como **dashboard**: saudação, **atividades de hoje** (técnico: as próprias
+  + "onde estará"; ADM: todas), **notificações** não lidas e **atalhos**. `tsc` OK.
+- Docs: BACKLOG #D3/#HOME ✅, PLANEJAMENTO, `frontend/public/README.md`.
+
+**Arquivos:** `frontend/src/{components/{Logo,Sidebar,Layout},pages/Home}.tsx`,
+`frontend/public/README.md`, `docs/projeto/**`.
+
+---
+
+## 2026-06-24 — Backlog: logo natural (#D3) + Home ao clicar no logo (#HOME)
+
+Adicionados ao [`BACKLOG.md`](BACKLOG.md) §G e ao plano:
+- **#D3** — logo em **SVG sem fundo** (PNG atual tem fundo cinza) e **maior**;
+  depende do **asset** transparente do usuário.
+- **#HOME** — clicar no **logo** abre **Home personalizada**: técnico vê **atividades
+  do dia**, **cliente** onde estará e infos relevantes; ADM vê resumo do dia.
+  Sem dependência nova (reusa cronograma/perfil/notificações).
+
+---
+
+## 2026-06-24 — Cronograma: #CR3 feriados (global) + #CR4 notificações
+
+**Branch:** `feat/fase-7-frontend`. **Decisões:** feriado **global**; notificar **só o técnico**.
+
+- **Modelo:** `Feriado` (data única, descrição) + `Notificacao` (usuario_id, tipo,
+  título, texto, ref_id, lida, criado_em). Tabelas novas via micro-migração.
+- **API:** feriados em `/cronograma/feriados[...]` (GET autenticado; POST/DELETE
+  `gerir_usuarios`); criar visita **gera notificação para o técnico**. Novo router
+  `/notificacoes` (GET próprias; marcar lida/todas). Registrados no `main.py`.
+- **Frontend:** `NotificacoesProvider` (badge + poll 60s); **sino** na Sidebar
+  (header + rail) com badge; página `/notificacoes`. Cronograma: feriado destaca o
+  dia (vermelho) + marcar/remover no card; fim de semana já em verde.
+- **Testes:** +2 (`test_feriado_crud`, `test_notificacao_ao_criar_atividade`) →
+  **68 passed**. `tsc` OK.
+
+**Arquivos:** `app/{modelos,cronograma,notificacoes,main}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,notificacoes/NotificacoesContext,pages/{Cronograma,Notificacoes},
+components/Sidebar,main,App}.tsx`, `docs/**`.
+
+---
+
+## 2026-06-24 — Cronograma: #CR1/#CR2/#CR5 + fim de semana (#CR3 parcial)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **`components/Avatar.tsx`** (novo): foto (`foto_url`) ou **iniciais** (Caíque
+  Miranda → CM). Sidebar refatorada para usá-lo (DRY).
+- **#CR1:** calendário renderiza só as semanas do mês vigente; dias de outros meses
+  ficam vazios (sem número).
+- **#CR2/#CR5:** cada dia mostra **avatar do técnico** + atividade (cor por status);
+  card do dia mostra avatar + “onde está” (cliente/unidade). Backend: `VisitaResumo`
+  ganhou `tecnico_foto`.
+- **#CR3 (parcial):** sábado/domingo com tom verde da logo (`--brand-2`, via CSS var
+  inline). Falta o **feriado** (tabela) — e o **#CR4 notificações** (próximo).
+- `tsc` OK; cronograma 4 testes ok.
+
+**Arquivos:** `app/cronograma.py`, `frontend/src/{components/{Avatar,Sidebar}.tsx,
+pages/Cronograma.tsx,lib/api.ts}`.
+
+---
+
+## 2026-06-24 — Backlog: otimizações do cronograma (#CR1–#CR5)
+
+Registradas no [`BACKLOG.md`](BACKLOG.md) §C como atividades em andamento:
+- **#CR1** grade só do mês vigente (sem dias do mês seguinte);
+- **#CR2** miniatura do dia (avatares/atividade);
+- **#CR3** feriados + sábado/domingo com cor da logo;
+- **#CR4** notificações (cria atividade → notificação + sino + tela) — fundação genérica;
+- **#CR5** "onde cada um está" + avatar (foto/iniciais, ex.: Caíque Miranda → CM).
+
+Ordem sem retrabalho: `Avatar` reutilizável → #CR2/#CR5 → #CR1/#CR3 (visual) →
+#CR3 feriado/#CR4 (backend). PLANEJAMENTO atualizado.
+
+---
+
+## 2026-06-24 — Etapa 3 — Cronograma (visitas) + card do dia (#C1); fix do logo
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix logo:** fallback “IBSystems” estava invisível (`text-transparent` sem o
+  gradiente do Tailwind antes do rebuild). Agora o gradiente vem por **CSS var inline**
+  no `Logo.tsx` (funciona sem rebuild). O `logo.png` ainda não existe → some que mostra
+  o fallback; colocar em `frontend/public/logo.png`.
+- **Modelo:** `Visita` (técnico, cliente, data, título, status, observações). Tabela
+  nova via micro-migração.
+- **API:** novo router `/cronograma` (GET por papel via `usuario_atual`; POST/PATCH/
+  DELETE com `gerir_usuarios`). `cronograma.py` registrado no `main.py`.
+- **Frontend:** `Cronograma.tsx` com dados reais + **card do dia** (modal): ADM vê
+  todos os técnicos e gerencia (add/remove, filtro por técnico); técnico vê os próprios.
+- **Testes:** `test_cronograma.py` (4) → **66 passed**. `tsc` OK.
+- Docs: spec [`spec-etapa3-cronograma.md`](specs/spec-etapa3-cronograma.md),
+  `MODELO_DADOS`/`ARQUITETURA`/`TESTES`/`BACKLOG`/`PLANEJAMENTO`/`INDICE`.
+
+**Arquivos:** `app/{modelos,cronograma,main}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx,components/Logo.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — Etapa 1 — Entidade Cliente (fundação) + índice de docs
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Índice mestre:** novo [`docs/INDICE.md`](../INDICE.md) — links de toda a
+  documentação + roteiro para recriar em outra linguagem.
+- **Modelo:** `Cliente` (nome único, unidade, ativo) + N:N `usuario_cliente`
+  (`Usuario.clientes_rel`). Coluna legada `Usuario.clientes` (CSV) aposentada.
+  Micro-migração cria a tabela nova no banco existente.
+- **API:** CRUD `/admin/clientes`; `UsuarioDetalhe.clientes` vira lista; update por
+  `cliente_ids`. (Fix: DELETE 204 sem `-> None` p/ não inferir response_model.)
+- **Frontend:** card **Clientes** com CRUD; edição de usuário com **clientes em
+  checkbox** (puxados do banco) → fecha o #U2. `tsc` OK.
+- **Testes:** `test_clientes_crud_e_associacao` → **62 passed**.
+- Docs: spec [`spec-etapa1-clientes.md`](specs/spec-etapa1-clientes.md), `MODELO_DADOS`,
+  `ARQUITETURA` (endpoints), `TESTES`, `BACKLOG`/`PLANEJAMENTO` atualizados.
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-24 — #D1/#D2 — Identidade visual IBSystems + tema claro/escuro
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#D1:** paleta da marca (ciano `--brand` → teal `--brand-2`; `--primary` teal) nos
+  tokens (`index.css` + `tailwind.config`). Logo IBSystems no topo da sidebar, header
+  mobile e login via `components/Logo.tsx` (usa `/logo.png`, **fallback** texto gradiente
+  se faltar). Falta só o usuário colocar `frontend/public/logo.png`.
+- **#D2:** `theme/ThemeContext.tsx` (classe `dark` no `<html>` + persistência `rag-tema`,
+  respeita `prefers-color-scheme`, aplicado antes do render p/ evitar flash). Toggle no
+  menu do usuário. Bloco `.dark` no `index.css`. `tsc` OK.
+- Doc: novo [`docs/DESIGN.md`](../DESIGN.md). Backlog #D1/#D2 = ✅.
+
+**Arquivos:** `frontend/src/{index.css,main.tsx,theme/ThemeContext,components/{Logo,
+Sidebar,Layout},pages/Login}.tsx`, `frontend/tailwind.config.js`, `frontend/public/README.md`,
+`docs/DESIGN.md`.
+
+---
+
+## 2026-06-24 — Documentação de portabilidade + backlog/planejamento
+
+**Branch:** `feat/fase-7-frontend`.
+
+A pedido do usuário (documentação exaustiva p/ recriar em outra linguagem):
+- **`docs/projeto/BACKLOG.md`**: tarefas pendentes (checklist) + **plano sequenciado
+  sem retrabalho** (fundação `Cliente` antes das telas dependentes) + DoD.
+- **`docs/MODELO_DADOS.md`**: ER (Mermaid) + entidades/campos/invariantes.
+- **`docs/FLUXOS.md`**: diagramas de sequência (auth, /query, streaming, feedback,
+  ingestão) + flowchart de precedência de estratégia/camadas.
+- **`docs/TECNOLOGIAS.md`**: stack, **parâmetros exatos** (0.78, e5, JWT…) e
+  **equivalentes** por ecossistema (Node/Java/.NET/Go) para portar.
+- Interligado em `ARQUITETURA.md` e `README.md`. Memória do projeto registrada
+  (documentação exaustiva como diretriz permanente).
+
+---
+
+## 2026-06-24 — Fase 8 (parte 9) — #2 Card de usuário: perfil + documentos com validade
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Modelo:** `Usuario` ganhou `foto_url, telefone, cargo, unidade, clientes,
+  observacoes, acesso_expira_em`; nova tabela `documento_tecnico` (nome + validade).
+  A micro-migração adicionou as colunas/tabela ao banco existente sem recriar.
+- **API ADM:** `GET/PATCH /usuarios/{id}` agora retornam `UsuarioDetalhe` (perfil +
+  documentos); novos `POST/DELETE /usuarios/{id}/documentos[/{doc_id}]`.
+- **Frontend:** card de edição com **foto** (upload → data URL), telefone, cargo,
+  **unidade** (local de trabalho), **clientes**, **validade de acesso**, observações;
+  seção de **documentos com validade** + badge de status (válido/vence em Nd/vencido)
+  e alerta "⚠️ N vencendo/vencido". 61 testes.
+
+**Pendente:** alerta global de vencimento na lista de usuários; #1 "exatidão/docs".
+
+**Arquivos:** `app/{modelos,admin}.py`, `tests/test_admin.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx}`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 8) — Painel ADM em cards + aba Cronograma; fixes
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix #4 (Failed to fetch):** backend caíra + banco antigo sem coluna `feedback`.
+  `db.criar_tabelas` aplica **micro-migração** (ALTER ADD para colunas nullable
+  faltantes); `backend.ps1` roda `db --init` sempre. Teste novo (60 no total).
+- **Fix #1:** sidebar `bg-muted/30` (transparente) vazava no drawer → `bg-muted`.
+- **#5 Painel ADM em cards:** hub com cards **Gerenciar usuários** (real),
+  **API keys**, **Banco de dados**, **Clientes** (placeholders) e **Auditoria**
+  (real). Voltar com `← Voltar`.
+- **#3 Cronograma:** nova aba lateral + página com **calendário mensal** (navegação
+  de mês, "Hoje", seletor de técnico/local, eventos de exemplo). Placeholder p/
+  integração futura.
+
+**Pendente:** #2 (mais campos no card de edição de usuário — aguardando definição
+dos campos) e #1 "exatidão/modelagem" dos docs.
+
+**Arquivos:** `app/db.py`, `scripts/backend.ps1`, `tests/test_persistencia.py`,
+`frontend/src/pages/{Admin,Cronograma}.tsx`, `frontend/src/components/Sidebar.tsx`,
+`frontend/src/App.tsx`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 7) — Sidebar responsiva + specs (frontend/arquitetura)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Responsivo:** `hooks/useMediaQuery.ts`; `Layout` vira drawer sobreposto (com ☰
+  no topo + backdrop) abaixo de 768px e barra fixa (full/rail) acima. `Sidebar`
+  refatorada para receber `variant`/callbacks (estado de aberta sobe p/ o Layout);
+  drawer fecha ao navegar. `tsc` OK.
+- **Specs:** novo `spec-fase-8-frontend-chat.md` (chat + layout responsivo) e
+  `spec-arquitetura.md` (contratos/invariantes); notas de evolução em fase-7 e fase-9.
+
+**Arquivos:** `frontend/src/{hooks/useMediaQuery.ts,components/{Layout,Sidebar}.tsx}`,
+`docs/projeto/specs/{spec-fase-8-frontend-chat,spec-arquitetura,spec-fase-7-frontend,
+spec-fase-9-painel-adm-frontend}.md`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 6) — Sidebar em grupos + abas novas; fix do menu
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **Fix:** menu do usuário usava `bg-popover` (token inexistente no tema) → sem
+  fundo, "quebrado". Trocado por `bg-card` + overlay de clique-fora.
+- **Sidebar em grupos** (estilo plataforma de cursos): **Consulta** vira grupo
+  colapsável com sub-itens **Nova consulta** / **Buscar consulta** + a lista de
+  **Consultas recentes**. Novas abas de topo: **Relatórios**, **Buscar Equipamento**,
+  **Documentos** (placeholders `components/Placeholder.tsx`).
+- Rotas `/relatorios`, `/equipamentos`, `/documentos`; rail recolhido com os ícones.
+- `tsc --noEmit` OK.
+
+**Arquivos:** `frontend/src/components/{Sidebar,Placeholder}.tsx`,
+`frontend/src/pages/{Relatorios,Equipamentos,Documentos}.tsx`, `App.tsx`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 5) — Layout estilo ChatGPT (sidebar + multi-consulta)
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Feito (frontend, typecheck OK):**
+- `ChatContext`: passa de **uma** conversa para **várias** (`Conversa[]` com título/
+  timestamps). `novaConsulta`, `selecionar`, `excluir`; streaming endereçado por id
+  da conversa (trocar de consulta no meio não embaralha). Persiste `rag-consultas-<id>`.
+- `components/Sidebar.tsx` (novo): barra colapsável (rail de ícones). Topo: **Nova
+  consulta** e **Buscar consulta** (filtra por título/conteúdo). Lista **Consultas
+  recentes** (clicar abre; lixeira exclui). Rodapé: usuário com menu (Início, Painel
+  ADM, Sair). Ícones SVG inline (sem libs).
+- `Layout`: vira sidebar + outlet (sem header). `App`: `/` e `*` → `/consulta`;
+  Home movido p/ `/inicio`.
+- `Consulta`: usa o ativo; estado vazio “Qual falha vamos diagnosticar?”.
+
+**Arquivos:** `frontend/src/{chat/ChatContext,components/Sidebar,components/Layout,
+pages/Consulta,App}.tsx`.
+
+---
+
+## 2026-06-24 — Fase 8 (parte 4) — Histórico persistente + buscas fora da página
+
+**Branch:** `feat/fase-7-frontend`.
+
+**Problema:** o histórico do chat vivia no estado local de `Consulta`; ao trocar de
+aba a página era desmontada e o histórico (e uma busca em andamento) se perdia.
+
+**Feito (frontend, não testado aqui além de typecheck):**
+- `chat/ChatContext.tsx` (novo): `ChatProvider` acima das rotas guarda `mensagens`
+  e roda `enviar`/`votar` (streaming incluso). Como não é desmontado ao navegar, o
+  histórico persiste e a busca **continua rodando em outra aba**. Persistência em
+  `localStorage` por usuário (`rag-historico-<id>`) → sobrevive a reload.
+- `main.tsx`: `<ChatProvider>` dentro de `<AuthProvider>`, em volta de `<App>`.
+- `pages/Consulta.tsx`: vira apresentacional (consome `useChat`); botão **Limpar**.
+- `tsc --noEmit` = OK.
+
+**Arquivos:** `frontend/src/{chat/ChatContext,pages/Consulta,main}.tsx`.
 
 ---
 

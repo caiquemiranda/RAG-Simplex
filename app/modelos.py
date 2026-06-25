@@ -12,11 +12,12 @@ Usa SQLAlchemy 2.0 direto (sem SQLModel) — ver decisão D-016.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     Boolean,
     Column,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -48,6 +49,22 @@ usuario_permissao = Table(
     Column("permissao_id", ForeignKey("permissao.id"), primary_key=True),
 )
 
+# Quais clientes cada técnico/usuário atende (N:N).
+usuario_cliente = Table(
+    "usuario_cliente",
+    Base.metadata,
+    Column("usuario_id", ForeignKey("usuario.id"), primary_key=True),
+    Column("cliente_id", ForeignKey("cliente.id"), primary_key=True),
+)
+
+# Técnicos atribuídos a uma visita/atividade (N:N) — #CR8 (vários técnicos por atividade).
+visita_tecnico = Table(
+    "visita_tecnico",
+    Base.metadata,
+    Column("visita_id", ForeignKey("visita.id", ondelete="CASCADE"), primary_key=True),
+    Column("usuario_id", ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -76,6 +93,19 @@ class Papel(Base):
         return any(p.chave == chave for p in self.permissoes)
 
 
+class Unidade(Base):
+    """Unidade operacional (base/regional) — D-021. Promove o antigo texto livre
+    `unidade` a entidade, para a "visão por unidade" do cronograma ter filtro robusto
+    (sem sofrer com variação de digitação). Usuários e clientes são vinculados a ela."""
+
+    __tablename__ = "unidade"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    cidade: Mapped[str | None] = mapped_column(String(120), default=None)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class Usuario(Base):
     __tablename__ = "usuario"
 
@@ -91,11 +121,135 @@ class Usuario(Base):
     # Permissões concedidas diretamente a este usuário, além das do papel.
     permissoes_extra: Mapped[list[Permissao]] = relationship(secondary=usuario_permissao)
 
+    # --- Perfil / gestão de acesso (Fase 8) — todos opcionais ---
+    foto_url: Mapped[str | None] = mapped_column(Text, default=None)        # URL de arquivo (/arquivos/...); data URL legado tolerado
+    telefone: Mapped[str | None] = mapped_column(String(40), default=None)
+    cargo: Mapped[str | None] = mapped_column(String(80), default=None)
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # legado (texto) — usar unidade_rel (D-021)
+    unidade_id: Mapped[int | None] = mapped_column(ForeignKey("unidade.id"), default=None)  # base do técnico
+    unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
+    clientes: Mapped[str | None] = mapped_column(Text, default=None)        # legado (CSV) — usar clientes_rel
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
+    acesso_expira_em: Mapped[date | None] = mapped_column(Date, default=None)
+    # Cliente fixo (padrão) onde o técnico fica todo dia, salvo relocação (#ALOC).
+    cliente_padrao_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
+    cliente_padrao: Mapped[Cliente | None] = relationship(foreign_keys=[cliente_padrao_id])
+
+    documentos: Mapped[list[DocumentoTecnico]] = relationship(
+        back_populates="usuario", cascade="all, delete-orphan"
+    )
+    # Clientes que este técnico atende (N:N) — substitui o CSV `clientes`.
+    clientes_rel: Mapped[list[Cliente]] = relationship(
+        secondary=usuario_cliente, back_populates="tecnicos"
+    )
+
     def tem_permissao(self, chave: str) -> bool:
         """Permissão efetiva = permissões do papel ∪ permissões extra do usuário."""
         if self.papel is not None and self.papel.tem_permissao(chave):
             return True
         return any(p.chave == chave for p in self.permissoes_extra)
+
+
+class Cliente(Base):
+    """Cliente atendido (prédio/condomínio/instalação). Técnicos são associados a
+    clientes (N:N) para definir acesso e o cronograma por local."""
+
+    __tablename__ = "cliente"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # legado (texto) — usar unidade_rel (D-021)
+    unidade_id: Mapped[int | None] = mapped_column(ForeignKey("unidade.id"), default=None)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Identidade visual do cliente (usada onde ele aparecer) — #CLIV.
+    cor: Mapped[str | None] = mapped_column(String(9), default=None)        # hex #RRGGBB
+    logo_url: Mapped[str | None] = mapped_column(Text, default=None)        # /arquivos/...
+
+    tecnicos: Mapped[list[Usuario]] = relationship(
+        secondary=usuario_cliente, back_populates="clientes_rel"
+    )
+    unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
+
+
+class Visita(Base):
+    """Visita/atividade agendada de um técnico no cronograma (por dia e cliente/local)."""
+
+    __tablename__ = "visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # Técnico responsável (1º da lista) — mantido para compat; a lista completa é `tecnicos`.
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
+    data: Mapped[date] = mapped_column(Date)
+    titulo: Mapped[str] = mapped_column(String(160))            # atividade do dia
+    status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|concluida|cancelada
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
+
+    usuario: Mapped[Usuario] = relationship()
+    cliente: Mapped[Cliente | None] = relationship()
+    tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
+
+
+class Feriado(Base):
+    """Feriado (global) — destaca o dia no cronograma."""
+
+    __tablename__ = "feriado"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data: Mapped[date] = mapped_column(Date, unique=True)
+    descricao: Mapped[str] = mapped_column(String(120))
+
+
+class Notificacao(Base):
+    """Notificação para um usuário (ex.: nova atividade no cronograma)."""
+
+    __tablename__ = "notificacao"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    tipo: Mapped[str] = mapped_column(String(40), default="cronograma")
+    titulo: Mapped[str] = mapped_column(String(160))
+    texto: Mapped[str | None] = mapped_column(Text, default=None)
+    ref_id: Mapped[int | None] = mapped_column(default=None)  # id da entidade relacionada
+    lida: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class DocumentoEquipamento(Base):
+    """Documento de equipamento/empresa (manual, datasheet…). Só admin sobe; #DOC1."""
+
+    __tablename__ = "documento_equipamento"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    categoria: Mapped[str] = mapped_column(String(20))           # empresa | marca | cliente
+    marca: Mapped[str] = mapped_column(String(80), default="")   # IBSystems / Simplex / Notifier…
+    cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)  # categoria cliente
+    nome: Mapped[str] = mapped_column(String(160))               # nome de exibição (editável)
+    url: Mapped[str] = mapped_column(Text)                       # /arquivos/...
+    oculto: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente | None] = relationship()
+
+
+class DocumentoTecnico(Base):
+    """Documento exigido do técnico (ex.: NR-10, ASO, crachá de cliente) com validade.
+
+    Próximo do vencimento, o painel ADM destaca para o admin providenciar a renovação.
+    """
+
+    __tablename__ = "documento_tecnico"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    nome: Mapped[str] = mapped_column(String(120))
+    validade: Mapped[date | None] = mapped_column(Date, default=None)
+
+    usuario: Mapped[Usuario] = relationship(back_populates="documentos")
 
 
 class Provedor(Base):

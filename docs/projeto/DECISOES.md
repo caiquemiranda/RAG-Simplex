@@ -139,3 +139,15 @@ latência → planejado para a Fase 11 (qualidade/hardening), não bloqueia.
 parseando os marcadores consistentes do guia: `**Explicação simples.**` → camada 🟢;
 `**Causas possíveis:**` + `**Passos de solução…**` → camada 🔧. Sem o marcador, o 1º
 parágrafo vira a camada simples. Garante ancoragem perfeita (zero alucinação).
+
+### D-021 ✅ "Local de trabalho" vira entidade Unidade
+**2026-06-24.** O campo livre `unidade` (em `Usuario`/`Cliente`) será promovido a uma
+**entidade `Unidade`** (cadastro: nome, cidade…), com usuário/cliente vinculados a ela.
+**Por quê:** a "visão por unidade" do cronograma agrupando por texto livre sofreria com
+variação de digitação; a entidade dá filtro robusto e evita retrabalho. **Quando:**
+criar a `Unidade` **antes** de implementar a "visão por unidade" (Etapa 1c do BACKLOG).
+Até lá, o texto livre permanece (sem migração obrigatória).
+**Implementado (2026-06-25):** entidade `Unidade` (nome/cidade/ativo); `Usuario.unidade_id`
+e `Cliente.unidade_id`; CRUD `/admin/unidades` (DELETE 409 se em uso); `GET /unidades`;
+filtro `GET /cronograma?unidade_id=` (pela unidade do cliente, inclui virtuais #ALOC). O
+texto livre legado segue como fallback de exibição.
