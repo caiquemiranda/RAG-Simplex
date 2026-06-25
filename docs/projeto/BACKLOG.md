@@ -106,7 +106,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### D. Modelo de dados (consolidação — evita retrabalho)
 - [x] Trocar `Usuario.clientes` (CSV placeholder) por **relação N:N `usuario↔cliente`**
       (`usuario_cliente`). Coluna CSV permanece como legado sem uso na API.
-- [ ] (Opcional) Entidade **Unidade/Local** se "local de trabalho" virar cadastro.
+- [x] Entidade **Unidade** (D-021): "local de trabalho" virou cadastro + visão por unidade.
+      Spec [`specs/spec-unidade.md`](specs/spec-unidade.md).
 
 ### E. Núcleo RAG / fases pendentes
 - [ ] **Fase 10** — estratégias de nuvem (Claude) + arena. dep: API key.
