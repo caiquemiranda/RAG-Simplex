@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 from app import __version__
 from app.admin import router as admin_router
 from app.arquivos import router as arquivos_router
+from app.banco import router as banco_router
 from app.biblioteca import router as biblioteca_router
 from app.cronograma import router as cronograma_router
 from app.notificacoes import router as notificacoes_router
@@ -60,6 +61,7 @@ app.include_router(cronograma_router)
 app.include_router(notificacoes_router)
 app.include_router(arquivos_router)
 app.include_router(biblioteca_router)
+app.include_router(banco_router)
 
 # Arquivos enviados (logos, documentos…) servidos em /arquivos.
 settings.arquivos_dir.mkdir(parents=True, exist_ok=True)

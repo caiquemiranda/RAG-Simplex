@@ -151,3 +151,15 @@ Até lá, o texto livre permanece (sem migração obrigatória).
 e `Cliente.unidade_id`; CRUD `/admin/unidades` (DELETE 409 se em uso); `GET /unidades`;
 filtro `GET /cronograma?unidade_id=` (pela unidade do cliente, inclui virtuais #ALOC). O
 texto livre legado segue como fallback de exibição.
+
+### D-022 ✅ Migrações de schema versionadas com Alembic
+**2026-06-25.** O banco **real/persistente** passa a ser gerido por **Alembic**
+(`alembic/versions/`, baseline `2bd03ef0fccf` = schema completo atual). `aplicar_migracoes()`
+roda `upgrade head`; o `env.py` usa `settings.database_url` (fonte única de URL) e
+`Base.metadata` (autogenerate). **Por quê:** a micro-migração ad-hoc (`_migrar_colunas`,
+só ALTER ADD de colunas nullable) não cobre renomear/remover/constraint e não tem histórico
+auditável — perigoso conforme o schema cresce. **Escopo:** Alembic é a fonte de verdade do
+banco real; a `criar_tabelas()`/`create_all` permanece para os **testes** (SQLite em memória)
+e como **fallback** quando o Alembic não está instalado (substituição **gradual** da ad-hoc).
+Banco real existente foi **stampado** na baseline (já tinha o schema via `create_all`).
+**Fluxo:** `python -m alembic revision --autogenerate -m "..."` → revisar → `upgrade head`.

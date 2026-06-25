@@ -12,6 +12,8 @@ chromadb==0.6.3
 
 # --- Banco relacional (persistência: usuários, papéis, config, auditoria) ---
 SQLAlchemy==2.0.23
+# Migrações de schema versionadas do banco real (D-022). Compatível com SQLA 2.0.
+alembic==1.13.1
 # Cifragem das chaves de provedor em repouso (Fernet)
 cryptography==45.0.4
 

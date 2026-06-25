@@ -66,7 +66,8 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
   [Etapa 3 — Cronograma](projeto/specs/spec-etapa3-cronograma.md) ·
   [#FILES — Arquivos](projeto/specs/spec-files-arquivos.md) ·
   [#DOC1 — Biblioteca](projeto/specs/spec-doc1-biblioteca.md) ·
-  [Unidade (D-021)](projeto/specs/spec-unidade.md)
+  [Unidade (D-021)](projeto/specs/spec-unidade.md) ·
+  [Alembic + Banco (D-022)](projeto/specs/spec-d022-alembic-banco.md)
 
 ## 7. Roteiro: recriar o sistema em outra linguagem
 1. **Requisitos & invariantes** → [`prd…`](prd_sistema_rag_simplex.md) + [`FLUXOS.md`](FLUXOS.md) §"invariantes".

@@ -140,6 +140,19 @@ export type AdminUsuarioDetalhe = AdminUsuario & {
   documentos: DocumentoTecnico[]
 }
 
+// Card "Banco de dados" (status + backup) — D-022.
+export type BancoTabela = { nome: string; linhas: number }
+export type BancoMigracao = { revisao_atual: string | null; revisao_head: string | null; em_dia: boolean }
+export type BancoStatus = {
+  backend: string
+  caminho: string | null
+  tamanho_bytes: number | null
+  tabelas: BancoTabela[]
+  migracao: BancoMigracao
+  blocos_indexados: number
+}
+export type BancoBackup = { arquivo: string; tamanho_bytes: number }
+
 export type AdminPapel = { nome: string; permissoes: string[] }
 export type AdminPermissao = { chave: string; descricao: string }
 export type AdminProvedor = {
@@ -368,6 +381,8 @@ export const api = {
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
+    banco: () => request<BancoStatus>('/admin/banco'),
+    bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),
     criarUnidade: (dados: UnidadeEntrada & { nome: string }) =>
       request<AdminUnidade>('/admin/unidades', { method: 'POST', body: JSON.stringify(dados) }),

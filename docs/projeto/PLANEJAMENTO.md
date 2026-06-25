@@ -4,7 +4,7 @@ Visão única de **onde estamos** e **para onde vamos**. Consolida o status das 
 ([`ROADMAP.md`](ROADMAP.md)) e o backlog/sequência ([`BACKLOG.md`](BACKLOG.md)).
 Para o que já existe, ver [`../ARQUITETURA.md`](../ARQUITETURA.md).
 
-**Atualizado:** 2026-06-25 · **Branch:** `feat/fase-7-frontend` · **Backend:** 82 testes ✅
+**Atualizado:** 2026-06-25 · **Branch:** `feat/robustez-alembic-banco` · **Backend:** 88 testes ✅
 
 ---
 
@@ -24,7 +24,8 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | **Cronograma — otimizações (#CR1–#CR5)** | ✅ (grade do mês, avatares, fim de semana, feriados, notificações) |
 | **Entidade Cliente (N:N técnico↔cliente) + card Clientes CRUD** | ✅ (Etapa 1) |
 | **Card ADM: API keys** (cadastrar/rotacionar, chave cifrada) | ✅ (Etapa 0a) |
-| Card ADM: Banco de dados | ⬜ placeholder |
+| **Card ADM: Banco de dados** (status + backup, D-022) | ✅ |
+| **Migrações Alembic** (banco real, baseline + upgrade, D-022) | ✅ |
 | **Identidade visual (IBSystems) + tema claro/escuro + logo SVG + #HOME** | ✅ |
 | **Redesign: lista de usuários (avatar+cargo) e edição como tela própria** | ✅ (#U1/#U2) |
 | **Etapa 0: alerta de docs · input centralizado · /me/documentos** | ✅ |
@@ -36,7 +37,7 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | **Foto do usuário por arquivo** (tira data URL do banco) | ✅ |
 | **Entidade `Unidade` (D-021) → visão por unidade** | ✅ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |
-| Fase 11 (reranker, RAGAS-lite, Alembic) | ⬜ |
+| Fase 11 (reranker, RAGAS-lite) · ~~Alembic~~ ✅ | ⬜ |
 
 ## 2. Status das fases
 
