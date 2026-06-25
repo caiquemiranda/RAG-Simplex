@@ -7,7 +7,7 @@ Router montado em `/cronograma`. Visão por papel:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -71,6 +71,7 @@ class VisitaResumo(BaseModel):
     titulo: str
     status: str
     observacoes: str | None = None
+    fixo: bool = False                # alocação fixa virtual (#ALOC), não é uma visita real
 
 
 def _resumo(v: Visita) -> VisitaResumo:
@@ -108,13 +109,43 @@ def listar(
     usuario: Usuario = Depends(usuario_atual),
     sessao: Session = Depends(get_session),
 ) -> list[VisitaResumo]:
+    admin = usuario.tem_permissao("gerir_usuarios")
     consulta = select(Visita).where(Visita.data >= de, Visita.data <= ate)
     # Técnico (sem gestão) só vê visitas em que está atribuído.
-    if not usuario.tem_permissao("gerir_usuarios"):
+    if not admin:
         consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
     elif tecnico_id is not None:
         consulta = consulta.where(Visita.tecnicos.any(id=tecnico_id))
-    return [_resumo(v) for v in sessao.scalars(consulta.order_by(Visita.data))]
+    reais = list(sessao.scalars(consulta.order_by(Visita.data)))
+
+    # #ALOC: técnicos com cliente fixo aparecem no cliente nos dias SEM visita explícita.
+    if admin:
+        q_fix = select(Usuario).where(Usuario.cliente_padrao_id.is_not(None))
+        if tecnico_id is not None:
+            q_fix = q_fix.where(Usuario.id == tecnico_id)
+        fixos = list(sessao.scalars(q_fix))
+    else:
+        fixos = [usuario] if usuario.cliente_padrao_id else []
+
+    ocupado = {(v.data, t.id) for v in reais for t in v.tecnicos}
+    virtuais: list[VisitaResumo] = []
+    for tec in fixos:
+        cli = tec.cliente_padrao
+        if cli is None:
+            continue
+        dia = de
+        while dia <= ate:
+            if (dia, tec.id) not in ocupado:
+                mini = TecnicoMini(id=tec.id, nome=tec.nome or tec.email, foto=tec.foto_url)
+                virtuais.append(VisitaResumo(
+                    id=0, usuario_id=tec.id, tecnico_nome=mini.nome, tecnico_foto=mini.foto,
+                    tecnicos=[mini], cliente_id=cli.id, cliente_nome=cli.nome,
+                    cliente_cor=cli.cor, cliente_logo=cli.logo_url, unidade=cli.unidade,
+                    data=dia, titulo="(fixo)", status="fixo", fixo=True,
+                ))
+            dia += timedelta(days=1)
+
+    return [_resumo(v) for v in reais] + virtuais
 
 
 def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:

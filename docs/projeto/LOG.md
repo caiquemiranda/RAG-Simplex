@@ -36,6 +36,23 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — #ALOC: cliente fixo por técnico + #DOC2/3/4 no backlog
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#ALOC:** `Usuario.cliente_padrao_id` (cliente fixo). `GET /cronograma` injeta
+  **alocações virtuais** (`fixo=true`, id=0) para técnicos fixos nos dias **sem** visita;
+  visita real **sobrescreve**. Editável em *Perfil e gestão*; card do dia mostra fixos
+  read-only com aviso de relocação. Migração automática. Teste `test_cliente_fixo_alocacao`.
+- **Backlog (lote 3 §J):** **#DOC2** (Documentos como grupo na sidebar + cards),
+  **#DOC3** (documentos de cliente), **#DOC4** (busca em documentos).
+- **80 passed**; `tsc` OK. Docs: MODELO_DADOS, spec-etapa3, TESTES, BACKLOG.
+
+**Arquivos:** `app/{modelos,admin,cronograma}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/{Cronograma,Admin}.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #CR8: múltiplos técnicos por atividade (Visita N:N)
 
 **Branch:** `feat/fase-7-frontend`.

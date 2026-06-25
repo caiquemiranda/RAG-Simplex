@@ -82,6 +82,7 @@ class UsuarioAtualizar(BaseModel):
     cargo: str | None = None
     unidade: str | None = None
     cliente_ids: list[int] | None = None   # clientes atendidos (substitui o CSV)
+    cliente_padrao_id: int | None = None   # cliente fixo (#ALOC)
     observacoes: str | None = None
     acesso_expira_em: date | None = None
 
@@ -117,6 +118,8 @@ class UsuarioDetalhe(UsuarioResumo):
     cargo: str | None = None
     unidade: str | None = None
     clientes: list[ClienteResumo] = []     # clientes atendidos (relação)
+    cliente_padrao_id: int | None = None   # cliente fixo (#ALOC)
+    cliente_padrao_nome: str | None = None
     observacoes: str | None = None
     acesso_expira_em: date | None = None
     documentos: list[DocumentoResumo] = []
@@ -197,9 +200,12 @@ def _detalhe_usuario(u: Usuario) -> UsuarioDetalhe:
         foto_url=u.foto_url, telefone=u.telefone, cargo=u.cargo, unidade=u.unidade,
         observacoes=u.observacoes, acesso_expira_em=u.acesso_expira_em,
         clientes=[
-            ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo)
+            ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo,
+                          cor=c.cor, logo_url=c.logo_url)
             for c in u.clientes_rel
         ],
+        cliente_padrao_id=u.cliente_padrao_id,
+        cliente_padrao_nome=u.cliente_padrao.nome if u.cliente_padrao else None,
         documentos=[
             DocumentoResumo(id=d.id, nome=d.nome, validade=d.validade) for d in u.documentos
         ],
@@ -300,6 +306,11 @@ def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
         usuario.clientes_rel = [
             c for c in sessao.scalars(select(Cliente).where(Cliente.id.in_(dados.cliente_ids)))
         ]
+    if "cliente_padrao_id" in dados.model_fields_set:
+        cid = dados.cliente_padrao_id
+        if cid is not None and sessao.get(Cliente, cid) is None:
+            raise HTTPException(status_code=404, detail="Cliente fixo não encontrado.")
+        usuario.cliente_padrao_id = cid
     sessao.commit()
     sessao.refresh(usuario)
     return _detalhe_usuario(usuario)

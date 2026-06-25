@@ -151,6 +151,23 @@ def test_multiplos_tecnicos_por_atividade(ctx):
                         json={"status": "concluida"}).status_code == 200
 
 
+def test_cliente_fixo_alocacao(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    # Define o cliente fixo do tec.
+    client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_padrao_id": ids["cliente"]})
+
+    # Sem visita explícita: aparece como fixo no cliente (para o próprio técnico).
+    tec = _login(client, "tec@x.com")
+    vis = client.get("/cronograma?de=2026-07-10&ate=2026-07-10", headers=tec).json()
+    assert len(vis) == 1 and vis[0]["fixo"] is True and vis[0]["cliente_id"] == ids["cliente"]
+
+    # Com visita explícita naquele dia: sobrescreve (sem fixo duplicado).
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "Relocado"})
+    vis = client.get("/cronograma?de=2026-07-10&ate=2026-07-10", headers=tec).json()
+    assert len(vis) == 1 and vis[0]["fixo"] is False and vis[0]["titulo"] == "Relocado"
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

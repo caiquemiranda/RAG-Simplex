@@ -33,6 +33,7 @@ type PerfilForm = {
   cargo: string
   unidade: string
   clienteIds: Set<number>
+  clientePadraoId: number | ''
   observacoes: string
   acesso_expira_em: string
 }
@@ -173,6 +174,7 @@ export default function Admin() {
         cargo: det.cargo ?? '',
         unidade: det.unidade ?? '',
         clienteIds: new Set(det.clientes.map((c) => c.id)),
+        clientePadraoId: det.cliente_padrao_id ?? '',
         observacoes: det.observacoes ?? '',
         acesso_expira_em: det.acesso_expira_em ?? '',
       })
@@ -197,6 +199,7 @@ export default function Admin() {
         cargo: perfil?.cargo ?? '',
         unidade: perfil?.unidade ?? '',
         cliente_ids: perfil ? Array.from(perfil.clienteIds) : undefined,
+        cliente_padrao_id: perfil ? (perfil.clientePadraoId === '' ? null : perfil.clientePadraoId) : undefined,
         observacoes: perfil?.observacoes ?? '',
         acesso_expira_em: perfil?.acesso_expira_em || null,
       })
@@ -511,6 +514,15 @@ export default function Admin() {
                       </label>
                       <div className="space-y-1"><Label>Local de trabalho / unidade</Label><Input value={perfil.unidade} onChange={(e) => setPerfil({ ...perfil, unidade: e.target.value })} /></div>
                       <div className="space-y-1"><Label>Validade do acesso</Label><Input type="date" value={perfil.acesso_expira_em} onChange={(e) => setPerfil({ ...perfil, acesso_expira_em: e.target.value })} /></div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label>Cliente fixo (padrão no cronograma)</Label>
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                value={perfil.clientePadraoId}
+                                onChange={(e) => setPerfil({ ...perfil, clientePadraoId: e.target.value ? Number(e.target.value) : '' })}>
+                          <option value="">— nenhum —</option>
+                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                        </select>
+                      </div>
                       <div className="space-y-1 sm:col-span-2">
                         <Label>Clientes atendidos</Label>
                         {clientes.length === 0 ? (

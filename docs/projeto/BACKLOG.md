@@ -132,15 +132,19 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       (`Visita.tecnicos`; `usuario_id` = responsável). Criar com **vários técnicos**
       (checkbox), célula/card do dia mostram todos, **notifica todos**, **GET** filtra por
       atribuição, **qualquer atribuído fecha**. Backfill na migração. Spec spec-etapa3.
-- [ ] **#ALOC — Alocação fixa de técnicos a clientes** (item 2): alguns técnicos ficam
-      **sempre em atividade** num cliente por padrão. Opção: flag na relação
-      `usuario_cliente` (ex.: `fixo`) ou entidade de alocação recorrente; o calendário
-      mostra esses técnicos no cliente por padrão. **DECISÃO:** só **visual** (exibir os
-      fixos do cliente no dia) **ou** **gera visitas recorrentes**? dep: Cliente ✅ +
-      recomendável **#CR8** antes (vários técnicos por cliente).
-- [ ] **#DOC2 — Documentos como grupo na sidebar (sub-abas)** (item 3): a aba **Documentos**
-      vira **grupo colapsável** com sub-itens (Empresa + cada marca), igual a
-      **Relatórios↔clientes** (#R1). *Reusa o padrão de grupo da sidebar.* dep: #DOC1 ✅.
+- [x] **#ALOC — Cliente fixo (padrão) por técnico** (item 2): `Usuario.cliente_padrao_id`
+      (editável em Perfil); `GET /cronograma` injeta **alocações virtuais** (`fixo`) nos
+      dias sem visita explícita; visita real **sobrescreve** (relocação); card do dia
+      mostra fixos read-only. Spec spec-etapa3.
+
+### J. Documentos — evolução (2026-06-24, lote 3)
+- [ ] **#DOC2 — Documentos como grupo na sidebar + visão em cards** (item 3): a aba
+      **Documentos** vira **grupo colapsável** na sidebar e a visão geral usa **cards**
+      (Empresa, Clientes, Marcas), como **Relatórios↔clientes** (#R1). dep: #DOC1 ✅.
+- [ ] **#DOC3 — Documentos de cliente** (item 2): nova categoria **`cliente`** (docs para
+      trabalhar no cliente), vinculados ao `cliente_id`; card por cliente. dep: #DOC1 ✅ + Cliente ✅.
+- [ ] **#DOC4 — Busca nos documentos** (item 3): filtro por **nome** (e marca/cliente)
+      para achar rápido quando houver muitos. dep: #DOC1 ✅.
 
 ---
 

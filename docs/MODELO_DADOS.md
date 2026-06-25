@@ -44,6 +44,7 @@ erDiagram
     text clientes "LEGADO (CSV) — usar relação usuario_cliente"
     text observacoes
     date acesso_expira_em
+    int cliente_padrao_id FK "cliente fixo (#ALOC)"
   }
   CLIENTE {
     int id PK

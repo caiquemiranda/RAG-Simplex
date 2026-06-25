@@ -33,6 +33,13 @@ criada pela micro-migração no banco existente.
   (`Feriado`; marcar/remover no card do dia); **#CR4** ao criar atividade gera
   **notificação só para o técnico** (router `/notificacoes`, sino com badge, tela).
 
+## Cliente fixo / alocação (#ALOC, 2026-06-24)
+`Usuario.cliente_padrao_id` = cliente onde o técnico fica **todo dia** por padrão. O
+`GET /cronograma` injeta **alocações virtuais** (`fixo=true`, `id=0`, status `fixo`) para
+cada técnico fixo nos dias **sem** visita explícita; uma visita real naquele dia
+**sobrescreve** (relocação). Editável em *Perfil e gestão* (admin). No card do dia, as
+fixas são **read-only**; criar atividade reloca.
+
 ## Múltiplos técnicos por atividade (#CR8, 2026-06-24)
 N:N `visita_tecnico` (`Visita.tecnicos`); `usuario_id` = responsável (1º, compat).
 `VisitaIn.usuario_ids` (1+); `VisitaResumo.tecnicos[]` (+ `tecnico_nome/foto` do 1º).

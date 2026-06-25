@@ -261,7 +261,19 @@ export default function Cronograma() {
 
             <div className="max-h-72 space-y-2 overflow-y-auto">
               {visitasDoDia.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}
-              {visitasDoDia.map((v) => (
+              {visitasDoDia.map((v) =>
+                v.fixo ? (
+                  <div key={`fixo-${v.usuario_id}`} className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 p-2 text-sm">
+                    <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{v.tecnico_nome}</span>
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">fixo</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}</div>
+                    </div>
+                  </div>
+                ) : (
                 <div key={v.id} className="flex gap-2 rounded-lg border p-2 text-sm">
                   <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -325,7 +337,11 @@ export default function Cronograma() {
                     )}
                   </div>
                 </div>
-              ))}
+                ),
+              )}
+              {podeGerir && visitasDoDia.some((v) => v.fixo) && (
+                <p className="text-[11px] text-muted-foreground">Técnicos “fixos” aparecem por padrão; adicione uma atividade para <strong>relocar</strong> alguém neste dia.</p>
+              )}
             </div>
 
             {podeGerir && (

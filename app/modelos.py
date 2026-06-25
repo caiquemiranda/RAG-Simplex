@@ -116,6 +116,9 @@ class Usuario(Base):
     clientes: Mapped[str | None] = mapped_column(Text, default=None)        # legado (CSV) — usar clientes_rel
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
     acesso_expira_em: Mapped[date | None] = mapped_column(Date, default=None)
+    # Cliente fixo (padrão) onde o técnico fica todo dia, salvo relocação (#ALOC).
+    cliente_padrao_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
+    cliente_padrao: Mapped[Cliente | None] = relationship(foreign_keys=[cliente_padrao_id])
 
     documentos: Mapped[list[DocumentoTecnico]] = relationship(
         back_populates="usuario", cascade="all, delete-orphan"

@@ -86,6 +86,7 @@ export type Visita = {
   titulo: string
   status: string
   observacoes: string | null
+  fixo: boolean
 }
 export type NovaVisita = {
   usuario_ids: number[]
@@ -113,6 +114,8 @@ export type AdminUsuarioDetalhe = AdminUsuario & {
   cargo: string | null
   unidade: string | null
   clientes: AdminCliente[]
+  cliente_padrao_id: number | null
+  cliente_padrao_nome: string | null
   observacoes: string | null
   acesso_expira_em: string | null
   documentos: DocumentoTecnico[]
@@ -163,6 +166,7 @@ export type AtualizaUsuario = {
   cargo?: string | null
   unidade?: string | null
   cliente_ids?: number[]
+  cliente_padrao_id?: number | null
   observacoes?: string | null
   acesso_expira_em?: string | null
 }
