@@ -4,6 +4,24 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (3): #EQP-1 — entidade Equipamento + import CSV (backend)
+
+**Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md).
+
+- **Modelo:** `Equipamento` (cliente_id cascade; `painel, loop, add, type, model`, `criado_em`);
+  `Cliente.equipamentos`. Migração Alembic `2681a9da4b28` (limpei o ruído de FK do SQLite).
+- **API (`admin.py`):** `GET /admin/clientes/{id}/equipamentos`, `POST .../importar`
+  (CSV multipart; delimitador `,`/`;` via Sniffer; cabeçalho case-insensitive; `substituir`),
+  `DELETE /admin/equipamentos/{id}`. Perm. `gerir_usuarios`.
+- **api.ts:** tipos `Equipamento`/`ImportEquipResultado` + `equipamentos/importarEquipamentos/
+  removerEquipamento`. (UI fica no #CLI-PG.)
+- **Teste** `test_equipamentos_import_csv`. **94 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin}.py`, `alembic/versions/2681a9da4b28_*.py`,
+`tests/test_admin.py`, `frontend/src/lib/api.ts`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (2): #CR-FILTROS — Equipe/Clientes (multi) + #ALOC só dias úteis
 
 **Branch:** `feat/lote5-fixes`.

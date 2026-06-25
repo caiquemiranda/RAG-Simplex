@@ -14,7 +14,7 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
-  **Backend: 93 testes** passando.
+  **Backend: 94 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -41,9 +41,10 @@
 Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ Lote 4 mergeado: #FIX-TOKEN, #FIX-EMAIL, #FER-1.
 - ✅ **#ATV-1** — página de atividade (status, técnicos, **galeria de imagens**, **comentários**).
-- ⏭️ **#EQP-1** (fundação: entidade `Equipamento` + import CSV por cliente) →
-  **#CLI-PG** (página do cliente com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos"
-  com sub-abas + lista por cliente).
+- ✅ **#CR-FILTROS** — filtros Equipe/Clientes (multi) + #ALOC só seg–sex.
+- ✅ **#EQP-1** (backend) — entidade `Equipamento` + import CSV por cliente.
+- ⏭️ **#CLI-PG** (página do cliente com endereço/contatos + UI dos equipamentos) →
+  **#EQP-2** (sidebar "Equipamentos" com sub-abas + lista por cliente).
 
 **Depois do Lote 5:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
 *requer API key*) · #1 (alinhamento ChatGPT).

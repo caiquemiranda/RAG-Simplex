@@ -80,6 +80,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | POST/DELETE | `/admin/usuarios/{id}/documentos[/{doc_id}]` | `gerir_usuarios` | Documentos do técnico (validade). |
 | GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário; `unidade_id` D-021). |
 | GET/POST/PATCH/DELETE | `/admin/unidades[/{id}]` | `gerir_usuarios` | CRUD de **unidades** (base/regional, D-021); DELETE bloqueia se em uso (409). |
+| GET/POST | `/admin/clientes/{id}/equipamentos[/importar]` · DELETE `/admin/equipamentos/{id}` | `gerir_usuarios` | **Equipamentos** do cliente (#EQP-1): listar + **import CSV** (`painel,loop,add,type,model`; `substituir`). |
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |

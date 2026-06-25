@@ -194,6 +194,33 @@ def test_me_documentos(ctx):
     assert client.get("/me/documentos", headers=admin).json() == []
 
 
+def test_equipamentos_import_csv(ctx):
+    """#EQP-1: importa equipamentos por CSV (vírgula e ponto-e-vírgula), substitui, remove."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Prédio A"}).json()["id"]
+
+    csv1 = "painel,loop,add,type,model\n4100,1,12,smoke,4098-9714\n4100,1,13,heat,4098-9733\n"
+    r = client.post(f"/admin/clientes/{cid}/equipamentos/importar", headers=admin,
+                    files={"arquivo": ("eq.csv", csv1.encode(), "text/csv")})
+    assert r.status_code == 201 and r.json()["importados"] == 2
+    lista = client.get(f"/admin/clientes/{cid}/equipamentos", headers=admin).json()
+    assert len(lista) == 2 and lista[0]["model"] == "4098-9714" and lista[0]["add"] == "12"
+
+    # Ponto-e-vírgula + substituir → troca a lista.
+    csv2 = "painel;loop;add;type;model\nF3200;2;5;mcp;ABC\n"
+    r = client.post(f"/admin/clientes/{cid}/equipamentos/importar?substituir=true", headers=admin,
+                    files={"arquivo": ("eq2.csv", csv2.encode(), "text/csv")})
+    assert r.status_code == 201 and r.json()["total"] == 1
+    lista = client.get(f"/admin/clientes/{cid}/equipamentos", headers=admin).json()
+    assert len(lista) == 1 and lista[0]["type"] == "mcp"
+
+    # Remover um equipamento; não-admin barrado.
+    assert client.delete(f"/admin/equipamentos/{lista[0]['id']}", headers=admin).status_code == 204
+    assert client.get(f"/admin/clientes/{cid}/equipamentos", headers=admin).json() == []
+    assert client.get(f"/admin/clientes/{cid}/equipamentos", headers=_login(client, "op@x.com")).status_code == 403
+
+
 def test_lista_marca_documento_vencendo(ctx):
     from datetime import date, timedelta
 

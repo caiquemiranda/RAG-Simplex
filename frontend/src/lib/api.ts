@@ -72,6 +72,10 @@ export type AdminCliente = {
 export type ClienteEntrada = { nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
 
+// Equipamento do cliente (#EQP-1) — importado por CSV.
+export type Equipamento = { id: number; painel: string; loop: string; add: string; type: string; model: string }
+export type ImportEquipResultado = { importados: number; total: number }
+
 // Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
 export type AdminUnidade = { id: number; nome: string; cidade: string | null; ativo: boolean }
 export type UnidadeEntrada = { nome?: string; cidade?: string | null; ativo?: boolean }
@@ -403,6 +407,12 @@ export const api = {
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
+    // Equipamentos do cliente (#EQP-1)
+    equipamentos: (clienteId: number) => request<Equipamento[]>(`/admin/clientes/${clienteId}/equipamentos`),
+    importarEquipamentos: (clienteId: number, file: File, substituir = false) =>
+      uploadMultipart<ImportEquipResultado>(`/admin/clientes/${clienteId}/equipamentos/importar?substituir=${substituir}`, file),
+    removerEquipamento: (eqpId: number) =>
+      request<void>(`/admin/equipamentos/${eqpId}`, { method: 'DELETE' }),
     banco: () => request<BancoStatus>('/admin/banco'),
     bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),

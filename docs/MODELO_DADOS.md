@@ -20,6 +20,7 @@ erDiagram
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
   VISITA ||--o{ COMENTARIO_VISITA : "1:N (cascade, #ATV-1)"
   VISITA ||--o{ ANEXO_VISITA : "1:N (cascade, #ATV-1)"
+  CLIENTE ||--o{ EQUIPAMENTO : "1:N (cascade, #EQP-1)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -74,6 +75,16 @@ erDiagram
     string titulo "atividade"
     string status "agendada|concluida|cancelada"
     text observacoes
+  }
+  EQUIPAMENTO {
+    int id PK
+    int cliente_id FK "cascade"
+    string painel
+    string loop
+    string add "endereço no loop"
+    string type
+    string model
+    datetime criado_em
   }
   COMENTARIO_VISITA {
     int id PK
@@ -183,6 +194,13 @@ Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), c
 atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
 **Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
 Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### Equipamento (#EQP-1)
+Dispositivo do painel de incêndio de um **cliente** (`cliente_id`, cascade), importado por
+**CSV**. Colunas: `painel`, `loop`, `add` (endereço no loop), `type`, `model`. Fases
+seguintes (adiadas): `ultima_manutencao`/`ultimo_teste` e histórico do painel. A UI (lista +
+upload) vive na **página do cliente** (#CLI-PG) e na sidebar "Equipamentos" (#EQP-2).
+Ver [`projeto/specs/spec-eqp1-equipamento-csv.md`](projeto/specs/spec-eqp1-equipamento-csv.md).
 
 ### ComentarioVisita / AnexoVisita (página da atividade, #ATV-1)
 A atividade (`Visita`) tem uma **página própria** com **comentários** e **anexos de

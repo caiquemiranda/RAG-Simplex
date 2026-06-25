@@ -13,7 +13,10 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import csv
+import io
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,6 +29,7 @@ from app.modelos import (
     Cliente,
     ConfigEstrategia,
     DocumentoTecnico,
+    Equipamento,
     LogConsulta,
     Papel,
     Permissao,
@@ -481,6 +485,93 @@ def remover_cliente(cliente_id: int,
     if c is None:
         raise HTTPException(status_code=404, detail="Cliente não encontrado.")
     sessao.delete(c)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Equipamentos do cliente (#EQP-1) — import CSV                                 #
+# --------------------------------------------------------------------------- #
+_EQP_COLUNAS = ("painel", "loop", "add", "type", "model")
+
+
+class EquipamentoResumo(BaseModel):
+    id: int
+    painel: str
+    loop: str
+    add: str
+    type: str
+    model: str
+
+
+class ImportEquipOut(BaseModel):
+    importados: int
+    total: int
+
+
+def _resumo_equip(e: Equipamento) -> EquipamentoResumo:
+    return EquipamentoResumo(id=e.id, painel=e.painel, loop=e.loop, add=e.add,
+                             type=e.type, model=e.model)
+
+
+def _cliente_ou_404(sessao: Session, cliente_id: int) -> Cliente:
+    c = sessao.get(Cliente, cliente_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado.")
+    return c
+
+
+@router.get("/clientes/{cliente_id}/equipamentos", response_model=list[EquipamentoResumo])
+def listar_equipamentos(cliente_id: int,
+                        _: Usuario = Depends(requer("gerir_usuarios")),
+                        sessao: Session = Depends(get_session)) -> list[EquipamentoResumo]:
+    c = _cliente_ou_404(sessao, cliente_id)
+    return [_resumo_equip(e) for e in c.equipamentos]
+
+
+@router.post("/clientes/{cliente_id}/equipamentos/importar", response_model=ImportEquipOut,
+             status_code=status.HTTP_201_CREATED)
+async def importar_equipamentos(cliente_id: int,
+                                arquivo: UploadFile = File(...),
+                                substituir: bool = False,
+                                _: Usuario = Depends(requer("gerir_usuarios")),
+                                sessao: Session = Depends(get_session)) -> ImportEquipOut:
+    c = _cliente_ou_404(sessao, cliente_id)
+    bruto = (await arquivo.read()).decode("utf-8-sig", errors="replace")
+    if not bruto.strip():
+        raise HTTPException(status_code=400, detail="CSV vazio.")
+    # Delimitador automático (vírgula ou ponto-e-vírgula).
+    try:
+        dialeto = csv.Sniffer().sniff(bruto.splitlines()[0], delimiters=",;")
+        leitor = csv.DictReader(io.StringIO(bruto), dialect=dialeto)
+    except csv.Error:
+        leitor = csv.DictReader(io.StringIO(bruto))
+    if not leitor.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV sem cabeçalho.")
+    mapa = {(nome or "").strip().lower(): nome for nome in leitor.fieldnames}
+
+    if substituir:
+        c.equipamentos.clear()
+        sessao.flush()
+
+    importados = 0
+    for linha in leitor:
+        valores = {col: (linha.get(mapa.get(col, ""), "") or "").strip() for col in _EQP_COLUNAS}
+        if not any(valores.values()):
+            continue  # ignora linha vazia
+        c.equipamentos.append(Equipamento(**valores))
+        importados += 1
+    sessao.commit()
+    return ImportEquipOut(importados=importados, total=len(c.equipamentos))
+
+
+@router.delete("/equipamentos/{equipamento_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_equipamento(equipamento_id: int,
+                        _: Usuario = Depends(requer("gerir_usuarios")),
+                        sessao: Session = Depends(get_session)):
+    e = sessao.get(Equipamento, equipamento_id)
+    if e is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    sessao.delete(e)
     sessao.commit()
 
 

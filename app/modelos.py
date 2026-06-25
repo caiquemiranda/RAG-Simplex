@@ -169,6 +169,33 @@ class Cliente(Base):
         secondary=usuario_cliente, back_populates="clientes_rel"
     )
     unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
+    # Equipamentos do cliente (importados por CSV) — #EQP-1.
+    equipamentos: Mapped[list[Equipamento]] = relationship(
+        back_populates="cliente", cascade="all, delete-orphan"
+    )
+
+
+class Equipamento(Base):
+    """Equipamento (dispositivo do painel) de um cliente — #EQP-1.
+
+    Colunas vindas do CSV: `painel`, `loop`, `add` (endereço no loop), `type`, `model`.
+    Fases seguintes (adiadas): última manutenção / último teste; histórico do painel.
+    """
+
+    __tablename__ = "equipamento"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    painel: Mapped[str] = mapped_column(String(80), default="")
+    loop: Mapped[str] = mapped_column(String(40), default="")
+    add: Mapped[str] = mapped_column(String(40), default="")     # endereço do dispositivo
+    type: Mapped[str] = mapped_column(String(80), default="")
+    model: Mapped[str] = mapped_column(String(80), default="")
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
 
 
 class Visita(Base):

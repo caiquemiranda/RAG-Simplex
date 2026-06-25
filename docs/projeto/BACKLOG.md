@@ -37,11 +37,12 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       [`specs/spec-atv1-pagina-atividade.md`](specs/spec-atv1-pagina-atividade.md).
 
 **Equipamentos & cliente (fundação Equipamento primeiro):**
-- [ ] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade
-      `Equipamento` (`cliente_id`; colunas **painel, loop, add, type, model**); **upload de CSV**
-      para popular a lista do cliente. **Fases seguintes:** (b) +colunas **última manutenção**
-      e **último teste**; (c) **histórico do painel** do cliente — *adiado* (usuário vai ajustar
-      os dados baixados antes). ⚑ *Fundação* de #CLI-PG e #EQP-2.
+- [x] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade
+      `Equipamento` (`cliente_id`; **painel, loop, add, type, model**); endpoints
+      `GET/POST /admin/clientes/{id}/equipamentos[/importar]` (CSV, delimitador auto,
+      `substituir`) + DELETE. Migração `2681a9da4b28`. Spec
+      [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md). **Fases seguintes
+      adiadas:** (b) colunas última manutenção/teste; (c) histórico do painel. UI no #CLI-PG.
 - [ ] **#CLI-PG — página do cliente (como a do usuário)** (item 6): editar cliente em
       **página própria** com **endereço, contatos** e demais campos; dentro dela, a **lista de
       equipamentos** (CSV do #EQP-1). dep: #EQP-1.
