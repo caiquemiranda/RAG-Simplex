@@ -4,6 +4,19 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Foto do usuário por arquivo (tira data URL do banco)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- Frontend Admin: `onFoto` deixa de usar `FileReader`/data URL e passa a fazer
+  **upload real** via `uploadArquivo(file, "usuarios")` (#FILES) → grava a **URL**
+  (`/arquivos/usuarios/...`) em `foto_url`. Banco fica leve; `Avatar` já resolve o path.
+- Backend já aceitava `foto_url` string (sem mudança de schema). Comentário do modelo
+  atualizado; data URL legado continua tolerado na exibição.
+- Teste `test_perfil_e_documentos_do_usuario` agora afirma `foto_url=/arquivos/...`. **81 passed**; `tsc` OK.
+
+**Arquivos:** `frontend/src/pages/Admin.tsx`, `app/modelos.py`, `tests/test_admin.py`.
+
 Formato de cada entrada:
 `## AAAA-MM-DD — Fase N — título` · o que foi feito · decisões · arquivos.
 

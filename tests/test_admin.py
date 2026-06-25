@@ -133,13 +133,16 @@ def test_perfil_e_documentos_do_usuario(ctx):
     admin = _login(client, "admin@x.com")
     uid = ids["tec"]
 
-    # Atualiza campos de perfil/acesso.
+    # Atualiza campos de perfil/acesso. A foto é gravada como URL de arquivo
+    # (caminho /arquivos/...), não como data URL pesado no banco.
     r = client.patch(f"/admin/usuarios/{uid}", headers=admin,
                      json={"unidade": "Matriz SP", "telefone": "11999",
-                           "clientes": "Shopping X", "acesso_expira_em": "2027-01-01"})
+                           "clientes": "Shopping X", "acesso_expira_em": "2027-01-01",
+                           "foto_url": "/arquivos/usuarios/joao.jpg"})
     assert r.status_code == 200
     assert r.json()["unidade"] == "Matriz SP"
     assert r.json()["acesso_expira_em"] == "2027-01-01"
+    assert r.json()["foto_url"] == "/arquivos/usuarios/joao.jpg"
 
     # Adiciona um documento com validade.
     r = client.post(f"/admin/usuarios/{uid}/documentos", headers=admin,

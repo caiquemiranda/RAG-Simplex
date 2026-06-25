@@ -213,12 +213,16 @@ export default function Admin() {
     }
   }
 
-  function onFoto(e: ChangeEvent<HTMLInputElement>) {
+  async function onFoto(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setPerfil((p) => (p ? { ...p, foto_url: String(reader.result) } : p))
-    reader.readAsDataURL(file)
+    setErro(null)
+    try {
+      const { url } = await uploadArquivo(file, 'usuarios')   // grava a URL, não o data URL (banco leve)
+      setPerfil((p) => (p ? { ...p, foto_url: url } : p))
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Falha ao enviar a foto')
+    }
   }
 
   async function adicionarDoc() {
