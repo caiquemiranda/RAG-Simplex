@@ -11,6 +11,45 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 
 ## 1. Backlog (o que falta)
 
+### G. Lote 4 — novas solicitações (2026-06-25)
+
+**Correções rápidas (independentes, baixo risco):**
+- [ ] **#FIX-TOKEN — token de acesso dura 1 dia** (item 4): `access_token_expira_min`
+      60 → **1440**. Estava expirando rápido demais.
+- [ ] **#FIX-EMAIL — login/cadastro de e-mail case-insensitive** (item 2): normalizar
+      (`strip().lower()`) o e-mail **no login** e **na criação/edição** do usuário; backfill
+      dos existentes (lower). Evita falha de login por maiúscula/minúscula.
+
+**Cronograma:**
+- [ ] **#FER-1 — feriado sem atividades** (item 1): no dia de **feriado** o cronograma
+      **não** mostra atividades nem alocações fixas (#ALOC) — só **"Feriado"**. Ao marcar
+      feriado num dia que já tem atividades, **notificar os técnicos** envolvidos (o dia
+      ficará sem atividades). Backend: `listar` suprime visitas reais + virtuais em datas de
+      feriado; `criar_feriado` dispara notificações. dep: feriados ✅, notificações ✅.
+- [ ] **#ATV-1 — card/página de atividade** (item 3): hierarquia na navegação
+      **Cronograma → Cliente → Atividade**. Cada `Visita` vira um **card-atividade** com
+      **página própria**: `status` (select), **vários técnicos** (executam e **comentam**),
+      **anexar imagens** (reusa #FILES) exibidas na página. Novas entidades: `ComentarioVisita`
+      e `AnexoVisita` (ou anexos via campo). dep: #FILES ✅, `visita_tecnico` ✅ (#CR8).
+
+**Equipamentos & cliente (fundação Equipamento primeiro):**
+- [ ] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade
+      `Equipamento` (`cliente_id`; colunas **painel, loop, add, type, model**); **upload de CSV**
+      para popular a lista do cliente. **Fases seguintes:** (b) +colunas **última manutenção**
+      e **último teste**; (c) **histórico do painel** do cliente — *adiado* (usuário vai ajustar
+      os dados baixados antes). ⚑ *Fundação* de #CLI-PG e #EQP-2.
+- [ ] **#CLI-PG — página do cliente (como a do usuário)** (item 6): editar cliente em
+      **página própria** com **endereço, contatos** e demais campos; dentro dela, a **lista de
+      equipamentos** (CSV do #EQP-1). dep: #EQP-1.
+- [ ] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): renomear *"Buscar equipamento"*
+      para **grupo "Equipamentos"** com sub-abas **[Buscar equipamento · Sobre equipamento ·
+      Lista de equipamentos]**; em *Lista*, **card por cliente** → abre a lista daquele cliente
+      (espelha Relatórios/Documentos). dep: #EQP-1 (lista por cliente).
+
+> **Sequência sem retrabalho:** (1) #FIX-TOKEN + #FIX-EMAIL → (2) #FER-1 → (3) #ATV-1 →
+> (4) **#EQP-1** (fundação) → #CLI-PG → #EQP-2. Equipamento vem **antes** das telas que o
+> consomem (página do cliente e grupo da sidebar).
+
 ### A. Frontend / UX
 - [ ] **#1 — Alinhamento fino ao ChatGPT + "exatidão dos documentos"**: confirmar com o
       usuário se é (a) só ajuste visual, (b) atualizar docs/specs, (c) modelagem de dados.
