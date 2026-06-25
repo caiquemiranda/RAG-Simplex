@@ -15,17 +15,19 @@ from sqlalchemy.orm import Session
 from app.arquivos import remover_arquivo, salvar_upload
 from app.auth import requer, usuario_atual
 from app.db import get_session
-from app.modelos import DocumentoEquipamento, Usuario
+from app.modelos import Cliente, DocumentoEquipamento, Usuario
 
 router = APIRouter(prefix="/biblioteca", tags=["biblioteca"])
 
-_CATEGORIAS = {"empresa", "marca"}
+_CATEGORIAS = {"empresa", "marca", "cliente"}
 
 
 class DocEquipResumo(BaseModel):
     id: int
     categoria: str
     marca: str
+    cliente_id: int | None = None
+    cliente_nome: str | None = None
     nome: str
     url: str
     oculto: bool
@@ -38,17 +40,26 @@ class DocEquipAtualizar(BaseModel):
 
 
 def _resumo(d: DocumentoEquipamento) -> DocEquipResumo:
-    return DocEquipResumo(id=d.id, categoria=d.categoria, marca=d.marca, nome=d.nome,
-                          url=d.url, oculto=d.oculto)
+    return DocEquipResumo(
+        id=d.id, categoria=d.categoria, marca=d.marca,
+        cliente_id=d.cliente_id, cliente_nome=d.cliente.nome if d.cliente else None,
+        nome=d.nome, url=d.url, oculto=d.oculto,
+    )
 
 
 @router.get("", response_model=list[DocEquipResumo])
 def listar(categoria: str | None = Query(None),
+           cliente_id: int | None = Query(None),
+           busca: str | None = Query(None),
            usuario: Usuario = Depends(usuario_atual),
            sessao: Session = Depends(get_session)) -> list[DocEquipResumo]:
     consulta = select(DocumentoEquipamento)
     if categoria:
         consulta = consulta.where(DocumentoEquipamento.categoria == categoria)
+    if cliente_id is not None:
+        consulta = consulta.where(DocumentoEquipamento.cliente_id == cliente_id)
+    if busca:
+        consulta = consulta.where(DocumentoEquipamento.nome.ilike(f"%{busca.strip()}%"))
     if not usuario.tem_permissao("gerir_usuarios"):
         consulta = consulta.where(DocumentoEquipamento.oculto.is_(False))
     rows = sessao.scalars(consulta.order_by(DocumentoEquipamento.marca, DocumentoEquipamento.nome))
@@ -59,15 +70,20 @@ def listar(categoria: str | None = Query(None),
 def criar(arquivo: UploadFile = File(...),
           categoria: str = Form(...),
           marca: str = Form(""),
+          cliente_id: int | None = Form(None),
           nome: str = Form(""),
           _: Usuario = Depends(requer("gerir_usuarios")),
           sessao: Session = Depends(get_session)) -> DocEquipResumo:
     if categoria not in _CATEGORIAS:
-        raise HTTPException(status_code=400, detail="categoria deve ser 'empresa' ou 'marca'.")
+        raise HTTPException(status_code=400, detail="categoria inválida (empresa|marca|cliente).")
+    if categoria == "cliente":
+        if cliente_id is None or sessao.get(Cliente, cliente_id) is None:
+            raise HTTPException(status_code=400, detail="cliente_id obrigatório/ inválido para a categoria cliente.")
     url = salvar_upload(arquivo, f"biblioteca/{categoria}")
     marca_final = marca.strip() or ("IBSystems" if categoria == "empresa" else "Geral")
     d = DocumentoEquipamento(
         categoria=categoria, marca=marca_final,
+        cliente_id=cliente_id if categoria == "cliente" else None,
         nome=(nome.strip() or arquivo.filename or "documento"), url=url,
     )
     sessao.add(d)

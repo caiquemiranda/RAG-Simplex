@@ -97,7 +97,16 @@ export type NovaVisita = {
   observacoes?: string | null
 }
 export type Feriado = { id: number; data: string; descricao: string }
-export type DocEquip = { id: number; categoria: string; marca: string; nome: string; url: string; oculto: boolean }
+export type DocEquip = {
+  id: number
+  categoria: string
+  marca: string
+  cliente_id: number | null
+  cliente_nome: string | null
+  nome: string
+  url: string
+  oculto: boolean
+}
 export type Notificacao = {
   id: number
   tipo: string
@@ -363,15 +372,22 @@ export const api = {
     removerFeriado: (id: number) => request<void>(`/cronograma/feriados/${id}`, { method: 'DELETE' }),
   },
   biblioteca: {
-    listar: (categoria?: string) =>
-      request<DocEquip[]>(`/biblioteca${categoria ? `?categoria=${categoria}` : ''}`),
-    criar: async (file: File, categoria: string, marca = '', nome = '') => {
+    listar: (params?: { categoria?: string; busca?: string; cliente_id?: number }) => {
+      const q = new URLSearchParams()
+      if (params?.categoria) q.set('categoria', params.categoria)
+      if (params?.busca) q.set('busca', params.busca)
+      if (params?.cliente_id != null) q.set('cliente_id', String(params.cliente_id))
+      const s = q.toString()
+      return request<DocEquip[]>(`/biblioteca${s ? `?${s}` : ''}`)
+    },
+    criar: async (file: File, categoria: string, opts: { marca?: string; nome?: string; cliente_id?: number } = {}) => {
       const token = getToken()
       const fd = new FormData()
       fd.append('arquivo', file)
       fd.append('categoria', categoria)
-      fd.append('marca', marca)
-      fd.append('nome', nome)
+      fd.append('marca', opts.marca ?? '')
+      fd.append('nome', opts.nome ?? '')
+      if (opts.cliente_id != null) fd.append('cliente_id', String(opts.cliente_id))
       const res = await fetch(`${BASE}/biblioteca`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},

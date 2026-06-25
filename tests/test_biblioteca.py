@@ -86,6 +86,23 @@ def test_empresa_default_marca_ibsystems(client):
     assert r.status_code == 201 and r.json()["marca"] == "IBSystems"
 
 
+def test_documento_cliente_e_busca(client):
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Aeroporto"}).json()["id"]
+    # Categoria cliente sem cliente_id → 400.
+    assert client.post("/biblioteca", headers=admin,
+                       files={"arquivo": ("p.pdf", b"x", "application/pdf")},
+                       data={"categoria": "cliente"}).status_code == 400
+    # Com cliente_id → ok, com nome do cliente.
+    r = client.post("/biblioteca", headers=admin,
+                    files={"arquivo": ("planta.pdf", b"x", "application/pdf")},
+                    data={"categoria": "cliente", "cliente_id": str(cid), "nome": "Planta baixa"})
+    assert r.status_code == 201 and r.json()["cliente_id"] == cid and r.json()["cliente_nome"] == "Aeroporto"
+    # Busca por nome (#DOC4).
+    assert any(d["nome"] == "Planta baixa" for d in client.get("/biblioteca?busca=planta", headers=admin).json())
+    assert client.get("/biblioteca?busca=inexistente", headers=admin).json() == []
+
+
 def test_categoria_invalida_e_op_nao_sobe(client):
     admin = _login(client, "admin@x.com")
     assert _upar(client, admin, "outra").status_code == 400

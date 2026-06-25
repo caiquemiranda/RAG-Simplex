@@ -206,14 +206,17 @@ class DocumentoEquipamento(Base):
     __tablename__ = "documento_equipamento"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    categoria: Mapped[str] = mapped_column(String(20))           # empresa | marca
+    categoria: Mapped[str] = mapped_column(String(20))           # empresa | marca | cliente
     marca: Mapped[str] = mapped_column(String(80), default="")   # IBSystems / Simplex / Notifier…
+    cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)  # categoria cliente
     nome: Mapped[str] = mapped_column(String(160))               # nome de exibição (editável)
     url: Mapped[str] = mapped_column(Text)                       # /arquivos/...
     oculto: Mapped[bool] = mapped_column(Boolean, default=False)
     criado_em: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+    cliente: Mapped[Cliente | None] = relationship()
 
 
 class DocumentoTecnico(Base):
