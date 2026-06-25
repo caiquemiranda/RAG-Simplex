@@ -86,8 +86,9 @@ erDiagram
   }
   DOCUMENTO_EQUIPAMENTO {
     int id PK
-    string categoria "empresa|marca"
+    string categoria "empresa|marca|cliente"
     string marca "IBSystems/Simplex/Notifier"
+    int cliente_id FK "categoria cliente"
     string nome
     text url "/arquivos/..."
     bool oculto

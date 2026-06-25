@@ -46,6 +46,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
 
   const [grupo, setGrupo] = useState(true)
   const [grupoRel, setGrupoRel] = useState(false)
+  const [grupoDoc, setGrupoDoc] = useState(false)
   const [clientesRel, setClientesRel] = useState<ClienteVisivel[]>([])
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
@@ -184,7 +185,20 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
             </div>
           )}
           <NavLink to="/equipamentos" className={linkCls} onClick={navegou}><IconEquipamento /> Buscar Equipamento</NavLink>
-          <NavLink to="/documentos" className={linkCls} onClick={navegou}><IconDocumentos /> Documentos</NavLink>
+          {/* Grupo Documentos (Empresa/Clientes/Marcas) */}
+          <button className={`${itemBase} ${local.pathname === '/documentos' ? 'font-medium' : ''}`} onClick={() => setGrupoDoc((v) => !v)}>
+            <Chevron aberto={grupoDoc} />
+            <IconDocumentos />
+            <span className="flex-1 text-left">Documentos</span>
+          </button>
+          {grupoDoc && (
+            <div className="ml-3 space-y-0.5 border-l pl-2">
+              <NavLink to="/documentos" end className={linkCls} onClick={navegou}>Todos</NavLink>
+              <NavLink to="/documentos?cat=empresa" className={linkCls} onClick={navegou}>Empresa</NavLink>
+              <NavLink to="/documentos?cat=clientes" className={linkCls} onClick={navegou}>Clientes</NavLink>
+              <NavLink to="/documentos?cat=marcas" className={linkCls} onClick={navegou}>Marcas</NavLink>
+            </div>
+          )}
           <NavLink to="/cronograma" className={linkCls} onClick={navegou}><IconCronograma /> Cronograma</NavLink>
         </div>
       </nav>

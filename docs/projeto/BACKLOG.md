@@ -138,13 +138,13 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       mostra fixos read-only. Spec spec-etapa3.
 
 ### J. Documentos — evolução (2026-06-24, lote 3)
-- [ ] **#DOC2 — Documentos como grupo na sidebar + visão em cards** (item 3): a aba
-      **Documentos** vira **grupo colapsável** na sidebar e a visão geral usa **cards**
-      (Empresa, Clientes, Marcas), como **Relatórios↔clientes** (#R1). dep: #DOC1 ✅.
-- [ ] **#DOC3 — Documentos de cliente** (item 2): nova categoria **`cliente`** (docs para
-      trabalhar no cliente), vinculados ao `cliente_id`; card por cliente. dep: #DOC1 ✅ + Cliente ✅.
-- [ ] **#DOC4 — Busca nos documentos** (item 3): filtro por **nome** (e marca/cliente)
-      para achar rápido quando houver muitos. dep: #DOC1 ✅.
+- [x] **#DOC2 — Documentos: grupo na sidebar + cards** (item 3): sidebar com **grupo
+      "Documentos"** (Todos/Empresa/Clientes/Marcas via `?cat=`); página com seções e
+      **card por cliente** (avatar cor/logo), como Relatórios.
+- [x] **#DOC3 — Documentos de cliente** (item 2): categoria **`cliente`** +
+      `DocumentoEquipamento.cliente_id`; upload com seletor de cliente; card por cliente.
+- [x] **#DOC4 — Busca nos documentos** (item 3): backend `GET /biblioteca?busca=` (ilike)
+      + campo de busca na página (filtro por nome).
 
 ---
 

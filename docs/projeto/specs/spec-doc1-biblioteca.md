@@ -25,6 +25,14 @@ Dois acervos de documentos de equipamentos: **Empresa (IBSystems)** e **Marcas**
   **ocultar/mostrar**, **excluir**. Não-admin: vê só os não-ocultos como links de download.
 - `lib/api.ts`: tipo `DocEquip` + `api.biblioteca.*` + `urlArquivo`.
 
+## Evolução (lote 3: #DOC2/#DOC3/#DOC4)
+- **#DOC3** categoria **`cliente`** + `DocumentoEquipamento.cliente_id` (FK); upload com
+  seletor de cliente; `_resumo` traz `cliente_nome`.
+- **#DOC4** busca: `GET /biblioteca?busca=` (ilike no nome) + filtros `categoria`/`cliente_id`.
+- **#DOC2** frontend: grupo **Documentos** na sidebar (`?cat=empresa|clientes|marcas`);
+  página com seções (Empresa/Clientes/Marcas) e **card por cliente** (avatar cor/logo);
+  campo de busca; uploads por categoria. CRUD reusa #FILES.
+
 ## Testes
 `tests/test_biblioteca.py` (3): upload→listar→renomear→ocultar (admin vê / operador não)
 →excluir; default `IBSystems` na empresa; categoria inválida 400 + operador 403.

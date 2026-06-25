@@ -84,7 +84,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
 | GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
-| GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos de empresa/marcas (manuais, datasheets); `oculto` só p/ admin. |
+| GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos **empresa/marca/cliente** (`?categoria=&cliente_id=&busca=`); `oculto` só p/ admin. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
 | PUT | `/admin/config-global` | `gerir_estrategias` | Estratégia padrão global. |
 | GET | `/admin/auditoria` | `gerir_usuarios` | Log de consultas (com feedback). |

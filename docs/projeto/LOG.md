@@ -36,6 +36,24 @@ pages/{Admin,Consulta}.tsx}`.
 
 ---
 
+## 2026-06-24 — Lote 3 Documentos: cliente (#DOC3) + cards/sidebar (#DOC2) + busca (#DOC4)
+
+**Branch:** `feat/fase-7-frontend`.
+
+- **#DOC3:** `DocumentoEquipamento.cliente_id` + categoria `cliente`; upload exige
+  `cliente_id`; `_resumo` traz `cliente_nome`. Migração automática.
+- **#DOC4:** `GET /biblioteca?busca=` (ilike) + filtros `categoria`/`cliente_id`; campo
+  de busca na página (filtro por nome).
+- **#DOC2:** página Documentos reescrita — seções **Empresa/Clientes/Marcas**, **card por
+  cliente** (avatar cor/logo) como Relatórios; sidebar com **grupo "Documentos"**
+  (`?cat=`). `api.biblioteca` atualizado (listar com params; criar com opts/cliente_id).
+- **81 passed**; `tsc` OK. Docs: MODELO_DADOS, ARQUITETURA, TESTES, spec-doc1, BACKLOG.
+
+**Arquivos:** `app/{modelos,biblioteca}.py`, `tests/test_biblioteca.py`,
+`frontend/src/{lib/api.ts,pages/Documentos.tsx,components/Sidebar.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-24 — #ALOC: cliente fixo por técnico + #DOC2/3/4 no backlog
 
 **Branch:** `feat/fase-7-frontend`.
