@@ -449,6 +449,8 @@ export const api = {
     atualizar: (id: number, dados: Partial<NovaVisita>) =>
       request<Visita>(`/cronograma/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/cronograma/${id}`, { method: 'DELETE' }),
+    // Lista de todas as atividades (sidebar Cronograma → Atividades)
+    atividades: () => request<Visita[]>('/cronograma/atividades'),
     // Página da atividade (#ATV-1)
     obter: (id: number) => request<VisitaDetalhe>(`/cronograma/${id}`),
     comentar: (id: number, texto: string) =>

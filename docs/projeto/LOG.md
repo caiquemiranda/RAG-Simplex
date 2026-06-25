@@ -4,6 +4,26 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (6): melhorias UI — modal do dia, Atividades, fix auditoria
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#CR-DIA:** modal do dia reescrito em **2 colunas** (`max-w-4xl`): esquerda = **equipe
+  do dia** (`equipeDia`, dedup, onde cada um está); direita = **cards das atividades**
+  (linha de avatares de todos os técnicos, status, editar, abrir). Fixos só à esquerda.
+- **#CR-ATV:** sidebar "Cronograma" vira **grupo** (Calendário/Atividades). Nova tela
+  `pages/Atividades.tsx` (`/cronograma/atividades`): resumo + **faltam N / atrasada há N**
+  (calculado de `data`/`status`), abre a página da atividade. Backend `GET
+  /cronograma/atividades` (técnico as suas; admin todas). `api.cronograma.atividades()`.
+- **#FIX-AUDIT:** `AuditoriaView` — tabela em `overflow-x-auto` + `min-w-[760px]` (não corta
+  mais as últimas colunas).
+- **Testes** `test_lista_atividades`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,components/Sidebar.tsx,components/AuditoriaView.tsx,pages/Cronograma.tsx,pages/Atividades.tsx,App.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (5): #EQP-2 — sidebar "Equipamentos" + lista por cliente
 
 **Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp2-cli-pg.md`](specs/spec-eqp2-cli-pg.md).

@@ -275,6 +275,18 @@ def test_atividade_anexo_imagem(ctx, monkeypatch, tmp_path):
     assert r.status_code == 200 and r.json()["anexos"] == []
 
 
+def test_lista_atividades(ctx):
+    """Tela 'Atividades' (sidebar): admin vê todas; técnico só as suas."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-09-01", "titulo": "X"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "data": "2026-09-02", "titulo": "Y"})
+
+    assert len(client.get("/cronograma/atividades", headers=admin).json()) >= 2
+    tec = client.get("/cronograma/atividades", headers=_login(client, "tec@x.com")).json()
+    assert {v["titulo"] for v in tec} == {"X"}
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

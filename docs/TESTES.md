@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**96 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**97 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -121,7 +121,7 @@ pytest
 - `test_documento_cliente_e_busca` — categoria `cliente` (exige `cliente_id`) + busca por nome.
 - `test_categoria_invalida_e_op_nao_sobe` — 400 (categoria) e 403 (operador).
 
-### `test_cronograma.py` (15) — cronograma (multi-técnico, cliente fixo, unidade, atividade, feriados, notificações)
+### `test_cronograma.py` (16) — cronograma (multi-técnico, cliente fixo, unidade, atividade, feriados, notificações)
 - `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.
 - `test_unidade_crud_e_visao_por_unidade` — CRUD de unidade (409 duplicado); vincula cliente;
   `/cronograma?unidade_id=` filtra pela unidade do cliente; `/unidades`; DELETE em uso → 409.
@@ -140,6 +140,7 @@ pytest
 - `test_atividade_detalhe_e_comentario` — #ATV-1: detalhe/comentário só p/ atribuído ou admin
   (não-atribuído → 403; vazio → 400).
 - `test_atividade_anexo_imagem` — #ATV-1: anexa imagem (não-imagem → 400) e remove o anexo.
+- `test_lista_atividades` — `/cronograma/atividades`: admin vê todas; técnico só as suas.
 - `test_notificacao_ao_criar_atividade` — criar visita gera notificação só para o
   técnico; marcar como lida.
 

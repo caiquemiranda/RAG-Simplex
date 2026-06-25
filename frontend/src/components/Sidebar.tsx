@@ -48,6 +48,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   const [grupoRel, setGrupoRel] = useState(false)
   const [grupoDoc, setGrupoDoc] = useState(false)
   const [grupoEqp, setGrupoEqp] = useState(false)
+  const [grupoCron, setGrupoCron] = useState(false)
   const [clientesRel, setClientesRel] = useState<ClienteVisivel[]>([])
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
@@ -212,7 +213,18 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
               <NavLink to="/documentos?cat=marcas" className={linkCls} onClick={navegou}>Marcas</NavLink>
             </div>
           )}
-          <NavLink to="/cronograma" className={linkCls} onClick={navegou}><IconCronograma /> Cronograma</NavLink>
+          {/* Grupo Cronograma (Calendário/Atividades) */}
+          <button className={`${itemBase} ${local.pathname.startsWith('/cronograma') ? 'font-medium' : ''}`} onClick={() => setGrupoCron((v) => !v)}>
+            <Chevron aberto={grupoCron} />
+            <IconCronograma />
+            <span className="flex-1 text-left">Cronograma</span>
+          </button>
+          {grupoCron && (
+            <div className="ml-3 space-y-0.5 border-l pl-2">
+              <NavLink to="/cronograma" end className={linkCls} onClick={navegou}>Calendário</NavLink>
+              <NavLink to="/cronograma/atividades" className={linkCls} onClick={navegou}>Atividades</NavLink>
+            </div>
+          )}
         </div>
       </nav>
 

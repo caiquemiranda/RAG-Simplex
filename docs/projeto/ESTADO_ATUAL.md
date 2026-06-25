@@ -14,7 +14,7 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
-  **Backend: 96 testes** passando.
+  **Backend: 97 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -44,6 +44,8 @@ Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **#EQP-1** — entidade `Equipamento` + import CSV por cliente.
 - ✅ **#CLI-PG** — página do cliente (`/admin/cliente/:id`) com endereço/contatos + CSV.
 - ✅ **#EQP-2** — sidebar "Equipamentos" (Buscar/Sobre/Lista) + lista por cliente.
+- ✅ **Melhorias UI:** modal do dia em 2 colunas (#CR-DIA) · sidebar Cronograma→Atividades
+  (#CR-ATV, com "faltam N / atrasada há N") · fix da auditoria com colunas cortadas (#FIX-AUDIT).
 
 **Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
 

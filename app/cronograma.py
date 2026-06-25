@@ -218,6 +218,20 @@ def listar(
     return [_resumo(v) for v in reais] + virtuais
 
 
+@router.get("/atividades", response_model=list[VisitaResumo])
+def atividades(usuario: Usuario = Depends(usuario_atual),
+               sessao: Session = Depends(get_session)) -> list[VisitaResumo]:
+    """Todas as atividades (visitas reais) do usuário — para a tela 'Atividades' da sidebar.
+
+    Técnico vê as próprias; admin vê todas. Ordenadas por data (mais antigas primeiro);
+    o frontend calcula 'faltam N dias' / 'atrasada há N dias' a partir de `data`/`status`.
+    """
+    consulta = select(Visita).order_by(Visita.data)
+    if not usuario.tem_permissao("gerir_usuarios"):
+        consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
+    return [_resumo(v) for v in sessao.scalars(consulta)]
+
+
 def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:
     if cliente_id is not None and sessao.get(Cliente, cliente_id) is None:
         raise HTTPException(status_code=404, detail="Cliente não encontrado.")

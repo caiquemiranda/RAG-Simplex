@@ -87,6 +87,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
+| GET | `/cronograma/atividades` | autenticado | **Lista de atividades** (sidebar Cronograma→Atividades): técnico as suas; admin todas. |
 | GET | `/cronograma/{id}` | atribuído ou admin | **Detalhe da atividade** (#ATV-1): comentários + anexos. |
 | POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
 | POST/DELETE | `/cronograma/{id}/anexos[/{anexo_id}]` | atribuído ou admin | Anexa/remove **imagem** (`/arquivos/atividades/`). |

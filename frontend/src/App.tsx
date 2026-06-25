@@ -14,6 +14,7 @@ import Placeholder from './components/Placeholder'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
 import Atividade from './pages/Atividade'
+import Atividades from './pages/Atividades'
 import Notificacoes from './pages/Notificacoes'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/equipamentos/lista/:id" element={<EquipamentosLista />} />
           <Route path="/documentos" element={<Documentos />} />
           <Route path="/cronograma" element={<Cronograma />} />
+          <Route path="/cronograma/atividades" element={<Atividades />} />
           <Route path="/cronograma/atividade/:id" element={<Atividade />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/inicio" element={<Home />} />

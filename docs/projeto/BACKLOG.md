@@ -21,7 +21,15 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       **backfill** dos existentes via migração Alembic `5c77258e6fc6`. Teste
       `test_email_case_insensitive`.
 
-**Cronograma:**
+**Cronograma (melhorias do Lote 5):**
+- [x] **#CR-DIA — modal do dia em 2 colunas**: ao abrir o dia, **esquerda** = equipe e onde
+      cada um está; **direita** = **cards das atividades** (avatares dos técnicos, status,
+      editar, abrir). Modal alargado (`max-w-4xl`).
+- [x] **#CR-ATV — sidebar Cronograma → Atividades**: grupo "Cronograma" (Calendário/Atividades);
+      tela **Atividades** lista todas com resumo + **faltam N dias** / **atrasada há N**;
+      abre a página da atividade. Endpoint `GET /cronograma/atividades`.
+- [x] **#FIX-AUDIT — auditoria com colunas cortadas**: tabela em `overflow-x-auto`
+      (`min-w`) — não corta mais as últimas colunas (Estratégia/Fallback/Feedback).
 - [x] **#CR-FILTROS — filtros Equipe + Clientes (multi) + #ALOC só dias úteis** (Lote 5):
       `listar` aceita `tecnico_ids`/`cliente_ids` (multi); a alocação fixa virtual (#ALOC) só
       aparece **seg–sex** (fim de semana só com agendamento explícito). Frontend: dropdowns
