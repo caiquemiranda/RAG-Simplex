@@ -4,7 +4,7 @@ Visão única de **onde estamos** e **para onde vamos**. Consolida o status das 
 ([`ROADMAP.md`](ROADMAP.md)) e o backlog/sequência ([`BACKLOG.md`](BACKLOG.md)).
 Para o que já existe, ver [`../ARQUITETURA.md`](../ARQUITETURA.md).
 
-**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 78 testes ✅
+**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 81 testes ✅
 
 ---
 
