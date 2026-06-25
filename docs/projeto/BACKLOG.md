@@ -43,9 +43,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `substituir`) + DELETE. Migração `2681a9da4b28`. Spec
       [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md). **Fases seguintes
       adiadas:** (b) colunas última manutenção/teste; (c) histórico do painel. UI no #CLI-PG.
-- [ ] **#CLI-PG — página do cliente (como a do usuário)** (item 6): editar cliente em
-      **página própria** com **endereço, contatos** e demais campos; dentro dela, a **lista de
-      equipamentos** (CSV do #EQP-1). dep: #EQP-1.
+- [x] **#CLI-PG — página do cliente (como a do usuário)** (item 6): `Cliente` ganhou
+      `endereco/contato/telefone/email/observacoes` (migração `84ff7bfcb358`); `GET
+      /admin/clientes/{id}` (detalhe + equipamentos); página `pages/ClienteAdmin.tsx`
+      (`/admin/cliente/:id`) com dados, logo, **import CSV** e lista de equipamentos.
+      Teste `test_cliente_detalhe_e_campos`.
 - [ ] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): renomear *"Buscar equipamento"*
       para **grupo "Equipamentos"** com sub-abas **[Buscar equipamento · Sobre equipamento ·
       Lista de equipamentos]**; em *Lista*, **card por cliente** → abre a lista daquele cliente

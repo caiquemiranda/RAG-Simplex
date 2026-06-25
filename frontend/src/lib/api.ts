@@ -68,13 +68,24 @@ export type AdminCliente = {
   ativo: boolean
   cor: string | null
   logo_url: string | null
+  // Cadastro completo (#CLI-PG)
+  endereco: string | null
+  contato: string | null
+  telefone: string | null
+  email: string | null
+  observacoes: string | null
 }
-export type ClienteEntrada = { nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
+export type ClienteEntrada = {
+  nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean
+  cor?: string | null; logo_url?: string | null
+  endereco?: string | null; contato?: string | null; telefone?: string | null; email?: string | null; observacoes?: string | null
+}
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
 
 // Equipamento do cliente (#EQP-1) — importado por CSV.
 export type Equipamento = { id: number; painel: string; loop: string; add: string; type: string; model: string }
 export type ImportEquipResultado = { importados: number; total: number }
+export type ClienteDetalhe = AdminCliente & { equipamentos: Equipamento[] }
 
 // Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
 export type AdminUnidade = { id: number; nome: string; cidade: string | null; ativo: boolean }
@@ -401,6 +412,7 @@ export const api = {
       }),
     auditoria: (limite = 50) => request<AdminAuditoria[]>(`/admin/auditoria?limite=${limite}`),
     clientes: () => request<AdminCliente[]>('/admin/clientes'),
+    cliente: (id: number) => request<ClienteDetalhe>(`/admin/clientes/${id}`),
     criarCliente: (dados: ClienteEntrada & { nome: string }) =>
       request<AdminCliente>('/admin/clientes', { method: 'POST', body: JSON.stringify(dados) }),
     atualizarCliente: (id: number, dados: ClienteEntrada) =>

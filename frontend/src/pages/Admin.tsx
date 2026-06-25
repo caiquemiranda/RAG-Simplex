@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   api,
   uploadArquivo,
@@ -574,7 +575,7 @@ export default function Admin() {
                   <div key={c.id} className="flex items-center gap-3 py-2">
                     <Avatar nome={c.nome} fotoUrl={c.logo_url} cor={c.cor} className="h-10 w-10" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{c.nome}</div>
+                      <Link to={`/admin/cliente/${c.id}`} className="truncate text-sm font-medium text-primary hover:underline">{c.nome}</Link>
                       <div className="truncate text-xs text-muted-foreground">{c.unidade_nome ?? c.unidade ?? '—'}{!c.ativo && ' · inativo'}</div>
                     </div>
                     <select className="h-8 rounded-md border bg-background px-1 text-xs" title="Unidade do cliente"

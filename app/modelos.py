@@ -164,6 +164,12 @@ class Cliente(Base):
     # Identidade visual do cliente (usada onde ele aparecer) — #CLIV.
     cor: Mapped[str | None] = mapped_column(String(9), default=None)        # hex #RRGGBB
     logo_url: Mapped[str | None] = mapped_column(Text, default=None)        # /arquivos/...
+    # Cadastro completo (página do cliente) — #CLI-PG.
+    endereco: Mapped[str | None] = mapped_column(Text, default=None)
+    contato: Mapped[str | None] = mapped_column(String(120), default=None)  # nome do responsável
+    telefone: Mapped[str | None] = mapped_column(String(40), default=None)
+    email: Mapped[str | None] = mapped_column(String(255), default=None)
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
 
     tecnicos: Mapped[list[Usuario]] = relationship(
         secondary=usuario_cliente, back_populates="clientes_rel"

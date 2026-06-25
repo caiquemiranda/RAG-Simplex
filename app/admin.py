@@ -77,6 +77,12 @@ class ClienteIn(BaseModel):
     ativo: bool = True
     cor: str | None = None
     logo_url: str | None = None
+    # Cadastro completo (#CLI-PG)
+    endereco: str | None = None
+    contato: str | None = None
+    telefone: str | None = None
+    email: str | None = None
+    observacoes: str | None = None
 
 
 class ClienteAtualizar(BaseModel):
@@ -86,6 +92,11 @@ class ClienteAtualizar(BaseModel):
     ativo: bool | None = None
     cor: str | None = None
     logo_url: str | None = None
+    endereco: str | None = None
+    contato: str | None = None
+    telefone: str | None = None
+    email: str | None = None
+    observacoes: str | None = None
 
 
 class ClienteResumo(BaseModel):
@@ -97,6 +108,24 @@ class ClienteResumo(BaseModel):
     ativo: bool
     cor: str | None = None
     logo_url: str | None = None
+    endereco: str | None = None
+    contato: str | None = None
+    telefone: str | None = None
+    email: str | None = None
+    observacoes: str | None = None
+
+
+class EquipamentoResumo(BaseModel):
+    id: int
+    painel: str
+    loop: str
+    add: str
+    type: str
+    model: str
+
+
+class ClienteDetalhe(ClienteResumo):
+    equipamentos: list[EquipamentoResumo] = []
 
 
 class UsuarioAtualizar(BaseModel):
@@ -423,7 +452,9 @@ def _resumo_cliente(c: Cliente) -> ClienteResumo:
     return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade,
                          unidade_id=c.unidade_id,
                          unidade_nome=c.unidade_rel.nome if c.unidade_rel else None,
-                         ativo=c.ativo, cor=c.cor, logo_url=c.logo_url)
+                         ativo=c.ativo, cor=c.cor, logo_url=c.logo_url,
+                         endereco=c.endereco, contato=c.contato, telefone=c.telefone,
+                         email=c.email, observacoes=c.observacoes)
 
 
 @router.get("/clientes", response_model=list[ClienteResumo])
@@ -444,7 +475,10 @@ def criar_cliente(dados: ClienteIn,
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")
     c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None,
                 unidade_id=dados.unidade_id, ativo=dados.ativo,
-                cor=dados.cor or None, logo_url=dados.logo_url or None)
+                cor=dados.cor or None, logo_url=dados.logo_url or None,
+                endereco=dados.endereco or None, contato=dados.contato or None,
+                telefone=dados.telefone or None, email=dados.email or None,
+                observacoes=dados.observacoes or None)
     sessao.add(c)
     sessao.commit()
     sessao.refresh(c)
@@ -472,9 +506,24 @@ def atualizar_cliente(cliente_id: int, dados: ClienteAtualizar,
         c.cor = dados.cor or None
     if dados.logo_url is not None:
         c.logo_url = dados.logo_url or None
+    for campo in ("endereco", "contato", "telefone", "email", "observacoes"):
+        valor = getattr(dados, campo)
+        if valor is not None:
+            setattr(c, campo, valor or None)
     sessao.commit()
     sessao.refresh(c)
     return _resumo_cliente(c)
+
+
+@router.get("/clientes/{cliente_id}", response_model=ClienteDetalhe)
+def detalhe_cliente(cliente_id: int,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)) -> ClienteDetalhe:
+    c = sessao.get(Cliente, cliente_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado.")
+    base = _resumo_cliente(c).model_dump()
+    return ClienteDetalhe(**base, equipamentos=[_resumo_equip(e) for e in c.equipamentos])
 
 
 @router.delete("/clientes/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -492,15 +541,6 @@ def remover_cliente(cliente_id: int,
 # Equipamentos do cliente (#EQP-1) — import CSV                                 #
 # --------------------------------------------------------------------------- #
 _EQP_COLUNAS = ("painel", "loop", "add", "type", "model")
-
-
-class EquipamentoResumo(BaseModel):
-    id: int
-    painel: str
-    loop: str
-    add: str
-    type: str
-    model: str
 
 
 class ImportEquipOut(BaseModel):

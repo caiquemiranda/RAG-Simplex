@@ -66,6 +66,11 @@ erDiagram
     bool ativo
     string cor "hex (identidade visual)"
     text logo_url "/arquivos/..."
+    text endereco "#CLI-PG"
+    string contato "responsável"
+    string telefone
+    string email
+    text observacoes
   }
   VISITA {
     int id PK
@@ -178,6 +183,11 @@ Cliente atendido (prédio/condomínio/instalação) com `unidade_id` (base/regio
 Técnicos são associados a clientes via `usuario_cliente` (N:N) — define **acesso** e o
 **cronograma por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece
 na tabela mas não é mais usado pela API.
+
+### Cliente — cadastro completo (#CLI-PG)
+Além de `nome/unidade_id/cor/logo_url`, o cliente tem **página própria** com `endereco`,
+`contato` (responsável), `telefone`, `email`, `observacoes`. `GET /admin/clientes/{id}`
+devolve o detalhe (campos + `equipamentos[]`). UI em `pages/ClienteAdmin.tsx`.
 
 ### Unidade (D-021)
 Base/regional operacional (`nome` único, `cidade`, `ativo`). Promove o antigo texto livre

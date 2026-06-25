@@ -221,6 +221,22 @@ def test_equipamentos_import_csv(ctx):
     assert client.get(f"/admin/clientes/{cid}/equipamentos", headers=_login(client, "op@x.com")).status_code == 403
 
 
+def test_cliente_detalhe_e_campos(ctx):
+    """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={
+        "nome": "Prédio B", "endereco": "Rua 1, 100", "contato": "João", "telefone": "11 99999", "email": "a@b.com"}).json()["id"]
+
+    det = client.get(f"/admin/clientes/{cid}", headers=admin).json()
+    assert det["endereco"] == "Rua 1, 100" and det["contato"] == "João" and det["email"] == "a@b.com"
+    assert det["equipamentos"] == []
+
+    r = client.patch(f"/admin/clientes/{cid}", headers=admin, json={"observacoes": "tem 2 painéis"})
+    assert r.status_code == 200 and r.json()["observacoes"] == "tem 2 painéis"
+    assert client.get("/admin/clientes/99999", headers=admin).status_code == 404
+
+
 def test_lista_marca_documento_vencendo(ctx):
     from datetime import date, timedelta
 

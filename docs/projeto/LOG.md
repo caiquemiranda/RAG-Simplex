@@ -4,6 +4,25 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (4): #CLI-PG — página do cliente (endereço/contatos + equipamentos)
+
+**Branch:** `feat/lote5-fixes`.
+
+- **Modelo:** `Cliente` ganhou `endereco/contato/telefone/email/observacoes` (migração Alembic
+  `84ff7bfcb358`, batch add_column; ruído de FK removido).
+- **API (`admin.py`):** `ClienteIn/Atualizar/Resumo` com os campos; `ClienteDetalhe`
+  (resumo + `equipamentos[]`); novo `GET /admin/clientes/{id}` (detalhe).
+- **Frontend:** página `pages/ClienteAdmin.tsx` (rota `/admin/cliente/:id`) — dados do
+  cliente, logo, endereço/contatos, e seção **Equipamentos** (import CSV com `substituir`,
+  tabela, remover). Nome do cliente na lista do painel vira **link** para a página.
+  `api.ts`: `AdminCliente` estendido + `ClienteDetalhe` + `api.admin.cliente(id)`.
+- **Teste** `test_cliente_detalhe_e_campos`. **95 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin}.py`, `alembic/versions/84ff7bfcb358_*.py`,
+`tests/test_admin.py`, `frontend/src/{App.tsx,lib/api.ts,pages/ClienteAdmin.tsx,pages/Admin.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (3): #EQP-1 — entidade Equipamento + import CSV (backend)
 
 **Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md).

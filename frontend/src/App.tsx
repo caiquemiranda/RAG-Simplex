@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Home from './pages/Home'
 import Consulta from './pages/Consulta'
 import Admin from './pages/Admin'
+import ClienteAdmin from './pages/ClienteAdmin'
 import Relatorios from './pages/Relatorios'
 import RelatorioCliente from './pages/RelatorioCliente'
 import Equipamentos from './pages/Equipamentos'
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/inicio" element={<Home />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/cliente/:id" element={<ClienteAdmin />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/consulta" replace />} />
