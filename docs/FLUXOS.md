@@ -121,19 +121,20 @@ flowchart TD
 
 ## 7. Cronograma — listar visitas (#ALOC virtuais + #FER-1)
 
-`GET /cronograma?de&ate&tecnico_id&unidade_id` monta a visão do mês combinando **visitas
-reais** e **alocações fixas virtuais** (#ALOC), suprimindo **feriados** (#FER-1).
+`GET /cronograma?de&ate&tecnico_ids&cliente_ids&unidade_id` monta a visão do mês combinando
+**visitas reais** e **alocações fixas virtuais** (#ALOC), suprimindo **feriados** (#FER-1).
+Filtros multi: **Equipe** (`tecnico_ids`) e **Clientes** (`cliente_ids`).
 
 ```mermaid
 flowchart TD
   A[GET /cronograma de..ate] --> B[seleciona visitas reais no intervalo]
   B --> C{papel}
   C -- técnico --> C1[só visitas onde está atribuído]
-  C -- admin --> C2[todas; filtra por tecnico_id/unidade_id]
+  C -- admin --> C2[todas; filtra por tecnico_ids/cliente_ids/unidade_id]
   C1 & C2 --> D[carrega datas de FERIADO no intervalo]
   D --> E[remove visitas reais em datas de feriado #FER-1]
-  E --> F[para cada técnico com cliente_padrao #ALOC]
-  F --> G{dia é feriado?}
+  E --> F[para cada técnico com cliente_padrao #ALOC<br/>respeita filtros Equipe/Clientes/unidade]
+  F --> G{dia é feriado OU fim de semana?}
   G -- sim --> F
   G -- não --> H{já tem visita real nesse dia?}
   H -- sim --> F

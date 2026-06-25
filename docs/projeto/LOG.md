@@ -4,6 +4,24 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (2): #CR-FILTROS — Equipe/Clientes (multi) + #ALOC só dias úteis
+
+**Branch:** `feat/lote5-fixes`.
+
+- **Backend (`cronograma.listar`):** `tecnico_id` (single) → **`tecnico_ids`** (multi, filtro
+  "Equipe") + novo **`cliente_ids`** (multi, filtro "Clientes"); ambos aplicados a visitas
+  reais e às alocações fixas (#ALOC). **#ALOC só seg–sex** (`dia.weekday() < 5`) — fim de
+  semana só com agendamento explícito.
+- **Frontend (`Cronograma.tsx`):** componente reutilizável **`MultiFiltro`** (botão + dropdown
+  de checkboxes); filtros **Equipe** (técnicos) e **Clientes** (via `clientesVisiveis`).
+  `api.cronograma.listar(de, ate, {tecnicoIds, clienteIds, unidadeId})`.
+- **Teste** `test_filtros_equipe_clientes_e_aloc_dias_uteis`. **93 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (1): #ATV-1 página de atividade (comentários + anexos)
 
 **Branch:** `feat/lote5-fixes` (do `main` após o merge do Lote 4, PR #7).

@@ -168,6 +168,35 @@ def test_cliente_fixo_alocacao(ctx):
     assert len(vis) == 1 and vis[0]["fixo"] is False and vis[0]["titulo"] == "Relocado"
 
 
+def test_filtros_equipe_clientes_e_aloc_dias_uteis(ctx):
+    """Filtros multi (Equipe/Clientes) + alocação fixa (#ALOC) só de segunda a sexta."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    c2 = client.post("/admin/clientes", headers=admin, json={"nome": "Hospital Z"}).json()["id"]
+    # Sexta 2026-07-10: uma visita em cada cliente (técnicos diferentes).
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-07-10", "titulo": "A"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "cliente_id": c2, "data": "2026-07-10", "titulo": "B"})
+
+    base = "/cronograma?de=2026-07-10&ate=2026-07-10"
+    # Filtro por Clientes (multi com 1 valor).
+    vis = client.get(f"{base}&cliente_ids={ids['cliente']}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"A"}
+    # Filtro por Equipe (tecnico_ids).
+    vis = client.get(f"{base}&tecnico_ids={ids['tec2']}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"B"}
+    # Multi: os dois clientes.
+    vis = client.get(f"{base}&cliente_ids={ids['cliente']}&cliente_ids={c2}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"A", "B"}
+
+    # #ALOC só dias úteis: tec fixo no cliente.
+    client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_padrao_id": ids["cliente"]})
+    # Sábado 2026-07-11 → nenhum fixo.
+    assert client.get("/cronograma?de=2026-07-11&ate=2026-07-11", headers=admin).json() == []
+    # Segunda 2026-07-13 (dia útil, sem visita) → aparece o fixo.
+    seg = client.get("/cronograma?de=2026-07-13&ate=2026-07-13", headers=admin).json()
+    assert any(v["fixo"] for v in seg)
+
+
 def test_unidade_crud_e_visao_por_unidade(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")

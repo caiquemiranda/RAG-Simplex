@@ -14,7 +14,7 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
-  **Backend: 92 testes** passando.
+  **Backend: 93 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -31,8 +31,9 @@
   - **Documentos:** biblioteca **Empresa / Clientes / Marcas** (cards + grupo na sidebar +
     **busca**), CRUD de arquivos (#DOC1–#DOC4).
   - **Cronograma (real):** visitas com **vários técnicos** (#CR8), **card do dia** por papel,
-    **fechamento**, **cliente fixo + relocação** (#ALOC), **visão por unidade** (D-021),
-    agrupamento por **cliente** (cor/logo + avatares), **editar**, feriados, **notificações**.
+    **fechamento**, **cliente fixo + relocação** (#ALOC, só seg–sex), **visão por unidade** (D-021),
+    **filtros Equipe + Clientes** (multi), **página de atividade** (#ATV-1: status, imagens,
+    comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
 ## ⏭️ PRÓXIMO PASSO — Lote 5 (em andamento, branch `feat/lote5-fixes`)

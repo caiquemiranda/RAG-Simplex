@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**92 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**93 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -124,6 +124,8 @@ pytest
   `/cronograma?unidade_id=` filtra pela unidade do cliente; `/unidades`; DELETE em uso → 409.
 - `test_multiplos_tecnicos_por_atividade` — vários técnicos numa visita; todos veem/são notificados; qualquer um fecha.
 - `test_cliente_fixo_alocacao` — cliente fixo aparece (`fixo`); visita real sobrescreve.
+- `test_filtros_equipe_clientes_e_aloc_dias_uteis` — filtros multi **Equipe**/**Clientes**
+  (`tecnico_ids`/`cliente_ids`) e alocação fixa (#ALOC) **só de segunda a sexta**.
 - `test_tecnico_fecha_propria_visita` — técnico fecha a própria (status/observações); 403/400 nos limites.
 - `test_admin_cria_e_filtra_por_intervalo` — cria visita; filtra por intervalo de datas.
 - `test_tecnico_ve_apenas_as_proprias` — técnico só enxerga as próprias visitas.

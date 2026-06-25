@@ -83,7 +83,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
-| GET | `/cronograma?de=&ate=&tecnico_id=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas; filtro por **unidade** do cliente). |
+| GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
 | GET | `/cronograma/{id}` | atribuído ou admin | **Detalhe da atividade** (#ATV-1): comentários + anexos. |
 | POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |

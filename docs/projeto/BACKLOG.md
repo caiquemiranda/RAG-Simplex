@@ -22,6 +22,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `test_email_case_insensitive`.
 
 **Cronograma:**
+- [x] **#CR-FILTROS — filtros Equipe + Clientes (multi) + #ALOC só dias úteis** (Lote 5):
+      `listar` aceita `tecnico_ids`/`cliente_ids` (multi); a alocação fixa virtual (#ALOC) só
+      aparece **seg–sex** (fim de semana só com agendamento explícito). Frontend: dropdowns
+      multi-seleção **Equipe** e **Clientes**. Teste `test_filtros_equipe_clientes_e_aloc_dias_uteis`.
 - [x] **#FER-1 — feriado sem atividades** (item 1): `listar` suprime visitas reais +
       virtuais (#ALOC) em datas de feriado (dia mostra só "Feriado"); `criar_feriado`
       **notifica** os técnicos com atividade no dia; `criar` **bloqueia** (400) agendar em

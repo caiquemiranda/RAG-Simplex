@@ -414,9 +414,13 @@ export const api = {
       request<void>(`/admin/unidades/${id}`, { method: 'DELETE' }),
   },
   cronograma: {
-    listar: (de: string, ate: string, tecnicoId?: number | null, unidadeId?: number | null) =>
-      request<Visita[]>(`/cronograma?de=${de}&ate=${ate}` +
-        `${tecnicoId ? `&tecnico_id=${tecnicoId}` : ''}${unidadeId ? `&unidade_id=${unidadeId}` : ''}`),
+    listar: (de: string, ate: string, opts?: { tecnicoIds?: number[]; clienteIds?: number[]; unidadeId?: number | null }) => {
+      const p = new URLSearchParams({ de, ate })
+      opts?.tecnicoIds?.forEach((id) => p.append('tecnico_ids', String(id)))
+      opts?.clienteIds?.forEach((id) => p.append('cliente_ids', String(id)))
+      if (opts?.unidadeId) p.append('unidade_id', String(opts.unidadeId))
+      return request<Visita[]>(`/cronograma?${p.toString()}`)
+    },
     criar: (dados: NovaVisita) =>
       request<Visita>('/cronograma', { method: 'POST', body: JSON.stringify(dados) }),
     atualizar: (id: number, dados: Partial<NovaVisita>) =>

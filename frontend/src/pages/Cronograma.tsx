@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type ClienteVisivel, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -29,6 +29,46 @@ function agruparPorCliente(evs: Visita[]): GrupoCliente[] {
   return [...m.values()]
 }
 
+/** Filtro multi-seleção (botão + dropdown de checkboxes). Reusado por Equipe e Clientes. */
+function MultiFiltro({ label, todosLabel, opcoes, sel, setSel }: {
+  label: string
+  todosLabel: string
+  opcoes: { id: number; nome: string }[]
+  sel: Set<number>
+  setSel: (s: Set<number>) => void
+}) {
+  const [aberto, setAberto] = useState(false)
+  function alternar(id: number) {
+    const s = new Set(sel)
+    s.has(id) ? s.delete(id) : s.add(id)
+    setSel(s)
+  }
+  return (
+    <div className="relative">
+      <button className="h-9 rounded-md border bg-background px-3 text-sm" onClick={() => setAberto((v) => !v)}>
+        {sel.size ? `${label} (${sel.size})` : todosLabel} ▾
+      </button>
+      {aberto && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setAberto(false)} />
+          <div className="absolute z-20 mt-1 max-h-72 w-56 overflow-auto rounded-md border bg-card p-2 shadow-lg">
+            {sel.size > 0 && (
+              <button className="mb-1 w-full text-left text-xs text-primary hover:underline" onClick={() => setSel(new Set())}>limpar seleção</button>
+            )}
+            {opcoes.map((o) => (
+              <label key={o.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-accent">
+                <input type="checkbox" checked={sel.has(o.id)} onChange={() => alternar(o.id)} />
+                <span className="truncate">{o.nome}</span>
+              </label>
+            ))}
+            {opcoes.length === 0 && <p className="px-1 text-xs text-muted-foreground">nenhum</p>}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Cronograma() {
   const { usuario } = useAuth()
   const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
@@ -41,11 +81,13 @@ export default function Cronograma() {
   const [erro, setErro] = useState<string | null>(null)
   const [diaSel, setDiaSel] = useState<string | null>(null)
 
-  const [tecnicoFiltro, setTecnicoFiltro] = useState<number | ''>('')
-  const [unidadeFiltro, setUnidadeFiltro] = useState<number | ''>('')   // visão por unidade (D-021)
+  const [equipeFiltro, setEquipeFiltro] = useState<Set<number>>(new Set())   // Equipe (técnicos) — multi
+  const [clienteFiltro, setClienteFiltro] = useState<Set<number>>(new Set()) // Clientes — multi
+  const [unidadeFiltro, setUnidadeFiltro] = useState<number | ''>('')        // visão por unidade (D-021)
   const [unidades, setUnidades] = useState<UnidadeVisivel[]>([])
   const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
+  const [clientesVis, setClientesVis] = useState<ClienteVisivel[]>([])       // opções do filtro Clientes (todos os papéis)
   const [nova, setNova] = useState<{ usuarioIds: Set<number>; cliente_id: number | ''; titulo: string }>({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
 
   const de = fmt(new Date(ref.ano, ref.mes, 1))
@@ -54,7 +96,11 @@ export default function Cronograma() {
   async function recarregar() {
     try {
       const [vs, fs] = await Promise.all([
-        api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined, unidadeFiltro || undefined),
+        api.cronograma.listar(de, ate, {
+          tecnicoIds: podeGerir && equipeFiltro.size ? Array.from(equipeFiltro) : undefined,
+          clienteIds: clienteFiltro.size ? Array.from(clienteFiltro) : undefined,
+          unidadeId: unidadeFiltro || undefined,
+        }),
         api.cronograma.feriados(de, ate),
       ])
       setVisitas(vs)
@@ -78,13 +124,17 @@ export default function Cronograma() {
     try { await api.cronograma.removerFeriado(id); recarregar() } catch { /* ignore */ }
   }
 
+  // Chaves estáveis dos filtros multi para o array de dependências.
+  const equipeKey = Array.from(equipeFiltro).sort().join(',')
+  const clienteKey = Array.from(clienteFiltro).sort().join(',')
   useEffect(() => {
     recarregar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref, tecnicoFiltro, unidadeFiltro])
+  }, [ref, equipeKey, clienteKey, unidadeFiltro])
 
   useEffect(() => {
     api.unidadesVisiveis().then(setUnidades).catch(() => {})
+    api.clientesVisiveis().then(setClientesVis).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -165,11 +215,12 @@ export default function Cronograma() {
               </select>
             )}
             {podeGerir && (
-              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={tecnicoFiltro}
-                      onChange={(e) => setTecnicoFiltro(e.target.value ? Number(e.target.value) : '')}>
-                <option value="">Todos os técnicos</option>
-                {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
-              </select>
+              <MultiFiltro label="Equipe" todosLabel="Toda a equipe" sel={equipeFiltro} setSel={setEquipeFiltro}
+                           opcoes={tecnicos.map((t) => ({ id: t.id, nome: t.nome || t.email }))} />
+            )}
+            {clientesVis.length > 0 && (
+              <MultiFiltro label="Clientes" todosLabel="Todos os clientes" sel={clienteFiltro} setSel={setClienteFiltro}
+                           opcoes={clientesVis.map((c) => ({ id: c.id, nome: c.nome }))} />
             )}
           </div>
         </div>

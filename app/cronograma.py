@@ -149,7 +149,8 @@ def _carregar_tecnicos(sessao: Session, ids: list[int]) -> list[Usuario]:
 def listar(
     de: date = Query(..., description="data inicial (YYYY-MM-DD)"),
     ate: date = Query(..., description="data final (YYYY-MM-DD)"),
-    tecnico_id: int | None = Query(None),
+    tecnico_ids: list[int] = Query(default_factory=list, description="filtra por Equipe (1+ técnicos)"),
+    cliente_ids: list[int] = Query(default_factory=list, description="filtra por Clientes (1+)"),
     unidade_id: int | None = Query(None, description="filtra pela unidade do cliente (D-021)"),
     usuario: Usuario = Depends(usuario_atual),
     sessao: Session = Depends(get_session),
@@ -159,8 +160,11 @@ def listar(
     # Técnico (sem gestão) só vê visitas em que está atribuído.
     if not admin:
         consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
-    elif tecnico_id is not None:
-        consulta = consulta.where(Visita.tecnicos.any(id=tecnico_id))
+    elif tecnico_ids:
+        consulta = consulta.where(Visita.tecnicos.any(Usuario.id.in_(tecnico_ids)))
+    # Filtro de Clientes (multi): só visitas desses clientes.
+    if cliente_ids:
+        consulta = consulta.where(Visita.cliente_id.in_(cliente_ids))
     # Visão por unidade: só visitas cujo cliente pertence à unidade (D-021).
     if unidade_id is not None:
         consulta = consulta.where(Visita.cliente.has(Cliente.unidade_id == unidade_id))
@@ -176,8 +180,8 @@ def listar(
     # #ALOC: técnicos com cliente fixo aparecem no cliente nos dias SEM visita explícita.
     if admin:
         q_fix = select(Usuario).where(Usuario.cliente_padrao_id.is_not(None))
-        if tecnico_id is not None:
-            q_fix = q_fix.where(Usuario.id == tecnico_id)
+        if tecnico_ids:
+            q_fix = q_fix.where(Usuario.id.in_(tecnico_ids))
         fixos = list(sessao.scalars(q_fix))
     else:
         fixos = [usuario] if usuario.cliente_padrao_id else []
@@ -191,9 +195,13 @@ def listar(
         # Visão por unidade: ignora o fixo cujo cliente não é da unidade filtrada.
         if unidade_id is not None and cli.unidade_id != unidade_id:
             continue
+        # Filtro de Clientes: ignora o fixo cujo cliente não está selecionado.
+        if cliente_ids and cli.id not in cliente_ids:
+            continue
         dia = de
         while dia <= ate:
-            if dia in feriados:        # #FER-1: feriado não tem alocação fixa
+            # #FER-1: feriado não tem alocação fixa · seg–sex apenas (sem fim de semana).
+            if dia in feriados or dia.weekday() >= 5:
                 dia += timedelta(days=1)
                 continue
             if (dia, tec.id) not in ocupado:
