@@ -12,9 +12,10 @@ sequenceDiagram
   participant API as FastAPI
   participant DB as Banco
   U->>API: POST /auth/login {email, senha}
-  API->>DB: busca usuário por email
-  API->>API: verifica senha (bcrypt)
-  API-->>U: {access_token, refresh_token}
+  API->>API: normalizar_email(email) = strip().lower()  (#FIX-EMAIL)
+  API->>DB: busca usuário por email normalizado
+  API->>API: verifica senha (argon2)
+  API-->>U: {access_token (1 dia, #FIX-TOKEN), refresh_token (7 dias)}
   Note over U: guarda token (localStorage)
   U->>API: GET /auth/me (Authorization: Bearer)
   API->>API: decodifica/valida JWT
@@ -22,6 +23,10 @@ sequenceDiagram
   U->>API: (access expira) POST /auth/refresh
   API-->>U: novo access_token
 ```
+
+> **#FIX-EMAIL:** o e-mail é normalizado (`strip().lower()`) no **login** e na **criação**
+> (API + CLI admin); existentes normalizados pela migração Alembic `5c77258e6fc6`. Login é
+> **case-insensitive**. **#FIX-TOKEN:** access token dura **1 dia** (`access_token_expira_min=1440`).
 
 ## 2. Consulta `/query` (RAG completo)
 
@@ -112,6 +117,45 @@ flowchart TD
   D -- sim --> G[usa config global]
   D -- não --> S[usa settings padrão local_extrativa]
   U & P & G & S --> K["camadas filtradas por papel:<br/>operador = 🟢 · técnico/analista = 🟢+🔧"]
+```
+
+## 7. Cronograma — listar visitas (#ALOC virtuais + #FER-1)
+
+`GET /cronograma?de&ate&tecnico_id&unidade_id` monta a visão do mês combinando **visitas
+reais** e **alocações fixas virtuais** (#ALOC), suprimindo **feriados** (#FER-1).
+
+```mermaid
+flowchart TD
+  A[GET /cronograma de..ate] --> B[seleciona visitas reais no intervalo]
+  B --> C{papel}
+  C -- técnico --> C1[só visitas onde está atribuído]
+  C -- admin --> C2[todas; filtra por tecnico_id/unidade_id]
+  C1 & C2 --> D[carrega datas de FERIADO no intervalo]
+  D --> E[remove visitas reais em datas de feriado #FER-1]
+  E --> F[para cada técnico com cliente_padrao #ALOC]
+  F --> G{dia é feriado?}
+  G -- sim --> F
+  G -- não --> H{já tem visita real nesse dia?}
+  H -- sim --> F
+  H -- não --> I[gera visita virtual fixo=true id=0]
+  I --> F
+  E & I --> J[resposta = reais + virtuais]
+```
+
+## 8. Cronograma — marcar feriado (#FER-1)
+
+```mermaid
+sequenceDiagram
+  participant Admin as Admin
+  participant API as FastAPI
+  participant DB as Banco
+  Admin->>API: POST /cronograma/feriados {data, descrição} (gerir_usuarios)
+  API->>DB: existe feriado nessa data? (409 se sim)
+  API->>DB: insere Feriado
+  API->>DB: busca visitas naquele dia → técnicos (dedup)
+  API->>DB: cria Notificacao "atividades suspensas" p/ cada técnico
+  API-->>Admin: feriado criado
+  Note over API: agendar visita em dia de feriado → 400 (criar bloqueia)
 ```
 
 ## Invariantes refletidas nos fluxos
