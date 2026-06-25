@@ -1,3 +1,5 @@
+import { urlArquivo } from '../lib/api'
+
 /** Iniciais a partir do nome/e-mail: "Caíque Miranda" → "CM". */
 export function iniciais(texto: string): string {
   const p = texto.replace(/@.*/, '').split(/[.\s_-]+/).filter(Boolean)
@@ -20,9 +22,11 @@ export function Avatar({
 }) {
   const titulo = title ?? nome
   if (fotoUrl) {
+    // Caminhos relativos do backend (/arquivos/...) viram URL absoluta; data:/http passam direto.
+    const src = fotoUrl.startsWith('/') ? urlArquivo(fotoUrl) : fotoUrl
     return (
       <img
-        src={fotoUrl}
+        src={src}
         alt={nome}
         title={titulo}
         className={`shrink-0 rounded-full object-cover ${className}`}
