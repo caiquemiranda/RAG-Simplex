@@ -188,6 +188,48 @@ class Visita(Base):
     usuario: Mapped[Usuario] = relationship()
     cliente: Mapped[Cliente | None] = relationship()
     tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
+    # Página da atividade (#ATV-1): comentários e anexos de imagem.
+    comentarios: Mapped[list[ComentarioVisita]] = relationship(
+        back_populates="visita", cascade="all, delete-orphan", order_by="ComentarioVisita.criado_em"
+    )
+    anexos: Mapped[list[AnexoVisita]] = relationship(
+        back_populates="visita", cascade="all, delete-orphan", order_by="AnexoVisita.criado_em"
+    )
+
+
+class ComentarioVisita(Base):
+    """Comentário de um técnico/admin numa atividade do cronograma (#ATV-1)."""
+
+    __tablename__ = "comentario_visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    visita_id: Mapped[int] = mapped_column(ForeignKey("visita.id", ondelete="CASCADE"))
+    autor_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)
+    texto: Mapped[str] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    visita: Mapped[Visita] = relationship(back_populates="comentarios")
+    autor: Mapped[Usuario | None] = relationship()
+
+
+class AnexoVisita(Base):
+    """Anexo de imagem de uma atividade (#ATV-1) — arquivo em /arquivos/atividades/."""
+
+    __tablename__ = "anexo_visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    visita_id: Mapped[int] = mapped_column(ForeignKey("visita.id", ondelete="CASCADE"))
+    autor_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)
+    url: Mapped[str] = mapped_column(Text)                       # /arquivos/atividades/...
+    nome: Mapped[str] = mapped_column(String(200), default="")   # nome original
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    visita: Mapped[Visita] = relationship(back_populates="anexos")
+    autor: Mapped[Usuario | None] = relationship()
 
 
 class Feriado(Base):

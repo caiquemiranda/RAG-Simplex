@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
@@ -312,6 +313,9 @@ export default function Cronograma() {
                         <option value="concluida">concluída</option>
                         <option value="cancelada">cancelada</option>
                       </select>
+                      {!v.fixo && v.id > 0 && (
+                        <Link to={`/cronograma/atividade/${v.id}`} className="whitespace-nowrap text-[11px] text-primary hover:underline" title="Abrir página da atividade">abrir ↗</Link>
+                      )}
                     </div>
                     {podeGerir ? (
                       <div className="space-y-1">

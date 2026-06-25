@@ -26,11 +26,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       virtuais (#ALOC) em datas de feriado (dia mostra só "Feriado"); `criar_feriado`
       **notifica** os técnicos com atividade no dia; `criar` **bloqueia** (400) agendar em
       feriado. Teste `test_feriado_suprime_atividades_e_notifica`.
-- [ ] **#ATV-1 — card/página de atividade** (item 3): hierarquia na navegação
-      **Cronograma → Cliente → Atividade**. Cada `Visita` vira um **card-atividade** com
-      **página própria**: `status` (select), **vários técnicos** (executam e **comentam**),
-      **anexar imagens** (reusa #FILES) exibidas na página. Novas entidades: `ComentarioVisita`
-      e `AnexoVisita` (ou anexos via campo). dep: #FILES ✅, `visita_tecnico` ✅ (#CR8).
+- [x] **#ATV-1 — card/página de atividade** (item 3): página `/cronograma/atividade/:id`
+      (cascata Cronograma → Cliente → Atividade) com `status`, técnicos, **galeria de imagens**
+      e **comentários**. Entidades `ComentarioVisita` + `AnexoVisita` (migração Alembic
+      `7330e27f4c89`); acesso = atribuído ou admin. Spec
+      [`specs/spec-atv1-pagina-atividade.md`](specs/spec-atv1-pagina-atividade.md).
 
 **Equipamentos & cliente (fundação Equipamento primeiro):**
 - [ ] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade

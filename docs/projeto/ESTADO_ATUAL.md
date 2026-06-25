@@ -13,8 +13,8 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote4-fixes` (PR #6 da robustez/Alembic já mergeado em `main`).
-  **Backend: 90 testes** passando.
+- **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
+  **Backend: 92 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -35,16 +35,16 @@
     agrupamento por **cliente** (cor/logo + avatares), **editar**, feriados, **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Lote 4 (em andamento, branch `feat/lote4-fixes`)
+## ⏭️ PRÓXIMO PASSO — Lote 5 (em andamento, branch `feat/lote5-fixes`)
 
 Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
-1. ✅ **#FIX-TOKEN** (token 1 dia) + **#FIX-EMAIL** (e-mail case-insensitive).
-2. ✅ **#FER-1** — feriado sem atividades (suprime visitas/#ALOC no dia + notifica + bloqueia agendar).
-3. ⏭️ **#ATV-1** — página de atividade (status, multi-técnico, anexar imagens, comentários).
-4. **#EQP-1** (fundação: entidade `Equipamento` + CSV) → **#CLI-PG** (página do cliente
-   com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos" com sub-abas + lista por cliente).
+- ✅ Lote 4 mergeado: #FIX-TOKEN, #FIX-EMAIL, #FER-1.
+- ✅ **#ATV-1** — página de atividade (status, técnicos, **galeria de imagens**, **comentários**).
+- ⏭️ **#EQP-1** (fundação: entidade `Equipamento` + import CSV por cliente) →
+  **#CLI-PG** (página do cliente com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos"
+  com sub-abas + lista por cliente).
 
-**Depois do Lote 4:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
+**Depois do Lote 5:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
 *requer API key*) · #1 (alinhamento ChatGPT).
 
 ## 🔧 Para rodar na sua máquina

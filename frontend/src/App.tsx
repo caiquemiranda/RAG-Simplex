@@ -10,6 +10,7 @@ import RelatorioCliente from './pages/RelatorioCliente'
 import Equipamentos from './pages/Equipamentos'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
+import Atividade from './pages/Atividade'
 import Notificacoes from './pages/Notificacoes'
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/equipamentos" element={<Equipamentos />} />
           <Route path="/documentos" element={<Documentos />} />
           <Route path="/cronograma" element={<Cronograma />} />
+          <Route path="/cronograma/atividade/:id" element={<Atividade />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/inicio" element={<Home />} />
           <Route path="/admin" element={<Admin />} />

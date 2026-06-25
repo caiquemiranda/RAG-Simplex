@@ -202,6 +202,50 @@ def test_unidade_crud_e_visao_por_unidade(ctx):
     assert client.delete(f"/admin/unidades/{uid}", headers=admin).status_code == 204
 
 
+def test_atividade_detalhe_e_comentario(ctx):
+    """#ATV-1: detalhe e comentário só para técnico atribuído ou admin."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    vid = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-08-01", "titulo": "Inspeção"}).json()["id"]
+
+    # Atribuído vê o detalhe; não-atribuído (tec2) → 403.
+    assert client.get(f"/cronograma/{vid}", headers=_login(client, "tec@x.com")).status_code == 200
+    assert client.get(f"/cronograma/{vid}", headers=_login(client, "tec2@x.com")).status_code == 403
+
+    # Comentário do atribuído aparece; vazio → 400; não-atribuído → 403.
+    r = client.post(f"/cronograma/{vid}/comentarios", headers=_login(client, "tec@x.com"), json={"texto": "Cheguei ao local"})
+    assert r.status_code == 201 and r.json()["comentarios"][0]["texto"] == "Cheguei ao local"
+    assert r.json()["comentarios"][0]["autor_nome"] == "Tecnico"
+    assert client.post(f"/cronograma/{vid}/comentarios", headers=admin, json={"texto": "  "}).status_code == 400
+    assert client.post(f"/cronograma/{vid}/comentarios", headers=_login(client, "tec2@x.com"), json={"texto": "x"}).status_code == 403
+
+
+def test_atividade_anexo_imagem(ctx, monkeypatch, tmp_path):
+    """#ATV-1: anexar imagem na atividade e remover (técnico atribuído)."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "arquivos_dir", tmp_path)
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    vid = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-08-02", "titulo": "Foto"}).json()["id"]
+    tec = _login(client, "tec@x.com")
+
+    # Não-imagem → 400.
+    assert client.post(f"/cronograma/{vid}/anexos", headers=tec,
+                       files={"arquivo": ("nota.txt", b"x", "text/plain")}).status_code == 400
+    # Imagem → 201 e aparece nos anexos.
+    r = client.post(f"/cronograma/{vid}/anexos", headers=tec,
+                    files={"arquivo": ("foto.png", b"\x89PNG\r\n", "image/png")})
+    assert r.status_code == 201 and len(r.json()["anexos"]) == 1
+    anexo = r.json()["anexos"][0]
+    assert anexo["url"].startswith("/arquivos/atividades/")
+
+    # Remover anexo.
+    r = client.delete(f"/cronograma/{vid}/anexos/{anexo['id']}", headers=tec)
+    assert r.status_code == 200 and r.json()["anexos"] == []
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

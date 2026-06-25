@@ -18,6 +18,8 @@ erDiagram
   USUARIO ||--o{ VISITA : "1:N (responsável)"
   USUARIO }o--o{ VISITA : "N:N visita_tecnico (atribuídos)"
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
+  VISITA ||--o{ COMENTARIO_VISITA : "1:N (cascade, #ATV-1)"
+  VISITA ||--o{ ANEXO_VISITA : "1:N (cascade, #ATV-1)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -72,6 +74,21 @@ erDiagram
     string titulo "atividade"
     string status "agendada|concluida|cancelada"
     text observacoes
+  }
+  COMENTARIO_VISITA {
+    int id PK
+    int visita_id FK "cascade"
+    int autor_id FK "usuario"
+    text texto
+    datetime criado_em
+  }
+  ANEXO_VISITA {
+    int id PK
+    int visita_id FK "cascade"
+    int autor_id FK "usuario"
+    text url "/arquivos/atividades/..."
+    string nome "nome original"
+    datetime criado_em
   }
   FERIADO {
     int id PK
@@ -164,7 +181,15 @@ Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), c
 `status`. **Vários técnicos** podem ser atribuídos (N:N `visita_tecnico`, #CR8);
 `usuario_id` é o responsável (1º) por compatibilidade. Técnico vê visitas em que está
 atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
+**Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
 Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### ComentarioVisita / AnexoVisita (página da atividade, #ATV-1)
+A atividade (`Visita`) tem uma **página própria** com **comentários** e **anexos de
+imagem** (ambos `cascade` na visita). `ComentarioVisita`: `autor_id`, `texto`, `criado_em`.
+`AnexoVisita`: imagem em `/arquivos/atividades/` (`url`, `nome`, `autor_id`, `criado_em`).
+Acesso (ver/comentar/anexar/mudar status): **técnico atribuído ou admin**. Reusa #FILES.
+Ver [`projeto/specs/spec-atv1-pagina-atividade.md`](projeto/specs/spec-atv1-pagina-atividade.md).
 
 ### Feriado / Notificacao
 `Feriado` (global): data única + descrição; destaca o dia no cronograma.

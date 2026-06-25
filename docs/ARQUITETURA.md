@@ -85,6 +85,9 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_id=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas; filtro por **unidade** do cliente). |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
+| GET | `/cronograma/{id}` | atribuído ou admin | **Detalhe da atividade** (#ATV-1): comentários + anexos. |
+| POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
+| POST/DELETE | `/cronograma/{id}/anexos[/{anexo_id}]` | atribuído ou admin | Anexa/remove **imagem** (`/arquivos/atividades/`). |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
 | GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |

@@ -7,16 +7,25 @@ Router montado em `/cronograma`. Visão por papel:
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.arquivos import remover_arquivo, salvar_upload
 from app.auth import requer, usuario_atual
 from app.db import get_session
-from app.modelos import Cliente, Feriado, Notificacao, Usuario, Visita
+from app.modelos import (
+    AnexoVisita,
+    Cliente,
+    ComentarioVisita,
+    Feriado,
+    Notificacao,
+    Usuario,
+    Visita,
+)
 
 router = APIRouter(prefix="/cronograma", tags=["cronograma"])
 
@@ -73,6 +82,32 @@ class VisitaResumo(BaseModel):
     status: str
     observacoes: str | None = None
     fixo: bool = False                # alocação fixa virtual (#ALOC), não é uma visita real
+
+
+# --- Página da atividade (#ATV-1) ---
+class ComentarioOut(BaseModel):
+    id: int
+    autor_id: int | None = None
+    autor_nome: str | None = None
+    texto: str
+    criado_em: datetime
+
+
+class AnexoOut(BaseModel):
+    id: int
+    url: str
+    nome: str
+    autor_id: int | None = None
+    criado_em: datetime
+
+
+class ComentarioIn(BaseModel):
+    texto: str
+
+
+class VisitaDetalhe(VisitaResumo):
+    comentarios: list[ComentarioOut] = []
+    anexos: list[AnexoOut] = []
 
 
 def _nome_unidade(cli: Cliente | None) -> str | None:
@@ -265,6 +300,98 @@ def remover(visita_id: int,
         raise HTTPException(status_code=404, detail="Visita não encontrada.")
     sessao.delete(v)
     sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Página da atividade (#ATV-1) — detalhe, comentários e anexos de imagem       #
+# --------------------------------------------------------------------------- #
+def _carregar_visita(sessao: Session, visita_id: int) -> Visita:
+    v = sessao.get(Visita, visita_id)
+    if v is None:
+        raise HTTPException(status_code=404, detail="Atividade não encontrada.")
+    return v
+
+
+def _pode_gerir_visita(usuario: Usuario, v: Visita) -> bool:
+    """Técnico atribuído (em visita_tecnico) ou admin (gerir_usuarios)."""
+    return usuario.tem_permissao("gerir_usuarios") or any(t.id == usuario.id for t in v.tecnicos)
+
+
+def _detalhe(v: Visita) -> VisitaDetalhe:
+    return VisitaDetalhe(
+        **_resumo(v).model_dump(),
+        comentarios=[
+            ComentarioOut(id=c.id, autor_id=c.autor_id,
+                          autor_nome=(c.autor.nome or c.autor.email) if c.autor else None,
+                          texto=c.texto, criado_em=c.criado_em)
+            for c in v.comentarios
+        ],
+        anexos=[
+            AnexoOut(id=a.id, url=a.url, nome=a.nome, autor_id=a.autor_id, criado_em=a.criado_em)
+            for a in v.anexos
+        ],
+    )
+
+
+@router.get("/{visita_id}", response_model=VisitaDetalhe)
+def detalhe(visita_id: int,
+            usuario: Usuario = Depends(usuario_atual),
+            sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    return _detalhe(v)
+
+
+@router.post("/{visita_id}/comentarios", response_model=VisitaDetalhe,
+             status_code=status.HTTP_201_CREATED)
+def comentar(visita_id: int, dados: ComentarioIn,
+             usuario: Usuario = Depends(usuario_atual),
+             sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    if not dados.texto.strip():
+        raise HTTPException(status_code=400, detail="Comentário vazio.")
+    v.comentarios.append(ComentarioVisita(autor_id=usuario.id, texto=dados.texto.strip()))
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
+
+
+@router.post("/{visita_id}/anexos", response_model=VisitaDetalhe,
+             status_code=status.HTTP_201_CREATED)
+def anexar(visita_id: int,
+           arquivo: UploadFile = File(...),
+           usuario: Usuario = Depends(usuario_atual),
+           sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    if not (arquivo.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=400, detail="Anexo deve ser uma imagem.")
+    url = salvar_upload(arquivo, "atividades")
+    v.anexos.append(AnexoVisita(autor_id=usuario.id, url=url, nome=arquivo.filename or "imagem"))
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
+
+
+@router.delete("/{visita_id}/anexos/{anexo_id}", response_model=VisitaDetalhe)
+def remover_anexo(visita_id: int, anexo_id: int,
+                  usuario: Usuario = Depends(usuario_atual),
+                  sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    anexo = sessao.get(AnexoVisita, anexo_id)
+    if anexo is None or anexo.visita_id != visita_id:
+        raise HTTPException(status_code=404, detail="Anexo não encontrado.")
+    remover_arquivo(anexo.url)
+    sessao.delete(anexo)
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
 
 
 # --------------------------------------------------------------------------- #

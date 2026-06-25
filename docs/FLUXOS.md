@@ -158,6 +158,31 @@ sequenceDiagram
   Note over API: agendar visita em dia de feriado → 400 (criar bloqueia)
 ```
 
+## 9. Atividade — comentar e anexar imagem (#ATV-1)
+
+```mermaid
+sequenceDiagram
+  participant U as Técnico/Admin
+  participant API as FastAPI
+  participant FS as arquivos.py (#FILES)
+  participant DB as Banco
+  U->>API: GET /cronograma/{id} (detalhe)
+  API->>API: _pode_gerir_visita = admin OU atribuído? (senão 403)
+  API-->>U: VisitaDetalhe {..., comentarios[], anexos[]}
+  U->>API: POST /cronograma/{id}/comentarios {texto}
+  API->>DB: insere ComentarioVisita (autor = usuário)
+  API-->>U: detalhe atualizado
+  U->>API: POST /cronograma/{id}/anexos (multipart imagem)
+  API->>API: valida content_type image/*
+  API->>FS: salvar_upload(arquivo, "atividades") → /arquivos/atividades/...
+  API->>DB: insere AnexoVisita {url, nome, autor}
+  API-->>U: detalhe atualizado (galeria)
+  U->>API: DELETE /cronograma/{id}/anexos/{anexoId}
+  API->>FS: remover_arquivo(url)
+  API->>DB: remove AnexoVisita
+  API-->>U: detalhe atualizado
+```
+
 ## Invariantes refletidas nos fluxos
 - **RBAC** checado na borda (`requer(permissao)`) antes de qualquer lógica.
 - **Limiar 0.78**: abaixo → fallback (nunca improvisar procedimento).

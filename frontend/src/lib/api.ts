@@ -96,6 +96,10 @@ export type Visita = {
   observacoes: string | null
   fixo: boolean
 }
+// Página da atividade (#ATV-1).
+export type ComentarioVisita = { id: number; autor_id: number | null; autor_nome: string | null; texto: string; criado_em: string }
+export type AnexoVisita = { id: number; url: string; nome: string; autor_id: number | null; criado_em: string }
+export type VisitaDetalhe = Visita & { comentarios: ComentarioVisita[]; anexos: AnexoVisita[] }
 export type NovaVisita = {
   usuario_ids: number[]
   cliente_id?: number | null
@@ -310,6 +314,24 @@ export async function uploadArquivo(file: File, subpasta = ''): Promise<{ url: s
   return res.json()
 }
 
+/** POST multipart de um único arquivo (campo `arquivo`) para um endpoint qualquer. */
+export async function uploadMultipart<T>(path: string, file: File): Promise<T> {
+  const token = getToken()
+  const fd = new FormData()
+  fd.append('arquivo', file)
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  })
+  if (!res.ok) {
+    let detalhe = res.statusText
+    try { detalhe = (await res.json()).detail ?? detalhe } catch { /* sem JSON */ }
+    throw new Error(detalhe)
+  }
+  return res.json()
+}
+
 export const api = {
   login: (email: string, senha: string) =>
     request<{ access_token: string; refresh_token?: string }>('/auth/login', {
@@ -400,6 +422,13 @@ export const api = {
     atualizar: (id: number, dados: Partial<NovaVisita>) =>
       request<Visita>(`/cronograma/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/cronograma/${id}`, { method: 'DELETE' }),
+    // Página da atividade (#ATV-1)
+    obter: (id: number) => request<VisitaDetalhe>(`/cronograma/${id}`),
+    comentar: (id: number, texto: string) =>
+      request<VisitaDetalhe>(`/cronograma/${id}/comentarios`, { method: 'POST', body: JSON.stringify({ texto }) }),
+    anexar: (id: number, file: File) => uploadMultipart<VisitaDetalhe>(`/cronograma/${id}/anexos`, file),
+    removerAnexo: (id: number, anexoId: number) =>
+      request<VisitaDetalhe>(`/cronograma/${id}/anexos/${anexoId}`, { method: 'DELETE' }),
     feriados: (de: string, ate: string) =>
       request<Feriado[]>(`/cronograma/feriados/intervalo?de=${de}&ate=${ate}`),
     criarFeriado: (dados: { data: string; descricao: string }) =>

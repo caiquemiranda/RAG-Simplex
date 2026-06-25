@@ -4,6 +4,29 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (1): #ATV-1 página de atividade (comentários + anexos)
+
+**Branch:** `feat/lote5-fixes` (do `main` após o merge do Lote 4, PR #7).
+Spec: [`specs/spec-atv1-pagina-atividade.md`](specs/spec-atv1-pagina-atividade.md).
+
+- **Modelo:** entidades `ComentarioVisita` e `AnexoVisita` (cascade em `Visita`); migração
+  Alembic `7330e27f4c89` (limpei o ruído de FK do autogenerate no SQLite — só as 2 tabelas).
+- **API (`cronograma.py`):** `GET /cronograma/{id}` (detalhe), `POST .../comentarios`,
+  `POST/DELETE .../anexos` (imagem via #FILES → `/arquivos/atividades/`). RBAC: técnico
+  **atribuído** ou **admin** (`_pode_gerir_visita`).
+- **Frontend:** página `pages/Atividade.tsx` (rota `/cronograma/atividade/:id`) — breadcrumb
+  Cronograma→Cliente→Atividade, status, técnicos, galeria de imagens (anexar/remover),
+  thread de comentários. Card do dia ganhou link **"abrir ↗"** (só visitas reais).
+  `api.ts`: tipos + métodos `obter/comentar/anexar/removerAnexo` + helper `uploadMultipart`.
+- **Higiene:** recuperei (cherry-pick) o doc backfill do Lote 4 que ficou fora do PR #7.
+- **Testes:** `test_atividade_detalhe_e_comentario`, `test_atividade_anexo_imagem`. **92 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,cronograma}.py`, `alembic/versions/7330e27f4c89_*.py`,
+`tests/test_cronograma.py`, `frontend/src/{App.tsx,lib/api.ts,pages/Atividade.tsx,pages/Cronograma.tsx}`,
+`docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 4 (2): #FER-1 feriado sem atividades
 
 **Branch:** `feat/lote4-fixes`.
