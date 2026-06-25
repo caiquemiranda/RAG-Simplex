@@ -30,6 +30,7 @@ from app.modelos import (
     Papel,
     Permissao,
     Provedor,
+    Unidade,
     Usuario,
 )
 
@@ -46,9 +47,29 @@ class UsuarioCriar(BaseModel):
     papel: str | None = None
 
 
+class UnidadeIn(BaseModel):
+    nome: str
+    cidade: str | None = None
+    ativo: bool = True
+
+
+class UnidadeAtualizar(BaseModel):
+    nome: str | None = None
+    cidade: str | None = None
+    ativo: bool | None = None
+
+
+class UnidadeResumo(BaseModel):
+    id: int
+    nome: str
+    cidade: str | None = None
+    ativo: bool
+
+
 class ClienteIn(BaseModel):
     nome: str
     unidade: str | None = None
+    unidade_id: int | None = None
     ativo: bool = True
     cor: str | None = None
     logo_url: str | None = None
@@ -57,6 +78,7 @@ class ClienteIn(BaseModel):
 class ClienteAtualizar(BaseModel):
     nome: str | None = None
     unidade: str | None = None
+    unidade_id: int | None = None
     ativo: bool | None = None
     cor: str | None = None
     logo_url: str | None = None
@@ -66,6 +88,8 @@ class ClienteResumo(BaseModel):
     id: int
     nome: str
     unidade: str | None = None
+    unidade_id: int | None = None
+    unidade_nome: str | None = None
     ativo: bool
     cor: str | None = None
     logo_url: str | None = None
@@ -81,6 +105,7 @@ class UsuarioAtualizar(BaseModel):
     telefone: str | None = None
     cargo: str | None = None
     unidade: str | None = None
+    unidade_id: int | None = None          # base do técnico (entidade Unidade, D-021)
     cliente_ids: list[int] | None = None   # clientes atendidos (substitui o CSV)
     cliente_padrao_id: int | None = None   # cliente fixo (#ALOC)
     observacoes: str | None = None
@@ -117,6 +142,8 @@ class UsuarioDetalhe(UsuarioResumo):
     telefone: str | None = None
     cargo: str | None = None
     unidade: str | None = None
+    unidade_id: int | None = None          # base do técnico (entidade Unidade, D-021)
+    unidade_nome: str | None = None
     clientes: list[ClienteResumo] = []     # clientes atendidos (relação)
     cliente_padrao_id: int | None = None   # cliente fixo (#ALOC)
     cliente_padrao_nome: str | None = None
@@ -198,12 +225,10 @@ def _detalhe_usuario(u: Usuario) -> UsuarioDetalhe:
         papel=u.papel.nome if u.papel else None,
         permissoes_extra=[p.chave for p in u.permissoes_extra],
         foto_url=u.foto_url, telefone=u.telefone, cargo=u.cargo, unidade=u.unidade,
+        unidade_id=u.unidade_id,
+        unidade_nome=u.unidade_rel.nome if u.unidade_rel else None,
         observacoes=u.observacoes, acesso_expira_em=u.acesso_expira_em,
-        clientes=[
-            ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo,
-                          cor=c.cor, logo_url=c.logo_url)
-            for c in u.clientes_rel
-        ],
+        clientes=[_resumo_cliente(c) for c in u.clientes_rel],
         cliente_padrao_id=u.cliente_padrao_id,
         cliente_padrao_nome=u.cliente_padrao.nome if u.cliente_padrao else None,
         documentos=[
@@ -311,17 +336,87 @@ def atualizar_usuario(usuario_id: int, dados: UsuarioAtualizar,
         if cid is not None and sessao.get(Cliente, cid) is None:
             raise HTTPException(status_code=404, detail="Cliente fixo não encontrado.")
         usuario.cliente_padrao_id = cid
+    if "unidade_id" in dados.model_fields_set:
+        uid = dados.unidade_id
+        if uid is not None and sessao.get(Unidade, uid) is None:
+            raise HTTPException(status_code=404, detail="Unidade não encontrada.")
+        usuario.unidade_id = uid
     sessao.commit()
     sessao.refresh(usuario)
     return _detalhe_usuario(usuario)
 
 
 # --------------------------------------------------------------------------- #
+# Unidades (D-021) — base/regional para a "visão por unidade" do cronograma     #
+# --------------------------------------------------------------------------- #
+def _resumo_unidade(u: Unidade) -> UnidadeResumo:
+    return UnidadeResumo(id=u.id, nome=u.nome, cidade=u.cidade, ativo=u.ativo)
+
+
+@router.get("/unidades", response_model=list[UnidadeResumo])
+def listar_unidades(_: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)) -> list[UnidadeResumo]:
+    return [_resumo_unidade(u) for u in sessao.scalars(select(Unidade).order_by(Unidade.nome))]
+
+
+@router.post("/unidades", response_model=UnidadeResumo, status_code=status.HTTP_201_CREATED)
+def criar_unidade(dados: UnidadeIn,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> UnidadeResumo:
+    if not dados.nome.strip():
+        raise HTTPException(status_code=400, detail="Nome da unidade é obrigatório.")
+    if sessao.scalar(select(Unidade).where(Unidade.nome == dados.nome.strip())):
+        raise HTTPException(status_code=409, detail="Já existe uma unidade com esse nome.")
+    u = Unidade(nome=dados.nome.strip(), cidade=dados.cidade or None, ativo=dados.ativo)
+    sessao.add(u)
+    sessao.commit()
+    sessao.refresh(u)
+    return _resumo_unidade(u)
+
+
+@router.patch("/unidades/{unidade_id}", response_model=UnidadeResumo)
+def atualizar_unidade(unidade_id: int, dados: UnidadeAtualizar,
+                      _: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> UnidadeResumo:
+    u = sessao.get(Unidade, unidade_id)
+    if u is None:
+        raise HTTPException(status_code=404, detail="Unidade não encontrada.")
+    if dados.nome is not None:
+        u.nome = dados.nome.strip()
+    if dados.cidade is not None:
+        u.cidade = dados.cidade or None
+    if dados.ativo is not None:
+        u.ativo = dados.ativo
+    sessao.commit()
+    sessao.refresh(u)
+    return _resumo_unidade(u)
+
+
+@router.delete("/unidades/{unidade_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_unidade(unidade_id: int,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)):
+    u = sessao.get(Unidade, unidade_id)
+    if u is None:
+        raise HTTPException(status_code=404, detail="Unidade não encontrada.")
+    # Bloqueia remoção se ainda houver técnicos ou clientes vinculados (evita órfãos).
+    em_uso = sessao.scalar(select(Cliente).where(Cliente.unidade_id == unidade_id)) or \
+        sessao.scalar(select(Usuario).where(Usuario.unidade_id == unidade_id))
+    if em_uso is not None:
+        raise HTTPException(status_code=409,
+                            detail="Unidade em uso por técnicos/clientes; desvincule antes de remover.")
+    sessao.delete(u)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
 # Clientes                                                                     #
 # --------------------------------------------------------------------------- #
 def _resumo_cliente(c: Cliente) -> ClienteResumo:
-    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade, ativo=c.ativo,
-                         cor=c.cor, logo_url=c.logo_url)
+    return ClienteResumo(id=c.id, nome=c.nome, unidade=c.unidade,
+                         unidade_id=c.unidade_id,
+                         unidade_nome=c.unidade_rel.nome if c.unidade_rel else None,
+                         ativo=c.ativo, cor=c.cor, logo_url=c.logo_url)
 
 
 @router.get("/clientes", response_model=list[ClienteResumo])
@@ -338,7 +433,10 @@ def criar_cliente(dados: ClienteIn,
         raise HTTPException(status_code=400, detail="Nome do cliente é obrigatório.")
     if sessao.scalar(select(Cliente).where(Cliente.nome == dados.nome.strip())):
         raise HTTPException(status_code=409, detail="Já existe um cliente com esse nome.")
-    c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None, ativo=dados.ativo,
+    if dados.unidade_id is not None and sessao.get(Unidade, dados.unidade_id) is None:
+        raise HTTPException(status_code=404, detail="Unidade não encontrada.")
+    c = Cliente(nome=dados.nome.strip(), unidade=dados.unidade or None,
+                unidade_id=dados.unidade_id, ativo=dados.ativo,
                 cor=dados.cor or None, logo_url=dados.logo_url or None)
     sessao.add(c)
     sessao.commit()
@@ -357,6 +455,10 @@ def atualizar_cliente(cliente_id: int, dados: ClienteAtualizar,
         c.nome = dados.nome.strip()
     if dados.unidade is not None:
         c.unidade = dados.unidade or None
+    if "unidade_id" in dados.model_fields_set:
+        if dados.unidade_id is not None and sessao.get(Unidade, dados.unidade_id) is None:
+            raise HTTPException(status_code=404, detail="Unidade não encontrada.")
+        c.unidade_id = dados.unidade_id
     if dados.ativo is not None:
         c.ativo = dados.ativo
     if dados.cor is not None:

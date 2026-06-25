@@ -168,6 +168,40 @@ def test_cliente_fixo_alocacao(ctx):
     assert len(vis) == 1 and vis[0]["fixo"] is False and vis[0]["titulo"] == "Relocado"
 
 
+def test_unidade_crud_e_visao_por_unidade(ctx):
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+
+    # Cria a unidade e vincula o cliente existente (Shopping X) a ela.
+    r = client.post("/admin/unidades", headers=admin, json={"nome": "Filial SP", "cidade": "São Paulo"})
+    assert r.status_code == 201
+    uid = r.json()["id"]
+    # Nome duplicado → 409.
+    assert client.post("/admin/unidades", headers=admin, json={"nome": "Filial SP"}).status_code == 409
+    r = client.patch(f"/admin/clientes/{ids['cliente']}", headers=admin, json={"unidade_id": uid})
+    assert r.status_code == 200 and r.json()["unidade_nome"] == "Filial SP"
+
+    # Segundo cliente SEM unidade + uma visita nele.
+    cid2 = client.post("/admin/clientes", headers=admin, json={"nome": "Hospital Y"}).json()["id"]
+    client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-07-10", "titulo": "Na filial"})
+    client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec2"]], "cliente_id": cid2, "data": "2026-07-10", "titulo": "Fora"})
+
+    # Visão por unidade: só a visita do cliente da unidade aparece.
+    vis = client.get(f"/cronograma?de=2026-07-10&ate=2026-07-10&unidade_id={uid}", headers=admin).json()
+    assert len(vis) == 1 and vis[0]["titulo"] == "Na filial" and vis[0]["unidade_id"] == uid
+
+    # Seletor público lista a unidade ativa.
+    unidades = client.get("/unidades", headers=admin).json()
+    assert any(u["id"] == uid and u["nome"] == "Filial SP" for u in unidades)
+
+    # Remoção bloqueada enquanto há cliente vinculado (409); liberada após desvincular.
+    assert client.delete(f"/admin/unidades/{uid}", headers=admin).status_code == 409
+    client.patch(f"/admin/clientes/{ids['cliente']}", headers=admin, json={"unidade_id": None})
+    assert client.delete(f"/admin/unidades/{uid}", headers=admin).status_code == 204
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

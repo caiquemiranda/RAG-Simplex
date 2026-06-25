@@ -18,8 +18,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `docs_alerta` (vencidos/≤30d) no `UsuarioResumo` → badge **⚠️ N doc.** na linha.
 - [x] **Input centralizado** no estado vazio da consulta (estilo "O que tem na agenda"):
       quando não há mensagens, o título + campo de envio ficam **centralizados**.
-- [ ] **Foto do técnico**: hoje é data URL no banco. Migrar para upload de arquivo
-      + endpoint de mídia quando houver muitos usuários. dep: decisão de storage.
+- [x] **Foto do técnico por arquivo**: upload via `/upload` (subpasta `usuarios`) grava a
+      **URL** em `foto_url` (tira o data URL pesado do banco). Reusa #FILES; data URL legado tolerado.
 
 ### B. Painel ADM — cards hoje placeholder
 - [x] **Clientes** (entidade + CRUD): cadastrar clientes; técnicos associados via
@@ -36,8 +36,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 - [x] **Fechamento de visita**: no card do dia, **status** editável (agendada/concluída/
       cancelada) + **observações**. Técnico **fecha a própria** visita; admin edita todas.
       `PATCH /cronograma/{id}` com RBAC (técnico: só status/observações da própria).
-- [ ] **Visão por unidade/local** — dep: **entidade `Unidade`** (decisão **D-021**:
-      vira cadastro). Criar `Unidade` antes do filtro para não retrabalhar.
+- [x] **Visão por unidade/local** (D-021): entidade **`Unidade`** (nome/cidade/ativo) +
+      `Usuario.unidade_id`/`Cliente.unidade_id`; CRUD `/admin/unidades`; `GET /unidades`;
+      filtro **`/cronograma?unidade_id=`** (pela unidade do cliente; inclui virtuais #ALOC).
+      Frontend: gestão no card "Clientes e unidades", seletor por cliente/técnico, dropdown
+      de unidade no cronograma. Spec [`specs/spec-unidade.md`](specs/spec-unidade.md).
 
 #### Otimizações do cronograma (2026-06-24)
 - [x] **#CR1 — Grade só do mês vigente**: renderiza apenas as semanas com dias do mês;

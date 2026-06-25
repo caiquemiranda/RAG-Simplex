@@ -4,7 +4,7 @@ Visão única de **onde estamos** e **para onde vamos**. Consolida o status das 
 ([`ROADMAP.md`](ROADMAP.md)) e o backlog/sequência ([`BACKLOG.md`](BACKLOG.md)).
 Para o que já existe, ver [`../ARQUITETURA.md`](../ARQUITETURA.md).
 
-**Atualizado:** 2026-06-24 · **Branch:** `feat/fase-7-frontend` · **Backend:** 81 testes ✅
+**Atualizado:** 2026-06-25 · **Branch:** `feat/fase-7-frontend` · **Backend:** 82 testes ✅
 
 ---
 
@@ -32,8 +32,9 @@ streaming, citações e feedback), e o admin gerencia usuários/acessos.
 | **#R1 Relatórios = cards de clientes + sidebar** | ✅ |
 | **#DOC1 Documentos (Empresa/Marcas) biblioteca + CRUD** | ✅ |
 | **#CR6/#CR7 calendário (agrupa por cliente, editar, layout) · fechamento de visita** | ✅ |
-| **Lote 2: #CR8 multi-técnico · #ALOC alocação fixa · #DOC2 docs na sidebar** | ⬜ próximo |
-| Entidade `Unidade` (D-021) → visão por unidade | ⬜ |
+| **Lote 2: #CR8 multi-técnico · #ALOC alocação fixa** · **Lote 3 #DOC2/3/4 docs** | ✅ |
+| **Foto do usuário por arquivo** (tira data URL do banco) | ✅ |
+| **Entidade `Unidade` (D-021) → visão por unidade** | ✅ |
 | Fase 10 (nuvem + arena) | ⬜ requer API key |
 | Fase 11 (reranker, RAGAS-lite, Alembic) | ⬜ |
 

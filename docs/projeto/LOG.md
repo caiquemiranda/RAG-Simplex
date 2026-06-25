@@ -4,6 +4,27 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Entidade Unidade + "visão por unidade" no cronograma (D-021)
+
+**Branch:** `feat/fase-7-frontend`. Spec: [`specs/spec-unidade.md`](specs/spec-unidade.md).
+
+- **Modelo:** `Unidade` (nome único/cidade/ativo); `Usuario.unidade_id` e
+  `Cliente.unidade_id` (+ `unidade_rel`). Texto legado mantido como fallback. Micro-migração
+  genérica criou a tabela + colunas (banco real migrado).
+- **API:** CRUD `/admin/unidades` (DELETE 409 se em uso; nome duplicado 409); `GET /unidades`
+  (ativas); `unidade_id` em criar/atualizar cliente e usuário (valida → 404); `ClienteResumo`/
+  `UsuarioDetalhe` com `unidade_id`/`unidade_nome`. Cronograma: filtro `?unidade_id=` (pela
+  unidade do cliente; respeita virtuais #ALOC); `VisitaResumo.unidade_id`.
+- **Frontend:** tipos/métodos em `api.ts`; Admin card "Clientes e unidades" (gestão de
+  unidades + seletor por cliente/linha/perfil de usuário); dropdown de unidade no Cronograma.
+- **Teste** `test_unidade_crud_e_visao_por_unidade`. **82 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin,main,cronograma}.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx,pages/Cronograma.tsx}`, `docs/**`,
+`specs/spec-unidade.md`.
+
+---
+
 ## 2026-06-25 — Foto do usuário por arquivo (tira data URL do banco)
 
 **Branch:** `feat/fase-7-frontend`.

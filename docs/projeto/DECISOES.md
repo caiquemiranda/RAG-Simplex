@@ -147,3 +147,7 @@ parágrafo vira a camada simples. Garante ancoragem perfeita (zero alucinação)
 variação de digitação; a entidade dá filtro robusto e evita retrabalho. **Quando:**
 criar a `Unidade` **antes** de implementar a "visão por unidade" (Etapa 1c do BACKLOG).
 Até lá, o texto livre permanece (sem migração obrigatória).
+**Implementado (2026-06-25):** entidade `Unidade` (nome/cidade/ativo); `Usuario.unidade_id`
+e `Cliente.unidade_id`; CRUD `/admin/unidades` (DELETE 409 se em uso); `GET /unidades`;
+filtro `GET /cronograma?unidade_id=` (pela unidade do cliente, inclui virtuais #ALOC). O
+texto livre legado segue como fallback de exibição.

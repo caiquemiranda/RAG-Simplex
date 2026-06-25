@@ -63,12 +63,19 @@ export type AdminCliente = {
   id: number
   nome: string
   unidade: string | null
+  unidade_id: number | null
+  unidade_nome: string | null
   ativo: boolean
   cor: string | null
   logo_url: string | null
 }
-export type ClienteEntrada = { nome?: string; unidade?: string | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
-export type ClienteVisivel = { id: number; nome: string; unidade: string | null; cor: string | null; logo_url: string | null }
+export type ClienteEntrada = { nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
+export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
+
+// Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
+export type AdminUnidade = { id: number; nome: string; cidade: string | null; ativo: boolean }
+export type UnidadeEntrada = { nome?: string; cidade?: string | null; ativo?: boolean }
+export type UnidadeVisivel = { id: number; nome: string; cidade: string | null }
 
 export type TecnicoMini = { id: number; nome: string; foto: string | null }
 export type Visita = {
@@ -82,6 +89,7 @@ export type Visita = {
   cliente_cor: string | null
   cliente_logo: string | null
   unidade: string | null
+  unidade_id: number | null
   data: string
   titulo: string
   status: string
@@ -122,6 +130,8 @@ export type AdminUsuarioDetalhe = AdminUsuario & {
   telefone: string | null
   cargo: string | null
   unidade: string | null
+  unidade_id: number | null
+  unidade_nome: string | null
   clientes: AdminCliente[]
   cliente_padrao_id: number | null
   cliente_padrao_nome: string | null
@@ -174,6 +184,7 @@ export type AtualizaUsuario = {
   telefone?: string | null
   cargo?: string | null
   unidade?: string | null
+  unidade_id?: number | null
   cliente_ids?: number[]
   cliente_padrao_id?: number | null
   observacoes?: string | null
@@ -295,6 +306,7 @@ export const api = {
   me: () => request<Usuario>('/auth/me'),
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
+  unidadesVisiveis: () => request<UnidadeVisivel[]>('/unidades'),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -356,10 +368,18 @@ export const api = {
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
+    unidades: () => request<AdminUnidade[]>('/admin/unidades'),
+    criarUnidade: (dados: UnidadeEntrada & { nome: string }) =>
+      request<AdminUnidade>('/admin/unidades', { method: 'POST', body: JSON.stringify(dados) }),
+    atualizarUnidade: (id: number, dados: UnidadeEntrada) =>
+      request<AdminUnidade>(`/admin/unidades/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    removerUnidade: (id: number) =>
+      request<void>(`/admin/unidades/${id}`, { method: 'DELETE' }),
   },
   cronograma: {
-    listar: (de: string, ate: string, tecnicoId?: number | null) =>
-      request<Visita[]>(`/cronograma?de=${de}&ate=${ate}${tecnicoId ? `&tecnico_id=${tecnicoId}` : ''}`),
+    listar: (de: string, ate: string, tecnicoId?: number | null, unidadeId?: number | null) =>
+      request<Visita[]>(`/cronograma?de=${de}&ate=${ate}` +
+        `${tecnicoId ? `&tecnico_id=${tecnicoId}` : ''}${unidadeId ? `&unidade_id=${unidadeId}` : ''}`),
     criar: (dados: NovaVisita) =>
       request<Visita>('/cronograma', { method: 'POST', body: JSON.stringify(dados) }),
     atualizar: (id: number, dados: Partial<NovaVisita>) =>

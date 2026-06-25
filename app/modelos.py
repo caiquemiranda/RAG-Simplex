@@ -93,6 +93,19 @@ class Papel(Base):
         return any(p.chave == chave for p in self.permissoes)
 
 
+class Unidade(Base):
+    """Unidade operacional (base/regional) — D-021. Promove o antigo texto livre
+    `unidade` a entidade, para a "visão por unidade" do cronograma ter filtro robusto
+    (sem sofrer com variação de digitação). Usuários e clientes são vinculados a ela."""
+
+    __tablename__ = "unidade"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    cidade: Mapped[str | None] = mapped_column(String(120), default=None)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class Usuario(Base):
     __tablename__ = "usuario"
 
@@ -112,7 +125,9 @@ class Usuario(Base):
     foto_url: Mapped[str | None] = mapped_column(Text, default=None)        # URL de arquivo (/arquivos/...); data URL legado tolerado
     telefone: Mapped[str | None] = mapped_column(String(40), default=None)
     cargo: Mapped[str | None] = mapped_column(String(80), default=None)
-    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local de trabalho
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # legado (texto) — usar unidade_rel (D-021)
+    unidade_id: Mapped[int | None] = mapped_column(ForeignKey("unidade.id"), default=None)  # base do técnico
+    unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
     clientes: Mapped[str | None] = mapped_column(Text, default=None)        # legado (CSV) — usar clientes_rel
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
     acesso_expira_em: Mapped[date | None] = mapped_column(Date, default=None)
@@ -143,7 +158,8 @@ class Cliente(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str] = mapped_column(String(120), unique=True)
-    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # local/cidade
+    unidade: Mapped[str | None] = mapped_column(String(120), default=None)  # legado (texto) — usar unidade_rel (D-021)
+    unidade_id: Mapped[int | None] = mapped_column(ForeignKey("unidade.id"), default=None)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True)
     # Identidade visual do cliente (usada onde ele aparecer) — #CLIV.
     cor: Mapped[str | None] = mapped_column(String(9), default=None)        # hex #RRGGBB
@@ -152,6 +168,7 @@ class Cliente(Base):
     tecnicos: Mapped[list[Usuario]] = relationship(
         secondary=usuario_cliente, back_populates="clientes_rel"
     )
+    unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
 
 
 class Visita(Base):

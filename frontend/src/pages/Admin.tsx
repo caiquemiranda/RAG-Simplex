@@ -3,6 +3,7 @@ import {
   api,
   uploadArquivo,
   type AdminCliente,
+  type AdminUnidade,
   type AdminPapel,
   type AdminPermissao,
   type AdminProvedor,
@@ -32,6 +33,7 @@ type PerfilForm = {
   telefone: string
   cargo: string
   unidade: string
+  unidadeId: number | ''
   clienteIds: Set<number>
   clientePadraoId: number | ''
   observacoes: string
@@ -45,7 +47,7 @@ const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone:
   { chave: 'usuarios', titulo: 'Gerenciar usuários', desc: 'Criar/editar usuários, papéis e permissões.', icone: '👤' },
   { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: '🔑' },
   { chave: 'banco', titulo: 'Banco de dados', desc: 'Gerenciar bancos de dados do sistema.', icone: '🗄️' },
-  { chave: 'clientes', titulo: 'Clientes', desc: 'Clientes e quais técnicos têm acesso a cada um.', icone: '🏢' },
+  { chave: 'clientes', titulo: 'Clientes e unidades', desc: 'Clientes, unidades (bases) e quais técnicos têm acesso.', icone: '🏢' },
   { chave: 'auditoria', titulo: 'Auditoria', desc: 'Histórico de consultas e feedback.', icone: '📋' },
 ]
 
@@ -60,7 +62,9 @@ export default function Admin() {
   const [permissoes, setPermissoes] = useState<AdminPermissao[]>([])
   const [estrategias, setEstrategias] = useState<string[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
-  const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '', cor: '#16C0CC' })
+  const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '', cor: '#16C0CC', unidadeId: '' as number | '' })
+  const [unidades, setUnidades] = useState<AdminUnidade[]>([])
+  const [novaUnidade, setNovaUnidade] = useState({ nome: '', cidade: '' })
   const [provedores, setProvedores] = useState<AdminProvedor[]>([])
   const [novoProv, setNovoProv] = useState({ nome: '', api_key: '', ativo: true })
   const corDefault = '#16C0CC'
@@ -85,18 +89,20 @@ export default function Admin() {
   async function carregar() {
     setErro(null)
     try {
-      const [us, ps, pms, es, cs] = await Promise.all([
+      const [us, ps, pms, es, cs, uns] = await Promise.all([
         api.admin.usuarios(),
         api.admin.papeis(),
         api.admin.permissoes(),
         api.admin.estrategias(),
         api.admin.clientes(),
+        api.admin.unidades(),
       ])
       setUsuarios(us)
       setPapeis(ps)
       setPermissoes(pms)
       setEstrategias(es)
       setClientes(cs)
+      setUnidades(uns)
       if (podeChaves) setProvedores(await api.admin.provedores())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar')
@@ -173,6 +179,7 @@ export default function Admin() {
         telefone: det.telefone ?? '',
         cargo: det.cargo ?? '',
         unidade: det.unidade ?? '',
+        unidadeId: det.unidade_id ?? '',
         clienteIds: new Set(det.clientes.map((c) => c.id)),
         clientePadraoId: det.cliente_padrao_id ?? '',
         observacoes: det.observacoes ?? '',
@@ -198,6 +205,7 @@ export default function Admin() {
         telefone: perfil?.telefone ?? '',
         cargo: perfil?.cargo ?? '',
         unidade: perfil?.unidade ?? '',
+        unidade_id: perfil ? (perfil.unidadeId === '' ? null : perfil.unidadeId) : undefined,
         cliente_ids: perfil ? Array.from(perfil.clienteIds) : undefined,
         cliente_padrao_id: perfil ? (perfil.clientePadraoId === '' ? null : perfil.clientePadraoId) : undefined,
         observacoes: perfil?.observacoes ?? '',
@@ -254,20 +262,46 @@ export default function Admin() {
     if (!novoCliente.nome.trim()) return
     setErro(null)
     try {
-      await api.admin.criarCliente({ nome: novoCliente.nome.trim(), unidade: novoCliente.unidade || null, cor: novoCliente.cor })
-      setNovoCliente({ nome: '', unidade: '', cor: corDefault })
+      await api.admin.criarCliente({
+        nome: novoCliente.nome.trim(), unidade: novoCliente.unidade || null, cor: novoCliente.cor,
+        unidade_id: novoCliente.unidadeId === '' ? null : novoCliente.unidadeId,
+      })
+      setNovoCliente({ nome: '', unidade: '', cor: corDefault, unidadeId: '' })
       setClientes(await api.admin.clientes())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao criar cliente')
     }
   }
 
-  async function patchCliente(c: AdminCliente, dados: { ativo?: boolean; cor?: string; logo_url?: string }) {
+  async function patchCliente(c: AdminCliente, dados: { ativo?: boolean; cor?: string; logo_url?: string; unidade_id?: number | null }) {
     try {
       await api.admin.atualizarCliente(c.id, dados)
       setClientes(await api.admin.clientes())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao atualizar cliente')
+    }
+  }
+
+  // --- Unidades (D-021) ---
+  async function criarUnidade() {
+    if (!novaUnidade.nome.trim()) return
+    setErro(null)
+    try {
+      await api.admin.criarUnidade({ nome: novaUnidade.nome.trim(), cidade: novaUnidade.cidade || null })
+      setNovaUnidade({ nome: '', cidade: '' })
+      setUnidades(await api.admin.unidades())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao criar unidade')
+    }
+  }
+
+  async function removerUnidade(u: AdminUnidade) {
+    setErro(null)
+    try {
+      await api.admin.removerUnidade(u.id)
+      setUnidades(await api.admin.unidades())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao remover unidade')
     }
   }
 
@@ -421,11 +455,41 @@ export default function Admin() {
         )}
         {secao === 'clientes' && (
           <div className="space-y-4">
+            {/* Unidades (D-021) — base/regional para a "visão por unidade" do cronograma. */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Unidades (bases/regionais)</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="space-y-1"><Label>Nome</Label><Input value={novaUnidade.nome} onChange={(e) => setNovaUnidade({ ...novaUnidade, nome: e.target.value })} placeholder="Filial SP" /></div>
+                  <div className="space-y-1"><Label>Cidade</Label><Input value={novaUnidade.cidade} onChange={(e) => setNovaUnidade({ ...novaUnidade, cidade: e.target.value })} /></div>
+                  <Button size="sm" onClick={criarUnidade} disabled={!novaUnidade.nome.trim()}>Adicionar unidade</Button>
+                </div>
+                {unidades.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {unidades.map((u) => (
+                      <span key={u.id} className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs">
+                        <span className="font-medium">{u.nome}</span>
+                        {u.cidade && <span className="text-muted-foreground">· {u.cidade}</span>}
+                        <button className="text-destructive hover:underline" title="Remover unidade" onClick={() => removerUnidade(u)}>✕</button>
+                      </span>
+                    ))}
+                  </div>
+                ) : <p className="text-xs text-muted-foreground">Nenhuma unidade cadastrada. Cadastre para agrupar o cronograma por base.</p>}
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader><CardTitle className="text-base">Novo cliente</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1"><Label>Nome</Label><Input value={novoCliente.nome} onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })} /></div>
-                <div className="space-y-1"><Label>Unidade / local</Label><Input value={novoCliente.unidade} onChange={(e) => setNovoCliente({ ...novoCliente, unidade: e.target.value })} /></div>
+                <div className="space-y-1">
+                  <Label>Unidade</Label>
+                  <select className="h-10 rounded-md border bg-background px-2 text-sm"
+                          value={novoCliente.unidadeId}
+                          onChange={(e) => setNovoCliente({ ...novoCliente, unidadeId: e.target.value ? Number(e.target.value) : '' })}>
+                    <option value="">— sem unidade —</option>
+                    {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
                 <div className="space-y-1">
                   <Label>Cor</Label>
                   <input type="color" value={novoCliente.cor} onChange={(e) => setNovoCliente({ ...novoCliente, cor: e.target.value })} className="h-10 w-12 cursor-pointer rounded border" />
@@ -440,8 +504,14 @@ export default function Admin() {
                     <Avatar nome={c.nome} fotoUrl={c.logo_url} cor={c.cor} className="h-10 w-10" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{c.nome}</div>
-                      <div className="truncate text-xs text-muted-foreground">{c.unidade ?? '—'}{!c.ativo && ' · inativo'}</div>
+                      <div className="truncate text-xs text-muted-foreground">{c.unidade_nome ?? c.unidade ?? '—'}{!c.ativo && ' · inativo'}</div>
                     </div>
+                    <select className="h-8 rounded-md border bg-background px-1 text-xs" title="Unidade do cliente"
+                            value={c.unidade_id ?? ''}
+                            onChange={(e) => patchCliente(c, { unidade_id: e.target.value ? Number(e.target.value) : null })}>
+                      <option value="">— unidade —</option>
+                      {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                    </select>
                     <input type="color" value={c.cor ?? corDefault} onChange={(e) => patchCliente(c, { cor: e.target.value })} title="Cor do cliente" className="h-8 w-8 cursor-pointer rounded border" />
                     <label className="cursor-pointer text-xs text-primary hover:underline" title="Enviar logo">
                       logo
@@ -516,7 +586,15 @@ export default function Admin() {
                         <input type="checkbox" checked={form.ativo} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
                         Ativo
                       </label>
-                      <div className="space-y-1"><Label>Local de trabalho / unidade</Label><Input value={perfil.unidade} onChange={(e) => setPerfil({ ...perfil, unidade: e.target.value })} /></div>
+                      <div className="space-y-1">
+                        <Label>Unidade (base)</Label>
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                value={perfil.unidadeId}
+                                onChange={(e) => setPerfil({ ...perfil, unidadeId: e.target.value ? Number(e.target.value) : '' })}>
+                          <option value="">— sem unidade —</option>
+                          {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                        </select>
+                      </div>
                       <div className="space-y-1"><Label>Validade do acesso</Label><Input type="date" value={perfil.acesso_expira_em} onChange={(e) => setPerfil({ ...perfil, acesso_expira_em: e.target.value })} /></div>
                       <div className="space-y-1 sm:col-span-2">
                         <Label>Cliente fixo (padrão no cronograma)</Label>

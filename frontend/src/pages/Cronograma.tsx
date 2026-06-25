@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -41,6 +41,8 @@ export default function Cronograma() {
   const [diaSel, setDiaSel] = useState<string | null>(null)
 
   const [tecnicoFiltro, setTecnicoFiltro] = useState<number | ''>('')
+  const [unidadeFiltro, setUnidadeFiltro] = useState<number | ''>('')   // visão por unidade (D-021)
+  const [unidades, setUnidades] = useState<UnidadeVisivel[]>([])
   const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
   const [nova, setNova] = useState<{ usuarioIds: Set<number>; cliente_id: number | ''; titulo: string }>({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
@@ -51,7 +53,7 @@ export default function Cronograma() {
   async function recarregar() {
     try {
       const [vs, fs] = await Promise.all([
-        api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined),
+        api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined, unidadeFiltro || undefined),
         api.cronograma.feriados(de, ate),
       ])
       setVisitas(vs)
@@ -78,7 +80,11 @@ export default function Cronograma() {
   useEffect(() => {
     recarregar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref, tecnicoFiltro])
+  }, [ref, tecnicoFiltro, unidadeFiltro])
+
+  useEffect(() => {
+    api.unidadesVisiveis().then(setUnidades).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!podeGerir) return
@@ -148,13 +154,23 @@ export default function Cronograma() {
             <button className="rounded-lg border px-2 py-1 text-sm hover:bg-accent" onClick={() => mover(1)} aria-label="Próximo mês">›</button>
             <h1 className="ml-2 text-lg font-semibold capitalize">{titulo}</h1>
           </div>
-          {podeGerir && (
-            <select className="h-9 rounded-md border bg-background px-3 text-sm" value={tecnicoFiltro}
-                    onChange={(e) => setTecnicoFiltro(e.target.value ? Number(e.target.value) : '')}>
-              <option value="">Todos os técnicos</option>
-              {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
-            </select>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {unidades.length > 0 && (
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={unidadeFiltro}
+                      onChange={(e) => setUnidadeFiltro(e.target.value ? Number(e.target.value) : '')}
+                      title="Visão por unidade">
+                <option value="">Todas as unidades</option>
+                {unidades.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              </select>
+            )}
+            {podeGerir && (
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={tecnicoFiltro}
+                      onChange={(e) => setTecnicoFiltro(e.target.value ? Number(e.target.value) : '')}>
+                <option value="">Todos os técnicos</option>
+                {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
+              </select>
+            )}
+          </div>
         </div>
 
         {erro && <p className="text-sm text-destructive">{erro}</p>}

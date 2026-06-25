@@ -66,12 +66,20 @@ class VisitaResumo(BaseModel):
     cliente_nome: str | None = None
     cliente_cor: str | None = None
     cliente_logo: str | None = None
-    unidade: str | None = None
+    unidade: str | None = None        # nome da unidade (entidade) ou texto legado
+    unidade_id: int | None = None     # base do cliente (D-021) — para a visão por unidade
     data: date
     titulo: str
     status: str
     observacoes: str | None = None
     fixo: bool = False                # alocação fixa virtual (#ALOC), não é uma visita real
+
+
+def _nome_unidade(cli: Cliente | None) -> str | None:
+    """Nome da unidade do cliente: prioriza a entidade (D-021), cai para o texto legado."""
+    if cli is None:
+        return None
+    return cli.unidade_rel.nome if cli.unidade_rel else cli.unidade
 
 
 def _resumo(v: Visita) -> VisitaResumo:
@@ -84,7 +92,8 @@ def _resumo(v: Visita) -> VisitaResumo:
         cliente_nome=v.cliente.nome if v.cliente else None,
         cliente_cor=v.cliente.cor if v.cliente else None,
         cliente_logo=v.cliente.logo_url if v.cliente else None,
-        unidade=v.cliente.unidade if v.cliente else None,
+        unidade=_nome_unidade(v.cliente),
+        unidade_id=v.cliente.unidade_id if v.cliente else None,
         data=v.data, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
     )
 
@@ -106,6 +115,7 @@ def listar(
     de: date = Query(..., description="data inicial (YYYY-MM-DD)"),
     ate: date = Query(..., description="data final (YYYY-MM-DD)"),
     tecnico_id: int | None = Query(None),
+    unidade_id: int | None = Query(None, description="filtra pela unidade do cliente (D-021)"),
     usuario: Usuario = Depends(usuario_atual),
     sessao: Session = Depends(get_session),
 ) -> list[VisitaResumo]:
@@ -116,6 +126,9 @@ def listar(
         consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
     elif tecnico_id is not None:
         consulta = consulta.where(Visita.tecnicos.any(id=tecnico_id))
+    # Visão por unidade: só visitas cujo cliente pertence à unidade (D-021).
+    if unidade_id is not None:
+        consulta = consulta.where(Visita.cliente.has(Cliente.unidade_id == unidade_id))
     reais = list(sessao.scalars(consulta.order_by(Visita.data)))
 
     # #ALOC: técnicos com cliente fixo aparecem no cliente nos dias SEM visita explícita.
@@ -133,6 +146,9 @@ def listar(
         cli = tec.cliente_padrao
         if cli is None:
             continue
+        # Visão por unidade: ignora o fixo cujo cliente não é da unidade filtrada.
+        if unidade_id is not None and cli.unidade_id != unidade_id:
+            continue
         dia = de
         while dia <= ate:
             if (dia, tec.id) not in ocupado:
@@ -140,7 +156,8 @@ def listar(
                 virtuais.append(VisitaResumo(
                     id=0, usuario_id=tec.id, tecnico_nome=mini.nome, tecnico_foto=mini.foto,
                     tecnicos=[mini], cliente_id=cli.id, cliente_nome=cli.nome,
-                    cliente_cor=cli.cor, cliente_logo=cli.logo_url, unidade=cli.unidade,
+                    cliente_cor=cli.cor, cliente_logo=cli.logo_url,
+                    unidade=_nome_unidade(cli), unidade_id=cli.unidade_id,
                     data=dia, titulo="(fixo)", status="fixo", fixo=True,
                 ))
             dia += timedelta(days=1)

@@ -18,6 +18,8 @@ erDiagram
   USUARIO ||--o{ VISITA : "1:N (responsável)"
   USUARIO }o--o{ VISITA : "N:N visita_tecnico (atribuídos)"
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
+  UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
+  UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
   PROVEDOR ||--o{ CONFIG_ESTRATEGIA : "0..1 (provedor_id)"
 
@@ -37,19 +39,27 @@ erDiagram
     string hash_senha "bcrypt, nullable"
     bool ativo
     int papel_id FK
-    text foto_url "URL ou data URL"
+    text foto_url "URL de arquivo (/arquivos/...); data URL legado"
     string telefone
     string cargo
-    string unidade "local de trabalho"
+    string unidade "LEGADO (texto) — usar unidade_id"
+    int unidade_id FK "base do técnico (D-021)"
     text clientes "LEGADO (CSV) — usar relação usuario_cliente"
     text observacoes
     date acesso_expira_em
     int cliente_padrao_id FK "cliente fixo (#ALOC)"
   }
+  UNIDADE {
+    int id PK
+    string nome UK
+    string cidade
+    bool ativo
+  }
   CLIENTE {
     int id PK
     string nome UK
-    string unidade "local/cidade"
+    string unidade "LEGADO (texto) — usar unidade_id"
+    int unidade_id FK "base/regional (D-021)"
     bool ativo
     string cor "hex (identidade visual)"
     text logo_url "/arquivos/..."
@@ -136,10 +146,18 @@ cargo, unidade, clientes, observações, `acesso_expira_em`) adicionados na Fase
 > (ver [`projeto/BACKLOG.md`](projeto/BACKLOG.md) §2, Etapa 1) — evitar acoplar muito a ele.
 
 ### Cliente
-Cliente atendido (prédio/condomínio/instalação) com `unidade` (local). Técnicos são
-associados a clientes via `usuario_cliente` (N:N) — define **acesso** e o **cronograma
-por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece na tabela
-mas não é mais usado pela API.
+Cliente atendido (prédio/condomínio/instalação) com `unidade_id` (base/regional, D-021).
+Técnicos são associados a clientes via `usuario_cliente` (N:N) — define **acesso** e o
+**cronograma por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece
+na tabela mas não é mais usado pela API.
+
+### Unidade (D-021)
+Base/regional operacional (`nome` único, `cidade`, `ativo`). Promove o antigo texto livre
+`unidade` (em `Usuario`/`Cliente`) a **entidade**, para a **"visão por unidade"** do
+cronograma ter filtro robusto (sem sofrer com variação de digitação). Tanto técnicos
+(`Usuario.unidade_id`, base) quanto clientes (`Cliente.unidade_id`) referenciam a unidade.
+O filtro `GET /cronograma?unidade_id=` mostra só as visitas cujo **cliente** pertence à
+unidade. O texto livre legado permanece como fallback de exibição (sem migração obrigatória).
 
 ### Visita (cronograma)
 Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), com

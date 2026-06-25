@@ -46,7 +46,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import Cliente, LogConsulta, Usuario
+from app.modelos import Cliente, LogConsulta, Unidade, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -213,8 +213,15 @@ class ClientePublico(BaseModel):
     id: int
     nome: str
     unidade: str | None = None
+    unidade_id: int | None = None
     cor: str | None = None
     logo_url: str | None = None
+
+
+class UnidadePublica(BaseModel):
+    id: int
+    nome: str
+    cidade: str | None = None
 
 
 @app.get("/clientes", response_model=list[ClientePublico])
@@ -230,9 +237,22 @@ def clientes_visiveis(
     else:
         clientes = sorted((c for c in usuario.clientes_rel if c.ativo), key=lambda c: c.nome)
     return [
-        ClientePublico(id=c.id, nome=c.nome, unidade=c.unidade, cor=c.cor, logo_url=c.logo_url)
+        ClientePublico(id=c.id, nome=c.nome, unidade=c.unidade, unidade_id=c.unidade_id,
+                       cor=c.cor, logo_url=c.logo_url)
         for c in clientes
     ]
+
+
+@app.get("/unidades", response_model=list[UnidadePublica])
+def unidades_visiveis(
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[UnidadePublica]:
+    """Unidades ativas (para o seletor da 'visão por unidade' do cronograma)."""
+    unidades = sessao.scalars(
+        select(Unidade).where(Unidade.ativo.is_(True)).order_by(Unidade.nome)
+    ).all()
+    return [UnidadePublica(id=u.id, nome=u.nome, cidade=u.cidade) for u in unidades]
 
 
 # --------------------------------------------------------------------------- #

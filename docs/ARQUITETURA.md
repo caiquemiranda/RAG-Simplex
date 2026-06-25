@@ -51,7 +51,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `auth.py` | Hash de senha (bcrypt), JWT (access/refresh), dependência `requer(permissao)`. |
 | `seed.py` | Semeia permissões e papéis padrão (idempotente). |
 | `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
-| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados globais. |
+| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados + **filtro por unidade** (D-021). |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
@@ -77,9 +77,11 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | PUT | `/admin/usuarios/{id}/permissoes-extra` | `gerir_usuarios` | Permissões extra do usuário. |
 | GET/PUT | `/admin/usuarios/{id}/estrategia` | `gerir_estrategias` | Estratégia/persona/camadas por usuário. |
 | POST/DELETE | `/admin/usuarios/{id}/documentos[/{doc_id}]` | `gerir_usuarios` | Documentos do técnico (validade). |
-| GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário). |
+| GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário; `unidade_id` D-021). |
+| GET/POST/PATCH/DELETE | `/admin/unidades[/{id}]` | `gerir_usuarios` | CRUD de **unidades** (base/regional, D-021); DELETE bloqueia se em uso (409). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
-| GET | `/cronograma?de=&ate=&tecnico_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). |
+| GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
+| GET | `/cronograma?de=&ate=&tecnico_id=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas; filtro por **unidade** do cliente). |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
 | GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
