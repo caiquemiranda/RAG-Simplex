@@ -34,6 +34,6 @@ Dois acervos de documentos de equipamentos: **Empresa (IBSystems)** e **Marcas**
   campo de busca; uploads por categoria. CRUD reusa #FILES.
 
 ## Testes
-`tests/test_biblioteca.py` (3): upload→listar→renomear→ocultar (admin vê / operador não)
-→excluir; default `IBSystems` na empresa; categoria inválida 400 + operador 403.
-Suíte: **78 passed**.
+`tests/test_biblioteca.py` (4): upload→listar→renomear→ocultar (admin vê / operador não)
+→excluir; default `IBSystems` na empresa; **categoria `cliente` + busca por nome**;
+categoria inválida 400 + operador 403. Suíte: **81 passed**.
