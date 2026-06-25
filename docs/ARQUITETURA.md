@@ -56,7 +56,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
-| `db.py` | Engine/Session; `criar_tabelas` (create_all + micro-migração); `python -m app.db --init`. |
+| `db.py` | Engine/Session; **`aplicar_migracoes`** (Alembic `upgrade head`, banco real, D-022); `criar_tabelas` (create_all + micro-migração — testes/fallback); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
 
 ### Endpoints

@@ -1,9 +1,10 @@
 # Testes — RAG-Simplex
 
-**82 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
-geração, persistência (+ micro-migração), autenticação, RBAC, painel ADM (usuários,
-perfil, documentos, **clientes**, **unidades**), **cronograma** (visitas, **feriados**,
-**notificações**, **visão por unidade**), **arquivos/biblioteca**, streaming e feedback.
+**84 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+geração, persistência (+ micro-migração + **migrações Alembic**), autenticação, RBAC,
+painel ADM (usuários, perfil, documentos, **clientes**, **unidades**), **cronograma**
+(visitas, **feriados**, **notificações**, **visão por unidade**), **arquivos/biblioteca**,
+streaming e feedback.
 
 ## Princípios
 
@@ -65,6 +66,11 @@ pytest
 - `test_resolucao_precedencia` — usuário > papel > global > settings.
 - `test_resolucao_sem_config_usa_settings` — fallback de configuração.
 - `test_cifrar_decifrar_roundtrip` / `test_mascarar` / `test_cifrar_sem_chave_erro_claro` — chaves nunca em claro.
+
+### `test_migracoes.py` (2) — migrações Alembic (D-022)
+- `test_migracao_tem_unica_head` — grafo de migrações sem branches (uma só head).
+- `test_upgrade_cria_schema_igual_aos_modelos` — `upgrade head` num banco vazio gera
+  exatamente as tabelas dos modelos (baseline sem drift). *Skip se Alembic ausente.*
 
 ### `test_auth.py` (8) — autenticação
 - Hash/verificação de senha; round-trip de access token; rejeição de token

@@ -59,10 +59,10 @@ if (-not (Test-Path $activate)) {
     & $activate
 }
 
-# --- Banco: cria/atualiza schema sempre (idempotente, aplica micro-migrações) ---
+# --- Banco: aplica migrações Alembic + semeia padrões (idempotente) ---
 $dbFile = Join-Path $raiz 'data\processed\ragsimplex.db'
 $dbNovo = -not (Test-Path $dbFile)
-Write-Host '== Banco: criando/atualizando schema (db --init) ==' -ForegroundColor Cyan
+Write-Host '== Banco: migracoes Alembic + seed (db --init) ==' -ForegroundColor Cyan
 python -m app.db --init
 if ($dbNovo) {
     Write-Host '== Criando admin padrao ==' -ForegroundColor Cyan
