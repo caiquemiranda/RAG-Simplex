@@ -131,6 +131,13 @@ def listar(
         consulta = consulta.where(Visita.cliente.has(Cliente.unidade_id == unidade_id))
     reais = list(sessao.scalars(consulta.order_by(Visita.data)))
 
+    # #FER-1: dia de feriado não tem atividades nem alocações fixas (aparece só "Feriado").
+    feriados = set(sessao.scalars(
+        select(Feriado.data).where(Feriado.data >= de, Feriado.data <= ate)
+    ))
+    if feriados:
+        reais = [v for v in reais if v.data not in feriados]
+
     # #ALOC: técnicos com cliente fixo aparecem no cliente nos dias SEM visita explícita.
     if admin:
         q_fix = select(Usuario).where(Usuario.cliente_padrao_id.is_not(None))
@@ -151,6 +158,9 @@ def listar(
             continue
         dia = de
         while dia <= ate:
+            if dia in feriados:        # #FER-1: feriado não tem alocação fixa
+                dia += timedelta(days=1)
+                continue
             if (dia, tec.id) not in ocupado:
                 mini = TecnicoMini(id=tec.id, nome=tec.nome or tec.email, foto=tec.foto_url)
                 virtuais.append(VisitaResumo(
@@ -177,6 +187,9 @@ def criar(dados: VisitaIn,
           sessao: Session = Depends(get_session)) -> VisitaResumo:
     if not dados.usuario_ids:
         raise HTTPException(status_code=400, detail="Informe ao menos um técnico.")
+    # #FER-1: não se agenda atividade em dia de feriado (o dia fica sem atividades).
+    if sessao.scalar(select(Feriado).where(Feriado.data == dados.data)):
+        raise HTTPException(status_code=400, detail="Dia é feriado — sem atividades.")
     tecnicos = _carregar_tecnicos(sessao, dados.usuario_ids)
     _buscar_cliente(sessao, dados.cliente_id)
     v = Visita(
@@ -277,6 +290,18 @@ def criar_feriado(dados: FeriadoIn,
         raise HTTPException(status_code=409, detail="Já existe um feriado nessa data.")
     f = Feriado(data=dados.data, descricao=dados.descricao.strip() or "Feriado")
     sessao.add(f)
+    sessao.flush()
+
+    # #FER-1: o dia fica sem atividades — avisa os técnicos que tinham algo marcado.
+    visitas_no_dia = sessao.scalars(select(Visita).where(Visita.data == dados.data)).all()
+    tecnicos = {t.id: t for v in visitas_no_dia for t in v.tecnicos}
+    for t in tecnicos.values():
+        sessao.add(Notificacao(
+            usuario_id=t.id, tipo="cronograma",
+            titulo=f"Feriado em {dados.data.isoformat()}: atividades suspensas",
+            texto=f"{f.descricao} — o dia ficará sem atividades.", ref_id=f.id,
+        ))
+
     sessao.commit()
     sessao.refresh(f)
     return FeriadoResumo(id=f.id, data=f.data, descricao=f.descricao)

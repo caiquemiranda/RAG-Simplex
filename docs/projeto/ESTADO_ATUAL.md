@@ -13,12 +13,12 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/robustez-alembic-banco` (PR #5 da `feat/fase-7-frontend` já mergeado em
-  `main`). **Backend: 88 testes** passando.
+- **Branch:** `feat/lote4-fixes` (PR #6 da robustez/Alembic já mergeado em `main`).
+  **Backend: 90 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
-  - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática**, **infra de
-    arquivos** (`/upload` + `/arquivos`, #FILES).
+  - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
+    **infra de arquivos** (`/upload` + `/arquivos`, #FILES).
   - **Marca/tema:** identidade **IBSystems**, **tema claro/escuro**, **logo SVG** clicável.
   - **Chat:** streaming NDJSON, citações split-screen, feedback, histórico, sidebar responsiva.
   - **Dashboard (#HOME):** atividades do dia, onde estará, notificações, seus documentos.
@@ -35,14 +35,17 @@
     agrupamento por **cliente** (cor/logo + avatares), **editar**, feriados, **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO
+## ⏭️ PRÓXIMO PASSO — Lote 4 (em andamento, branch `feat/lote4-fixes`)
 
-Robustez concluída nesta sessão (**Alembic** ✅ + card **"Banco de dados"** ✅, D-022).
-Falta abrir PR da branch `feat/robustez-alembic-banco` e mergear. Próximos candidatos:
+Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
+1. ✅ **#FIX-TOKEN** (token 1 dia) + **#FIX-EMAIL** (e-mail case-insensitive).
+2. ✅ **#FER-1** — feriado sem atividades (suprime visitas/#ALOC no dia + notifica + bloqueia agendar).
+3. ⏭️ **#ATV-1** — página de atividade (status, multi-técnico, anexar imagens, comentários).
+4. **#EQP-1** (fundação: entidade `Equipamento` + CSV) → **#CLI-PG** (página do cliente
+   com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos" com sub-abas + lista por cliente).
 
-1. **Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite, *sem key, sem custo*).
-2. **Fase 10** (estratégias de nuvem, *requer API key* + decisão D-006).
-3. Pequena: **#1** alinhamento fino ao ChatGPT (precisa confirmar escopo com o usuário).
+**Depois do Lote 4:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
+*requer API key*) · #1 (alinhamento ChatGPT).
 
 ## 🔧 Para rodar na sua máquina
 

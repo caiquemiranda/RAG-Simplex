@@ -38,6 +38,7 @@ from app.auth import (
     criar_access_token,
     criar_refresh_token,
     decodificar_token,
+    normalizar_email,
     requer,
     usuario_atual,
     verificar_senha,
@@ -153,7 +154,7 @@ class UsuarioOut(BaseModel):
 @app.post("/auth/login", response_model=TokenOut)
 def login(dados: LoginIn, sessao: Session = Depends(get_session)) -> TokenOut:
     """Autentica por e-mail/senha e devolve tokens de acesso e refresh."""
-    usuario = sessao.scalar(select(Usuario).where(Usuario.email == dados.email))
+    usuario = sessao.scalar(select(Usuario).where(Usuario.email == normalizar_email(dados.email)))
     if usuario is None or not verificar_senha(dados.senha, usuario.hash_senha):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="E-mail ou senha inválidos.")

@@ -35,6 +35,15 @@ class TokenInvalido(ValueError):
 # --------------------------------------------------------------------------- #
 # Senhas                                                                       #
 # --------------------------------------------------------------------------- #
+def normalizar_email(email: str) -> str:
+    """Normaliza o e-mail para comparação/armazenamento (sem espaços, minúsculo).
+
+    Usado no login e no cadastro para o e-mail ser **case-insensitive** — evita falha
+    de login por diferença de maiúscula/minúscula.
+    """
+    return (email or "").strip().lower()
+
+
 def hash_senha(senha: str) -> str:
     """Gera o hash argon2 de uma senha."""
     return _ph.hash(senha)
@@ -147,6 +156,7 @@ def requer(permissao: str):
 # --------------------------------------------------------------------------- #
 def criar_ou_atualizar_admin(sessao: Session, email: str, senha: str, nome: str = "Admin") -> Usuario:
     """Cria (ou atualiza a senha de) um usuário com papel Admin."""
+    email = normalizar_email(email)
     papel_admin = sessao.scalar(select(Papel).where(Papel.nome == "Admin"))
     usuario = sessao.scalar(select(Usuario).where(Usuario.email == email))
     if usuario is None:

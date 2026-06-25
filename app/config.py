@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # Segredo HMAC dos tokens. Se vazio, usa `secret_key` como fallback.
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
-    access_token_expira_min: int = 60
+    access_token_expira_min: int = 1440   # 1 dia (evita expirar no meio do uso)
     refresh_token_expira_dias: int = 7
 
     # --- Recuperação (PRD §6.1) ---

@@ -4,6 +4,37 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 4 (2): #FER-1 feriado sem atividades
+
+**Branch:** `feat/lote4-fixes`.
+
+- `cronograma.listar`: carrega os feriados do intervalo e **suprime** visitas reais +
+  alocações fixas (#ALOC) nos dias de feriado (dia mostra só "Feriado").
+- `criar_feriado`: ao marcar feriado num dia com atividades, **notifica** os técnicos
+  envolvidos ("atividades suspensas").
+- `criar`: **bloqueia** (400) agendar atividade em dia de feriado.
+- Frontend já exibia o feriado na célula; sem mudança. Teste
+  `test_feriado_suprime_atividades_e_notifica`. **90 passed**.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 4 (1/3): correções rápidas #FIX-TOKEN + #FIX-EMAIL
+
+**Branch:** `feat/lote4-fixes` (criada do `main` após o merge do PR #6).
+
+- **#FIX-TOKEN:** `access_token_expira_min` 60 → **1440** (token dura 1 dia).
+- **#FIX-EMAIL:** e-mail **case-insensitive** — helper `auth.normalizar_email`
+  (`strip().lower()`) no **login** (`main.py`), na **criação** (`admin.py`) e no CLI admin
+  (`auth.py`). Backfill dos existentes via migração Alembic **`5c77258e6fc6`** (lowercase,
+  pulando colisões). Teste `test_email_case_insensitive`. **89 passed**.
+
+**Arquivos:** `app/{config,auth,main,admin}.py`, `alembic/versions/5c77258e6fc6_*.py`,
+`tests/test_admin.py`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Robustez: Alembic + card "Banco de dados" (D-022)
 
 **Branch:** `feat/robustez-alembic-banco` (criada de `main` após o merge do PR #5).
