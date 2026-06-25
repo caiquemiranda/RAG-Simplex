@@ -4,6 +4,7 @@ import {
   uploadArquivo,
   type AdminCliente,
   type AdminUnidade,
+  type BancoStatus,
   type AdminPapel,
   type AdminPermissao,
   type AdminProvedor,
@@ -43,6 +44,14 @@ type Secao = null | 'usuarios' | 'auditoria' | 'apikeys' | 'banco' | 'clientes'
 
 const CAMADAS = ['simples', 'tecnica']
 
+/** Formata bytes em KB/MB legível (ex.: 131072 → "128 KB"). */
+function formatarBytes(n: number | null): string {
+  if (n == null) return '—'
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
 const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone: string }[] = [
   { chave: 'usuarios', titulo: 'Gerenciar usuários', desc: 'Criar/editar usuários, papéis e permissões.', icone: '👤' },
   { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: '🔑' },
@@ -65,6 +74,8 @@ export default function Admin() {
   const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '', cor: '#16C0CC', unidadeId: '' as number | '' })
   const [unidades, setUnidades] = useState<AdminUnidade[]>([])
   const [novaUnidade, setNovaUnidade] = useState({ nome: '', cidade: '' })
+  const [banco, setBanco] = useState<BancoStatus | null>(null)
+  const [backupMsg, setBackupMsg] = useState<string | null>(null)
   const [provedores, setProvedores] = useState<AdminProvedor[]>([])
   const [novoProv, setNovoProv] = useState({ nome: '', api_key: '', ativo: true })
   const corDefault = '#16C0CC'
@@ -126,6 +137,24 @@ export default function Admin() {
   useEffect(() => {
     if (podeGerir) carregar()
   }, [podeGerir])
+
+  // Carrega o status do banco ao abrir o card (consulta mais pesada — sob demanda).
+  useEffect(() => {
+    if (secao === 'banco') {
+      setBackupMsg(null)
+      api.admin.banco().then(setBanco).catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao ler o banco'))
+    }
+  }, [secao])
+
+  async function fazerBackup() {
+    setErro(null); setBackupMsg(null)
+    try {
+      const r = await api.admin.bancoBackup()
+      setBackupMsg(`Backup criado: ${r.arquivo} (${formatarBytes(r.tamanho_bytes)}).`)
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao fazer backup')
+    }
+  }
 
   function permsDoPapel(nome: string): Set<string> {
     return new Set(papeis.find((p) => p.nome === nome)?.permissoes ?? [])
@@ -449,9 +478,51 @@ export default function Admin() {
           )
         )}
         {secao === 'banco' && (
-          <Card><CardContent className="p-6 text-sm text-muted-foreground">
-            🚧 Em construção: gestão de <strong>bancos de dados</strong> (status, backup, reindexação).
-          </CardContent></Card>
+          <div className="space-y-4">
+            {backupMsg && <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm">{backupMsg}</p>}
+            {!banco ? (
+              <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando status do banco…</CardContent></Card>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">Status</CardTitle></CardHeader>
+                  <CardContent className="grid gap-3 sm:grid-cols-2">
+                    <div className="text-sm"><span className="text-muted-foreground">Backend:</span> <strong>{banco.backend}</strong></div>
+                    <div className="text-sm"><span className="text-muted-foreground">Tamanho:</span> <strong>{formatarBytes(banco.tamanho_bytes)}</strong></div>
+                    <div className="truncate text-sm sm:col-span-2"><span className="text-muted-foreground">Arquivo:</span> <span className="font-mono text-xs">{banco.caminho ?? '—'}</span></div>
+                    <div className="text-sm"><span className="text-muted-foreground">Blocos indexados (Chroma):</span> <strong>{banco.blocos_indexados}</strong></div>
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Migração:</span>{' '}
+                      {banco.migracao.em_dia
+                        ? <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">em dia</span>
+                        : <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">pendente</span>}
+                      <span className="ml-2 font-mono text-xs text-muted-foreground">{banco.migracao.revisao_atual ?? '—'} → {banco.migracao.revisao_head ?? '—'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader><CardTitle className="text-base">Tabelas</CardTitle></CardHeader>
+                  <CardContent className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+                    {banco.tabelas.map((t) => (
+                      <div key={t.nome} className="flex justify-between border-b py-1 text-sm">
+                        <span className="font-mono text-xs">{t.nome}</span>
+                        <span className="text-muted-foreground">{t.linhas}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="flex flex-wrap items-center gap-3 p-4">
+                    <Button size="sm" onClick={fazerBackup} disabled={banco.backend !== 'sqlite'}>Fazer backup</Button>
+                    <span className="text-xs text-muted-foreground">
+                      Cópia do arquivo SQLite para <span className="font-mono">data/processed/backups/</span>.
+                      Reindexação do guia: use <strong>POST /ingest</strong> (permissão <code>ingerir</code>).
+                    </span>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
         )}
         {secao === 'clientes' && (
           <div className="space-y-4">

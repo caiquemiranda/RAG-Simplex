@@ -26,7 +26,9 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `cliente_ids` na edição do usuário. ⚑ *Fundação* — spec [`specs/spec-etapa1-clientes.md`](specs/spec-etapa1-clientes.md).
 - [x] **Gerenciar API keys**: UI no card ADM (lista provedores + cadastrar/rotacionar
       chave). Backend `/admin/provedores` (perm. `gerir_chaves`, chave **cifrada**/mascarada).
-- [ ] **Banco de dados**: status/backup/reindexação (definir escopo real).
+- [x] **Banco de dados** (D-022): card ADM com **status** (tamanho, revisão Alembic,
+      contagem por tabela, blocos Chroma) + **backup** do SQLite (`/admin/banco[/backup]`).
+      Reindexação fica em `POST /ingest` (não duplicada).
 
 ### C. Cronograma
 - [x] **Backend de cronograma**: modelo `Visita` (técnico, cliente, data, título, status)
@@ -70,8 +72,9 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### E. Núcleo RAG / fases pendentes
 - [ ] **Fase 10** — estratégias de nuvem (Claude) + arena. dep: API key.
 - [ ] **Fase 11** — reranker cross-encoder (D-020); avaliação RAGAS-lite.
-- [ ] **Migrações Alembic** — substituir a micro-migração caseira por migrações
-      versionadas (a atual só cobre adição de coluna nullable).
+- [x] **Migrações Alembic** (D-022) — banco real gerido por Alembic (baseline +
+      `aplicar_migracoes`); micro-migração caseira fica para testes/fallback. Spec
+      [`specs/spec-d022-alembic-banco.md`](specs/spec-d022-alembic-banco.md).
 
 ### F. Documentação contínua (sempre junto da feature)
 - [ ] Manter `ARQUITETURA.md`, `MODELO_DADOS.md`, `FLUXOS.md`, `TECNOLOGIAS.md`,

@@ -4,6 +4,28 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Robustez: Alembic + card "Banco de dados" (D-022)
+
+**Branch:** `feat/robustez-alembic-banco` (criada de `main` após o merge do PR #5).
+Spec: [`specs/spec-d022-alembic-banco.md`](specs/spec-d022-alembic-banco.md).
+
+- **Contexto:** PR #5 (`feat/fase-7-frontend`) foi mergeado em `main` (`aece962`); `main`
+  local estava defasado e foi sincronizado (fast-forward). Nada perdido.
+- **Alembic (D-022):** scaffold (`alembic.ini`, `env.py` usando `settings.database_url` +
+  `Base.metadata`, `render_as_batch` no SQLite); baseline `2bd03ef0fccf` (17 tabelas);
+  banco real **stampado**. `db.py`: `aplicar_migracoes()` (upgrade head) é a fonte de
+  verdade do banco real; `criar_tabelas`/create_all fica p/ testes e fallback. `alembic==1.13.1`
+  no requirements; `backend.ps1` e `app.db --init` aplicam via Alembic.
+- **Card "Banco de dados":** `app/banco.py` (`/admin/banco` status + `/backup`); frontend
+  no `Admin.tsx` (migração em dia/pendente, tamanho, tabelas com contagem, botão backup).
+- **Testes:** `test_migracoes` (2) + `test_banco` (4). **88 passed**; `tsc` OK.
+
+**Arquivos:** `alembic/**`, `alembic.ini`, `app/{db,banco,main}.py`, `requirements.txt`,
+`scripts/backend.ps1`, `tests/test_{migracoes,banco}.py`,
+`frontend/src/{lib/api.ts,pages/Admin.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Entidade Unidade + "visão por unidade" no cronograma (D-021)
 
 **Branch:** `feat/fase-7-frontend`. Spec: [`specs/spec-unidade.md`](specs/spec-unidade.md).

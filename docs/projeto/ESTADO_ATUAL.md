@@ -3,7 +3,7 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-24
+**Última atualização:** 2026-06-25
 
 > **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
 > tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
@@ -13,7 +13,8 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/fase-7-frontend`. **Backend: 82 testes** passando.
+- **Branch:** `feat/robustez-alembic-banco` (PR #5 da `feat/fase-7-frontend` já mergeado em
+  `main`). **Backend: 88 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT, RBAC, persistência, **micro-migração automática**, **infra de
@@ -21,9 +22,11 @@
   - **Marca/tema:** identidade **IBSystems**, **tema claro/escuro**, **logo SVG** clicável.
   - **Chat:** streaming NDJSON, citações split-screen, feedback, histórico, sidebar responsiva.
   - **Dashboard (#HOME):** atividades do dia, onde estará, notificações, seus documentos.
+  - **Plataforma+:** **migrações Alembic** (banco real, D-022) — micro-migração vira fallback/testes.
   - **Painel ADM (cards):** Gerenciar usuários (edição em tela própria; **foto por arquivo**;
     cliente fixo #ALOC; **unidade base**; alerta ⚠️ docs); **Clientes e unidades** (CRUD +
-    **cor/logo**, técnico↔cliente, **unidade** D-021); **API keys** (cifrada); Auditoria.
+    **cor/logo**, técnico↔cliente, **unidade** D-021); **API keys** (cifrada); **Banco de dados**
+    (status + backup, D-022); Auditoria.
   - **Relatórios:** **cards de clientes** + grupo na sidebar (#R1).
   - **Documentos:** biblioteca **Empresa / Clientes / Marcas** (cards + grupo na sidebar +
     **busca**), CRUD de arquivos (#DOC1–#DOC4).
@@ -34,13 +37,11 @@
 
 ## ⏭️ PRÓXIMO PASSO
 
-A fila da sessão anterior foi concluída (**foto por arquivo** ✅ e **entidade Unidade /
-visão por unidade** ✅). Próximos candidatos, em ordem sem retrabalho:
+Robustez concluída nesta sessão (**Alembic** ✅ + card **"Banco de dados"** ✅, D-022).
+Falta abrir PR da branch `feat/robustez-alembic-banco` e mergear. Próximos candidatos:
 
-1. **Robustez:** **Alembic** (migrações versionadas — schema já estabilizou) · card
-   **"Banco de dados"** (status/backup/reindexação).
-2. **Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite, *sem key*) · **Fase 10**
-   (nuvem, *requer API key* + decisão D-006).
+1. **Inteligência:** **Fase 11** (reranker D-020 + RAGAS-lite, *sem key, sem custo*).
+2. **Fase 10** (estratégias de nuvem, *requer API key* + decisão D-006).
 3. Pequena: **#1** alinhamento fino ao ChatGPT (precisa confirmar escopo com o usuário).
 
 ## 🔧 Para rodar na sua máquina

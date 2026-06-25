@@ -1,10 +1,10 @@
 # Testes — RAG-Simplex
 
-**84 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**88 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação, RBAC,
-painel ADM (usuários, perfil, documentos, **clientes**, **unidades**), **cronograma**
-(visitas, **feriados**, **notificações**, **visão por unidade**), **arquivos/biblioteca**,
-streaming e feedback.
+painel ADM (usuários, perfil, documentos, **clientes**, **unidades**, **banco de dados**),
+**cronograma** (visitas, **feriados**, **notificações**, **visão por unidade**),
+**arquivos/biblioteca**, streaming e feedback.
 
 ## Princípios
 
@@ -71,6 +71,12 @@ pytest
 - `test_migracao_tem_unica_head` — grafo de migrações sem branches (uma só head).
 - `test_upgrade_cria_schema_igual_aos_modelos` — `upgrade head` num banco vazio gera
   exatamente as tabelas dos modelos (baseline sem drift). *Skip se Alembic ausente.*
+
+### `test_banco.py` (4) — card ADM "Banco de dados" (D-022)
+- `test_status_banco` — `/admin/banco`: contagem por tabela (sem `alembic_version`) + migração.
+- `test_backup_indisponivel_sem_arquivo` — backend em memória → 400 (mensagem clara).
+- `test_backup_copia_arquivo` — backup copia o SQLite para `backups/` (201).
+- `test_banco_exige_admin` — operador → 403 no status e no backup.
 
 ### `test_auth.py` (8) — autenticação
 - Hash/verificação de senha; round-trip de access token; rejeição de token

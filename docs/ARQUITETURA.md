@@ -55,6 +55,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
+| `banco.py` | Router `/admin/banco`: **status** do banco (tamanho, migração Alembic, contagem por tabela, blocos Chroma) + **backup** do SQLite. |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
 | `db.py` | Engine/Session; **`aplicar_migracoes`** (Alembic `upgrade head`, banco real, D-022); `criar_tabelas` (create_all + micro-migração — testes/fallback); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
@@ -79,6 +80,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | POST/DELETE | `/admin/usuarios/{id}/documentos[/{doc_id}]` | `gerir_usuarios` | Documentos do técnico (validade). |
 | GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário; `unidade_id` D-021). |
 | GET/POST/PATCH/DELETE | `/admin/unidades[/{id}]` | `gerir_usuarios` | CRUD de **unidades** (base/regional, D-021); DELETE bloqueia se em uso (409). |
+| GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_id=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas; filtro por **unidade** do cliente). |
