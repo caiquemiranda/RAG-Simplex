@@ -4,6 +4,22 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 4 (2): #FER-1 feriado sem atividades
+
+**Branch:** `feat/lote4-fixes`.
+
+- `cronograma.listar`: carrega os feriados do intervalo e **suprime** visitas reais +
+  alocações fixas (#ALOC) nos dias de feriado (dia mostra só "Feriado").
+- `criar_feriado`: ao marcar feriado num dia com atividades, **notifica** os técnicos
+  envolvidos ("atividades suspensas").
+- `criar`: **bloqueia** (400) agendar atividade em dia de feriado.
+- Frontend já exibia o feriado na célula; sem mudança. Teste
+  `test_feriado_suprime_atividades_e_notifica`. **90 passed**.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 4 (1/3): correções rápidas #FIX-TOKEN + #FIX-EMAIL
 
 **Branch:** `feat/lote4-fixes` (criada do `main` após o merge do PR #6).

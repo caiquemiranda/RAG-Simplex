@@ -14,7 +14,7 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote4-fixes` (PR #6 da robustez/Alembic já mergeado em `main`).
-  **Backend: 89 testes** passando.
+  **Backend: 90 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -39,8 +39,8 @@
 
 Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 1. ✅ **#FIX-TOKEN** (token 1 dia) + **#FIX-EMAIL** (e-mail case-insensitive).
-2. ⏭️ **#FER-1** — feriado sem atividades (suprime visitas/#ALOC no dia + notifica afetados).
-3. **#ATV-1** — página de atividade (status, multi-técnico, anexar imagens, comentários).
+2. ✅ **#FER-1** — feriado sem atividades (suprime visitas/#ALOC no dia + notifica + bloqueia agendar).
+3. ⏭️ **#ATV-1** — página de atividade (status, multi-técnico, anexar imagens, comentários).
 4. **#EQP-1** (fundação: entidade `Equipamento` + CSV) → **#CLI-PG** (página do cliente
    com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos" com sub-abas + lista por cliente).
 

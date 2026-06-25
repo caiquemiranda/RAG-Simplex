@@ -22,11 +22,10 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `test_email_case_insensitive`.
 
 **Cronograma:**
-- [ ] **#FER-1 — feriado sem atividades** (item 1): no dia de **feriado** o cronograma
-      **não** mostra atividades nem alocações fixas (#ALOC) — só **"Feriado"**. Ao marcar
-      feriado num dia que já tem atividades, **notificar os técnicos** envolvidos (o dia
-      ficará sem atividades). Backend: `listar` suprime visitas reais + virtuais em datas de
-      feriado; `criar_feriado` dispara notificações. dep: feriados ✅, notificações ✅.
+- [x] **#FER-1 — feriado sem atividades** (item 1): `listar` suprime visitas reais +
+      virtuais (#ALOC) em datas de feriado (dia mostra só "Feriado"); `criar_feriado`
+      **notifica** os técnicos com atividade no dia; `criar` **bloqueia** (400) agendar em
+      feriado. Teste `test_feriado_suprime_atividades_e_notifica`.
 - [ ] **#ATV-1 — card/página de atividade** (item 3): hierarquia na navegação
       **Cronograma → Cliente → Atividade**. Cada `Visita` vira um **card-atividade** com
       **página própria**: `status` (select), **vários técnicos** (executam e **comentam**),

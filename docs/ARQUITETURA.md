@@ -51,7 +51,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `auth.py` | Hash de senha (bcrypt), JWT (access/refresh), dependência `requer(permissao)`. |
 | `seed.py` | Semeia permissões e papéis padrão (idempotente). |
 | `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
-| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados + **filtro por unidade** (D-021). |
+| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados (**dia de feriado fica sem atividades/#ALOC + notifica**, #FER-1) + **filtro por unidade** (D-021). |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |

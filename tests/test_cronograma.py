@@ -214,6 +214,38 @@ def test_feriado_crud(ctx):
     assert client.delete(f"/cronograma/feriados/{fid}", headers=admin).status_code == 204
 
 
+def test_feriado_suprime_atividades_e_notifica(ctx):
+    """#FER-1: no feriado o dia fica sem atividades nem alocações fixas; técnicos avisados."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    dia = "2026-07-15"
+
+    # Atividade marcada + um técnico fixo (cliente padrão) no mesmo cliente.
+    client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": dia, "titulo": "Manut"})
+    client.patch(f"/admin/usuarios/{ids['tec2']}", headers=admin, json={"cliente_padrao_id": ids["cliente"]})
+
+    # Antes do feriado: aparece a atividade real e o fixo virtual.
+    antes = client.get(f"/cronograma?de={dia}&ate={dia}", headers=admin).json()
+    assert len(antes) >= 2 and any(v["fixo"] for v in antes)
+
+    # Marca feriado nesse dia.
+    assert client.post("/cronograma/feriados", headers=admin, json={"data": dia, "descricao": "Festa"}).status_code == 201
+
+    # O dia fica sem atividades nem fixos.
+    depois = client.get(f"/cronograma?de={dia}&ate={dia}", headers=admin).json()
+    assert depois == []
+
+    # O técnico da atividade foi notificado do feriado.
+    notifs = client.get("/notificacoes", headers=_login(client, "tec@x.com")).json()
+    assert any("Feriado" in n["titulo"] for n in notifs)
+
+    # Não se agenda nova atividade num dia de feriado.
+    bloq = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": dia, "titulo": "Nova"})
+    assert bloq.status_code == 400 and "feriado" in bloq.json()["detail"].lower()
+
+
 def test_notificacao_ao_criar_atividade(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
