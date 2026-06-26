@@ -167,7 +167,7 @@ técnico/analista recebem também "🔧 resolução técnica".
 
 ## 7. Testes
 
-**59 testes** (pytest), sem rede nem download de modelo. Detalhe em
+**97 testes** (pytest), sem rede nem download de modelo. Detalhe em
 [`TESTES.md`](TESTES.md).
 
 ## 8. Status por fase
