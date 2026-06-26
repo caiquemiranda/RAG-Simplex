@@ -41,6 +41,7 @@ export default function Cronograma() {
   const [novoFeriado, setNovoFeriado] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [diaSel, setDiaSel] = useState<string | null>(null)
+  const [editandoId, setEditandoId] = useState<number | null>(null)  // card de atividade em edição (admin)
 
   const [equipeFiltro, setEquipeFiltro] = useState<Set<number>>(new Set())   // Equipe (técnicos) — multi
   const [clienteFiltro, setClienteFiltro] = useState<Set<number>>(new Set()) // Clientes — multi
@@ -268,13 +269,17 @@ export default function Cronograma() {
       {diaSel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button className="absolute inset-0 bg-black/40" aria-label="Fechar" onClick={() => setDiaSel(null)} />
-          <div className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl border bg-card p-4 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-semibold">
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col rounded-xl border bg-card shadow-xl">
+            {/* Cabeçalho fixo */}
+            <div className="flex shrink-0 items-center justify-between border-b p-4">
+              <h2 className="font-semibold capitalize">
                 {new Date(diaSel + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
               </h2>
               <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={() => setDiaSel(null)}>✕</button>
             </div>
+
+            {/* Corpo rolável (único scroll) */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
 
             {/* Feriado (#CR3) */}
             {(() => {
@@ -314,53 +319,32 @@ export default function Cronograma() {
                 ))}
               </div>
 
-              {/* Direita: cards das atividades do dia */}
-              <div className="max-h-[62vh] space-y-3 overflow-y-auto pr-1">
+              {/* Direita: cards-resumo das atividades do dia */}
+              <div className="space-y-3">
                 {visitasDoDia.filter((v) => !v.fixo).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}
                 {visitasDoDia.filter((v) => !v.fixo).map((v) => (
-                  <div key={v.id} className="space-y-2 rounded-xl border bg-card p-3 text-sm shadow-sm">
-                    {/* Cabeçalho: avatares de todos os técnicos + status + abrir */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex -space-x-2">
-                        {v.tecnicos.map((t) => (
-                          <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-8 w-8 border-2 border-card text-[9px]" title={t.nome} />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={v.status}
-                          onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
-                          className={`rounded-full border px-2 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}
-                        >
-                          <option value="agendada">agendada</option>
-                          <option value="pendente">pendente</option>
-                          <option value="concluida">concluída</option>
-                          <option value="cancelada">cancelada</option>
-                        </select>
-                        {v.id > 0 && (
-                          <Link to={`/cronograma/atividade/${v.id}`} className="whitespace-nowrap text-[11px] text-primary hover:underline" title="Abrir página da atividade">abrir ↗</Link>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Título / descrição */}
-                    {podeGerir ? (
-                      <input
-                        defaultValue={v.titulo}
-                        onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
-                        className="w-full rounded border bg-background px-2 py-1 text-sm font-medium"
-                      />
-                    ) : (
-                      <div className="font-medium">{v.titulo}</div>
-                    )}
-
-                    {/* Cliente + técnicos (edição) ou somente leitura */}
-                    {podeGerir ? (
-                      <div className="space-y-1">
+                  <div key={v.id} className="rounded-xl border bg-card text-sm shadow-sm">
+                    {editandoId === v.id && podeGerir ? (
+                      /* ---- Edição inline (apenas admin) ---- */
+                      <div className="space-y-2 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold uppercase text-muted-foreground">Editar atividade</span>
+                          <button className="text-xs text-primary hover:underline" onClick={() => setEditandoId(null)}>concluir</button>
+                        </div>
+                        <input defaultValue={v.titulo}
+                               onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
+                               className="w-full rounded border bg-background px-2 py-1 text-sm font-medium" />
                         <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
                                 onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
                           <option value="">sem cliente</option>
                           {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                        </select>
+                        <select value={v.status} onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
+                                className={`h-8 w-full rounded border px-1 text-xs ${STATUS_COR[v.status] ?? 'bg-muted'}`}>
+                          <option value="agendada">agendada</option>
+                          <option value="pendente">pendente</option>
+                          <option value="concluida">concluída</option>
+                          <option value="cancelada">cancelada</option>
                         </select>
                         <div className="flex flex-wrap gap-1">
                           {tecnicos.map((t) => {
@@ -377,20 +361,30 @@ export default function Cronograma() {
                             )
                           })}
                         </div>
+                        <textarea defaultValue={v.observacoes ?? ''} rows={2} placeholder="observações…"
+                                  onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
+                                  className="w-full rounded border bg-background px-2 py-1 text-xs" />
+                        <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover atividade</button>
                       </div>
                     ) : (
-                      <div className="text-xs text-muted-foreground">📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}</div>
-                    )}
-
-                    <textarea
-                      defaultValue={v.observacoes ?? ''}
-                      rows={2}
-                      placeholder="observações do fechamento…"
-                      onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
-                      className="w-full rounded border bg-background px-2 py-1 text-xs"
-                    />
-                    {podeGerir && (
-                      <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover atividade</button>
+                      /* ---- Resumo (clica → página da atividade) ---- */
+                      <div className="flex items-stretch">
+                        <Link to={`/cronograma/atividade/${v.id}`} className="min-w-0 flex-1 space-y-1.5 p-3 hover:bg-accent/40">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate font-medium">{v.titulo}</span>
+                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground">📍 {v.cliente_nome ?? 'sem cliente'}</div>
+                          <div className="flex -space-x-2">
+                            {v.tecnicos.map((t) => (
+                              <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-7 w-7 border-2 border-card text-[9px]" title={t.nome} />
+                            ))}
+                          </div>
+                        </Link>
+                        {podeGerir && (
+                          <button className="shrink-0 border-l px-3 text-xs text-primary hover:bg-accent" title="Editar atividade" onClick={() => setEditandoId(v.id)}>editar</button>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -432,6 +426,7 @@ export default function Cronograma() {
                 <Button size="sm" onClick={adicionar} disabled={nova.usuarioIds.size === 0 || !nova.titulo.trim()}>Adicionar</Button>
               </div>
             )}
+            </div>{/* fim do corpo rolável */}
           </div>
         </div>
       )}

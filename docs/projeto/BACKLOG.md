@@ -22,6 +22,11 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `test_email_case_insensitive`.
 
 **Melhorias do Lote 5 (UI/UX):**
+- [x] **#CR-DIA2 — modal do dia: scroll único + cards-resumo + editar (admin)**: o modal
+      virou header fixo + **corpo com um único scroll** (não esconde mais topo/rodapé);
+      cards de atividade são **resumo** [cliente · título · técnicos · status] que **abre a
+      página da atividade** ao clicar; **admin** tem botão **editar** (form inline:
+      título/cliente/técnicos/status/obs/remover).
 - [x] **#HOME-FIRST — login cai na #home + grupos recolhidos**: rota `/` → `/inicio`;
       todos os grupos da sidebar começam **recolhidos** (Consulta deixou de abrir por padrão).
 - [x] **#NOTIF-LINK — notificações direcionam à atividade**: notificação `cronograma`

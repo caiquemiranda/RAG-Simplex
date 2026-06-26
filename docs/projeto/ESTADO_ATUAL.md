@@ -52,6 +52,8 @@ Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **UX/mobile:** login cai na **#home** + grupos da sidebar recolhidos (#HOME-FIRST) ·
   **notificações linkam** à atividade/calendário (#NOTIF-LINK) · **app responsivo** mobile
   (#MOBILE: Consulta full-screen, modal do dia, calendário compacto).
+- ✅ **Modal do dia v2 (#CR-DIA2):** scroll único (não esconde mais topo/rodapé) · cards =
+  **resumo** clicável (abre a atividade) · **admin** com botão **editar** (form inline).
 
 **Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
 

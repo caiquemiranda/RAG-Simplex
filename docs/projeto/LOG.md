@@ -4,6 +4,23 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (9): modal do dia — scroll único, cards-resumo, editar (admin)
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#CR-DIA2:** modal do dia reestruturado em **header fixo (shrink-0) + corpo `flex-1
+  overflow-y-auto`** (um único scroll; removido o `max-h-[62vh]` aninhado do painel direito
+  que escondia topo/rodapé — img do usuário).
+- **Cards = resumo** [cliente · título · avatares dos técnicos · status]; clicar abre
+  `/cronograma/atividade/{id}`. **Admin** ganha botão **editar** → form inline
+  (título/cliente/status/técnicos/observações/remover), via estado `editandoId`.
+- Técnico vê o resumo e edita status/comentários na **página da atividade**.
+- **97 passed**; `tsc` OK.
+
+**Arquivos:** `frontend/src/pages/Cronograma.tsx`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (8): home-first, notificações com link, responsivo mobile
 
 **Branch:** `feat/lote5-fixes`.
