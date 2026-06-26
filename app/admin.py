@@ -33,6 +33,7 @@ from app.modelos import (
     LogConsulta,
     Papel,
     Permissao,
+    Planta,
     Provedor,
     Unidade,
     Usuario,
@@ -117,11 +118,34 @@ class ClienteResumo(BaseModel):
 
 class EquipamentoResumo(BaseModel):
     id: int
+    tag: str
     painel: str
     loop: str
     add: str
     type: str
     model: str
+    status: str
+    ultima_manutencao: date | None = None
+    ultimo_teste: date | None = None
+    planta_id: int | None = None
+    pos_x: float | None = None
+    pos_y: float | None = None
+
+
+class EquipamentoAtualizar(BaseModel):
+    tag: str | None = None
+    painel: str | None = None
+    loop: str | None = None
+    add: str | None = None
+    type: str | None = None
+    model: str | None = None
+    status: str | None = None
+    ultima_manutencao: date | None = None
+    ultimo_teste: date | None = None
+    # Posição na planta (editor de mapa #MAP)
+    planta_id: int | None = None
+    pos_x: float | None = None
+    pos_y: float | None = None
 
 
 class ClienteDetalhe(ClienteResumo):
@@ -538,9 +562,9 @@ def remover_cliente(cliente_id: int,
 
 
 # --------------------------------------------------------------------------- #
-# Equipamentos do cliente (#EQP-1) — import CSV                                 #
+# Equipamentos do cliente (#EQP-1 + #MAP)                                       #
 # --------------------------------------------------------------------------- #
-_EQP_COLUNAS = ("painel", "loop", "add", "type", "model")
+_EQP_COLUNAS = ("tag", "painel", "loop", "add", "type", "model", "status")
 
 
 class ImportEquipOut(BaseModel):
@@ -549,8 +573,24 @@ class ImportEquipOut(BaseModel):
 
 
 def _resumo_equip(e: Equipamento) -> EquipamentoResumo:
-    return EquipamentoResumo(id=e.id, painel=e.painel, loop=e.loop, add=e.add,
-                             type=e.type, model=e.model)
+    return EquipamentoResumo(
+        id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add, type=e.type,
+        model=e.model, status=e.status, ultima_manutencao=e.ultima_manutencao,
+        ultimo_teste=e.ultimo_teste, planta_id=e.planta_id, pos_x=e.pos_x, pos_y=e.pos_y,
+    )
+
+
+def _parse_data(valor: str) -> date | None:
+    """Aceita ISO (AAAA-MM-DD) ou BR (DD/MM/AAAA). Vazio/ inválido → None."""
+    valor = (valor or "").strip()
+    if not valor:
+        return None
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(valor, fmt).date()
+        except ValueError:
+            continue
+    return None
 
 
 def _cliente_ou_404(sessao: Session, cliente_id: int) -> Cliente:
@@ -593,15 +633,47 @@ async def importar_equipamentos(cliente_id: int,
         c.equipamentos.clear()
         sessao.flush()
 
+    def _col(linha: dict, *nomes: str) -> str:
+        for n in nomes:
+            if n in mapa:
+                return (linha.get(mapa[n], "") or "").strip()
+        return ""
+
     importados = 0
     for linha in leitor:
         valores = {col: (linha.get(mapa.get(col, ""), "") or "").strip() for col in _EQP_COLUNAS}
-        if not any(valores.values()):
+        u_manut = _parse_data(_col(linha, "ultima_manutencao", "ultima manutencao", "última manutenção"))
+        u_teste = _parse_data(_col(linha, "ultimo_teste", "ultimo teste", "último teste"))
+        if not any(valores.values()) and not u_manut and not u_teste:
             continue  # ignora linha vazia
-        c.equipamentos.append(Equipamento(**valores))
+        c.equipamentos.append(Equipamento(**valores, ultima_manutencao=u_manut, ultimo_teste=u_teste))
         importados += 1
     sessao.commit()
     return ImportEquipOut(importados=importados, total=len(c.equipamentos))
+
+
+@router.patch("/equipamentos/{equipamento_id}", response_model=EquipamentoResumo)
+def atualizar_equipamento(equipamento_id: int, dados: EquipamentoAtualizar,
+                          _: Usuario = Depends(requer("gerir_usuarios")),
+                          sessao: Session = Depends(get_session)) -> EquipamentoResumo:
+    """Edita um equipamento (campos + **posição na planta** — usado pelo editor de mapa)."""
+    e = sessao.get(Equipamento, equipamento_id)
+    if e is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    if "planta_id" in dados.model_fields_set:
+        if dados.planta_id is not None and sessao.get(Planta, dados.planta_id) is None:
+            raise HTTPException(status_code=404, detail="Planta não encontrada.")
+        e.planta_id = dados.planta_id
+    for campo in ("tag", "painel", "loop", "add", "type", "model", "status"):
+        v = getattr(dados, campo)
+        if v is not None:
+            setattr(e, campo, v)
+    for campo in ("ultima_manutencao", "ultimo_teste", "pos_x", "pos_y"):
+        if campo in dados.model_fields_set:
+            setattr(e, campo, getattr(dados, campo))
+    sessao.commit()
+    sessao.refresh(e)
+    return _resumo_equip(e)
 
 
 @router.delete("/equipamentos/{equipamento_id}", status_code=status.HTTP_204_NO_CONTENT)

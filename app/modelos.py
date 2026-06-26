@@ -181,27 +181,58 @@ class Cliente(Base):
     )
 
 
-class Equipamento(Base):
-    """Equipamento (dispositivo do painel) de um cliente — #EQP-1.
+class Planta(Base):
+    """Planta baixa (projeto) de um cliente — #MAP. Uma planta = uma imagem (PNG
+    convertida de um PDF; PDF multipágina vira N plantas). Equipamentos são posicionados
+    sobre ela por coordenadas `pos_x`/`pos_y` (px na imagem)."""
 
-    Colunas vindas do CSV: `painel`, `loop`, `add` (endereço no loop), `type`, `model`.
-    Fases seguintes (adiadas): última manutenção / último teste; histórico do painel.
+    __tablename__ = "planta"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    nome: Mapped[str] = mapped_column(String(160), default="")
+    imagem_url: Mapped[str] = mapped_column(Text)               # /arquivos/plantas/...
+    largura: Mapped[int] = mapped_column(default=0)             # px
+    altura: Mapped[int] = mapped_column(default=0)              # px
+    ordem: Mapped[int] = mapped_column(default=0)               # ordem de exibição
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship()
+
+
+class Equipamento(Base):
+    """Equipamento (dispositivo do painel) de um cliente — #EQP-1 + #MAP.
+
+    Identificação: `tag` (ex.: N2-L23-DF-003, chave da busca) além de painel/loop/add/type/model.
+    Mapa: posicionado numa `planta` por `pos_x`/`pos_y` (px). Manutenção: `status`,
+    `ultima_manutencao`, `ultimo_teste` (histórico detalhado virá da futura O.S.).
     """
 
     __tablename__ = "equipamento"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    tag: Mapped[str] = mapped_column(String(80), default="")     # identificação (busca), ex.: N2-L23-DF-003
     painel: Mapped[str] = mapped_column(String(80), default="")
     loop: Mapped[str] = mapped_column(String(40), default="")
     add: Mapped[str] = mapped_column(String(40), default="")     # endereço do dispositivo
     type: Mapped[str] = mapped_column(String(80), default="")
     model: Mapped[str] = mapped_column(String(80), default="")
+    status: Mapped[str] = mapped_column(String(40), default="")  # ex.: Em operação | Alerta | Em manutenção
+    ultima_manutencao: Mapped[date | None] = mapped_column(Date, default=None)
+    ultimo_teste: Mapped[date | None] = mapped_column(Date, default=None)
+    # Posição na planta (#MAP) — coordenadas-map.
+    planta_id: Mapped[int | None] = mapped_column(ForeignKey("planta.id", ondelete="SET NULL"), default=None)
+    pos_x: Mapped[float | None] = mapped_column(Float, default=None)
+    pos_y: Mapped[float | None] = mapped_column(Float, default=None)
     criado_em: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
 
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
+    planta: Mapped[Planta | None] = relationship()
 
 
 class Visita(Base):

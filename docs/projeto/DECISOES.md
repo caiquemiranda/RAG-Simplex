@@ -163,3 +163,18 @@ banco real; a `criar_tabelas()`/`create_all` permanece para os **testes** (SQLit
 e como **fallback** quando o Alembic não está instalado (substituição **gradual** da ad-hoc).
 Banco real existente foi **stampado** na baseline (já tinha o schema via `create_all`).
 **Fluxo:** `python -m alembic revision --autogenerate -m "..."` → revisar → `upgrade head`.
+
+### D-023 ✅ "Buscar equipamento" (mapa de dispositivos) integrado e modernizado (#MAP)
+**2026-06-26.** Trazer o projeto legado `sistema-manutencao-3` (React CRA + Leaflet, dados
+estáticos em `Dispositivos.js`) para dentro do RAG-Simplex, nativo na stack atual. **Decisões:**
+- **Visualizador custom (zero dependência npm)** em vez de Leaflet — o npm aqui é restrito por
+  SSL; um componente próprio (imagem + zoom/pan + marcadores + popup) evita `npm install`.
+- **Conversão PDF→PNG no servidor** (PyMuPDF, `settings.planta_dpi=150`): o admin sobe o PDF;
+  cada página vira uma `Planta`. (PyMuPDF instala via pip — só o npm é restrito.)
+- **`tag`** (coluna nova) é a chave de busca do equipamento (ex.: `N2-L23-DF-003`).
+- **Coordenadas recadastradas** no editor (clicar na planta grava `pos_x`/`pos_y`), não migradas
+  do `Dispositivos.js`.
+- **Manutenção:** `status`, `ultima_manutencao`, `ultimo_teste` no equipamento (fecha a "fase B"
+  adiada do #EQP-1); **histórico detalhado** virá da futura **O.S. (Ordem de Serviço)**.
+**Escopo:** trazer só o módulo **plantas + buscar/mapa**; ordens de serviço/RAS do legado ficam
+para depois (a O.S. terá um campo "equipamento"). Spec: `specs/spec-map-mapa-dispositivos.md`.

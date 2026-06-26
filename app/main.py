@@ -31,6 +31,7 @@ from app.admin import router as admin_router
 from app.arquivos import router as arquivos_router
 from app.banco import router as banco_router
 from app.biblioteca import router as biblioteca_router
+from app.plantas import router as plantas_router
 from app.cronograma import router as cronograma_router
 from app.notificacoes import router as notificacoes_router
 from app.auth import (
@@ -48,7 +49,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import Cliente, Equipamento, LogConsulta, Unidade, Usuario
+from app.modelos import Cliente, Equipamento, LogConsulta, Planta, Unidade, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -63,6 +64,7 @@ app.include_router(notificacoes_router)
 app.include_router(arquivos_router)
 app.include_router(biblioteca_router)
 app.include_router(banco_router)
+app.include_router(plantas_router)
 
 # Arquivos enviados (logos, documentos…) servidos em /arquivos.
 settings.arquivos_dir.mkdir(parents=True, exist_ok=True)
@@ -260,28 +262,78 @@ def unidades_visiveis(
 
 class EquipamentoPublico(BaseModel):
     id: int
+    tag: str
     painel: str
     loop: str
     add: str
     type: str
     model: str
+    status: str
+    ultima_manutencao: str | None = None
+    ultimo_teste: str | None = None
+    planta_id: int | None = None
+    pos_x: float | None = None
+    pos_y: float | None = None
 
 
-@app.get("/clientes/{cliente_id}/equipamentos", response_model=list[EquipamentoPublico])
-def equipamentos_do_cliente(
-    cliente_id: int,
-    usuario: Usuario = Depends(usuario_atual),
-    sessao: Session = Depends(get_session),
-) -> list[EquipamentoPublico]:
-    """Equipamentos de um cliente (#EQP-2): admin vê de todos; técnico só dos seus clientes."""
+class PlantaPublica(BaseModel):
+    id: int
+    nome: str
+    imagem_url: str
+    largura: int
+    altura: int
+    ordem: int
+
+
+def _cliente_visivel(sessao: Session, usuario: Usuario, cliente_id: int) -> Cliente:
     cliente = sessao.get(Cliente, cliente_id)
     if cliente is None:
         raise HTTPException(status_code=404, detail="Cliente não encontrado.")
     if not usuario.tem_permissao("gerir_usuarios") and cliente not in usuario.clientes_rel:
         raise HTTPException(status_code=403, detail="Sem acesso a este cliente.")
+    return cliente
+
+
+@app.get("/clientes/{cliente_id}/equipamentos", response_model=list[EquipamentoPublico])
+def equipamentos_do_cliente(
+    cliente_id: int,
+    busca: str | None = None,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[EquipamentoPublico]:
+    """Equipamentos de um cliente (#EQP-2/#MAP): admin todos; técnico só dos seus.
+
+    `busca` filtra por **tag** ou **add** (case-insensitive) — usado no 'Buscar equipamento'.
+    """
+    cliente = _cliente_visivel(sessao, usuario, cliente_id)
+    termo = (busca or "").strip().lower()
     return [
-        EquipamentoPublico(id=e.id, painel=e.painel, loop=e.loop, add=e.add, type=e.type, model=e.model)
+        EquipamentoPublico(
+            id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add, type=e.type,
+            model=e.model, status=e.status,
+            ultima_manutencao=e.ultima_manutencao.isoformat() if e.ultima_manutencao else None,
+            ultimo_teste=e.ultimo_teste.isoformat() if e.ultimo_teste else None,
+            planta_id=e.planta_id, pos_x=e.pos_x, pos_y=e.pos_y,
+        )
         for e in cliente.equipamentos
+        if not termo or termo in (e.tag or "").lower() or termo in (e.add or "").lower()
+    ]
+
+
+@app.get("/clientes/{cliente_id}/plantas", response_model=list[PlantaPublica])
+def plantas_do_cliente(
+    cliente_id: int,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[PlantaPublica]:
+    """Plantas de um cliente (#MAP) — para o visualizador. RBAC igual ao de equipamentos."""
+    cliente = _cliente_visivel(sessao, usuario, cliente_id)
+    plantas = sessao.scalars(
+        select(Planta).where(Planta.cliente_id == cliente.id).order_by(Planta.ordem, Planta.id)
+    ).all()
+    return [
+        PlantaPublica(id=p.id, nome=p.nome, imagem_url=p.imagem_url, largura=p.largura, altura=p.altura, ordem=p.ordem)
+        for p in plantas
     ]
 
 

@@ -16,6 +16,8 @@ ID) em [`projeto/DECISOES.md`](projeto/DECISOES.md).
 | Embeddings | **sentence-transformers** (`intfloat/multilingual-e5-small`) | vetorização PT/EN | local, sem chave, otimizado p/ recuperação |
 | Auth | **JWT** (HS256) + **bcrypt** | sessão/segurança | stateless, padrão de mercado |
 | Cripto | Fernet/derivado (`app/cripto.py`) | chaves de provedor | nunca em claro |
+| Migrações | **Alembic** (1.13.1) | schema do banco real (D-022) | versionado; create_all p/ testes |
+| PDF→PNG | **PyMuPDF** (1.24.10) | converter plantas dos clientes (#MAP) | server-side, sem npm; DPI configurável |
 | Geração (nuvem, Fase 10) | **Anthropic SDK** (`claude-opus-4-8`) | LLM | qualidade; opcional |
 | Frontend | **React + Vite + TypeScript + TailwindCSS** | SPA | rápido, tipado, utilitário |
 | Testes | **pytest** | backend | sem rede/modelo no caminho padrão |

@@ -21,6 +21,8 @@ erDiagram
   VISITA ||--o{ COMENTARIO_VISITA : "1:N (cascade, #ATV-1)"
   VISITA ||--o{ ANEXO_VISITA : "1:N (cascade, #ATV-1)"
   CLIENTE ||--o{ EQUIPAMENTO : "1:N (cascade, #EQP-1)"
+  CLIENTE ||--o{ PLANTA : "1:N (cascade, #MAP)"
+  PLANTA ||--o{ EQUIPAMENTO : "0..1 (planta_id, posição #MAP)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -84,11 +86,28 @@ erDiagram
   EQUIPAMENTO {
     int id PK
     int cliente_id FK "cascade"
+    string tag "identificação/busca (#MAP)"
     string painel
     string loop
     string add "endereço no loop"
     string type
     string model
+    string status "Em operação|Alerta|… (#MAP)"
+    date ultima_manutencao
+    date ultimo_teste
+    int planta_id FK "posição (#MAP)"
+    float pos_x
+    float pos_y
+    datetime criado_em
+  }
+  PLANTA {
+    int id PK
+    int cliente_id FK "cascade"
+    string nome
+    text imagem_url "/arquivos/plantas/..."
+    int largura "px"
+    int altura "px"
+    int ordem
     datetime criado_em
   }
   COMENTARIO_VISITA {
@@ -204,6 +223,14 @@ Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), c
 atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
 **Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
 Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### Planta + Equipamento no mapa (#MAP)
+**Planta** = uma imagem (PNG) de projeto do cliente; o admin sobe um **PDF** e o servidor
+converte **cada página em uma planta** (PyMuPDF, `settings.planta_dpi`). O **Equipamento**
+ganhou: `tag` (identificação/busca, ex.: `N2-L23-DF-003`), `status`, `ultima_manutencao`,
+`ultimo_teste`, e a **posição** (`planta_id` + `pos_x`/`pos_y` em px) — as *coordenadas-map*
+usadas para localizá-lo no projeto. O histórico detalhado de manutenção virá da futura
+**Ordem de Serviço (O.S.)**. Ver [`projeto/specs/spec-map-mapa-dispositivos.md`](projeto/specs/spec-map-mapa-dispositivos.md).
 
 ### Equipamento (#EQP-1)
 Dispositivo do painel de incêndio de um **cliente** (`cliente_id`, cascade), importado por

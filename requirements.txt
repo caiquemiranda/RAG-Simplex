@@ -16,6 +16,8 @@ SQLAlchemy==2.0.23
 alembic==1.13.1
 # Cifragem das chaves de provedor em repouso (Fernet)
 cryptography==45.0.4
+# Conversão PDF→PNG das plantas dos clientes (#MAP — mapa de dispositivos)
+pymupdf==1.24.10
 
 # --- Embeddings locais (multilíngue PT/EN) ---
 sentence-transformers==3.3.1

@@ -49,6 +49,22 @@ def salvar_upload(upload: UploadFile, subpasta: str = "") -> str:
     return "/" + "/".join(("arquivos", *segmentos, nome))
 
 
+def salvar_bytes(conteudo: bytes, nome: str, subpasta: str = "") -> str:
+    """Salva **bytes** já em memória (ex.: PNG gerado de um PDF) e devolve a URL pública.
+
+    Mesma sanitização de `salvar_upload`, mas sem `UploadFile` (uso server-side, sem cap).
+    """
+    segmentos = [
+        s for s in (_SEGURO.sub("_", t).strip("_") for t in subpasta.replace("\\", "/").split("/"))
+        if s and s != ".."
+    ]
+    destino = settings.arquivos_dir.joinpath(*segmentos) if segmentos else settings.arquivos_dir
+    destino.mkdir(parents=True, exist_ok=True)
+    nome_final = f"{uuid.uuid4().hex[:8]}_{_nome_seguro(nome)}"
+    (destino / nome_final).write_bytes(conteudo)
+    return "/" + "/".join(("arquivos", *segmentos, nome_final))
+
+
 def remover_arquivo(url: str) -> None:
     """Remove do disco um arquivo apontado por uma URL ``/arquivos/…`` (best-effort, seguro)."""
     if not url or not url.startswith("/arquivos/"):

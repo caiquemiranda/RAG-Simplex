@@ -4,6 +4,28 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #MAP-1: backend do "Buscar equipamento" (plantas + posição + manutenção)
+
+**Branch:** `feat/buscar-equipamento` (do `main`). Decisão **D-023**. Spec
+[`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+
+- Olhei o projeto legado (`automation-reports-maintenance/SAAS/sistema-manutencao-3`): React
+  CRA + Leaflet (imagem-base + X/Y em `Dispositivos.js`). Decidido (D-023): trazer nativo,
+  **visualizador custom** (sem npm), **PDF→PNG no servidor** (PyMuPDF), **`tag`** como chave,
+  recadastro de coordenadas.
+- **Modelo:** `Planta` (cliente_id/nome/imagem_url/largura/altura/ordem); `Equipamento` +
+  `tag/status/ultima_manutencao/ultimo_teste/planta_id/pos_x/pos_y`. Migração `ec6397a8beb8`.
+- **Backend:** `app/plantas.py` (conversor `pdf_para_pngs` + CRUD de plantas, upload PDF→N PNGs
+  via `arquivos.salvar_bytes`); `admin.py` (CSV ganhou tag/status/datas; `PATCH /admin/
+  equipamentos/{id}` p/ posição); `main.py` (`?busca=` por tag + `GET /clientes/{id}/plantas`).
+  `pymupdf==1.24.10` no requirements; `config.planta_dpi=150`.
+- **Fecha a "fase B"** do #EQP-1 (última manutenção/teste). **99 passed**; testes `test_plantas` (2).
+
+**Arquivos:** `app/{modelos,plantas,admin,main,config,arquivos}.py`,
+`alembic/versions/ec6397a8beb8_*.py`, `requirements.txt`, `tests/test_plantas.py`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (9): modal do dia — scroll único, cards-resumo, editar (admin)
 
 **Branch:** `feat/lote5-fixes`.
