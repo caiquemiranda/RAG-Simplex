@@ -323,9 +323,9 @@ def test_feriado_suprime_atividades_e_notifica(ctx):
     depois = client.get(f"/cronograma?de={dia}&ate={dia}", headers=admin).json()
     assert depois == []
 
-    # O técnico da atividade foi notificado do feriado.
+    # O técnico da atividade foi notificado do feriado (tipo 'feriado' → link p/ o calendário).
     notifs = client.get("/notificacoes", headers=_login(client, "tec@x.com")).json()
-    assert any("Feriado" in n["titulo"] for n in notifs)
+    assert any(n["tipo"] == "feriado" and "Feriado" in n["titulo"] for n in notifs)
 
     # Não se agenda nova atividade num dia de feriado.
     bloq = client.post("/cronograma", headers=admin, json={

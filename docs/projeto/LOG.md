@@ -4,6 +4,26 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (8): home-first, notificações com link, responsivo mobile
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#HOME-FIRST:** rota `/` e `*` → **`/inicio`** (login cai na #home); sidebar com **todos os
+  grupos recolhidos** por padrão (grupo Consulta deixou de iniciar aberto).
+- **#NOTIF-LINK:** notificação de atividade (`tipo=cronograma`, `ref_id`=visita) vira **link**
+  para `/cronograma/atividade/{ref_id}`; feriado passou a `tipo=feriado` → link p/ o calendário.
+  Página `Notificacoes.tsx` renderiza `Link`/`button` conforme o destino.
+- **#MOBILE:** `<main>` rola (já corrigido em (6)); split-screen da Consulta vira **tela cheia**
+  no mobile (`hidden md:flex` no chat; `DocumentoPanel` `w-full md:w-1/2`); modal do dia
+  `max-h-[90vh] overflow-y-auto` e 1 coluna no mobile; calendário com células compactas
+  (`min-h-[64px] sm:min-h-[100px]`).
+- **Teste:** `tipo=feriado` coberto em `test_feriado_suprime_atividades_e_notifica`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{App.tsx,components/{Sidebar,DocumentoPanel}.tsx,pages/{Notificacoes,Consulta,Cronograma}.tsx}`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (7): filtros+gráfico em Atividades, status pendente, lightbox, sidebar
 
 **Branch:** `feat/lote5-fixes`.

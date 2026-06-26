@@ -23,7 +23,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/consulta" replace />} />
+          <Route path="/" element={<Navigate to="/inicio" replace />} />
           <Route path="/consulta" element={<Consulta />} />
           <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/relatorios/:id" element={<RelatorioCliente />} />
@@ -41,7 +41,7 @@ export default function App() {
           <Route path="/admin/cliente/:id" element={<ClienteAdmin />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/consulta" replace />} />
+      <Route path="*" element={<Navigate to="/inicio" replace />} />
     </Routes>
   )
 }

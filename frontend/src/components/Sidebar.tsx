@@ -44,7 +44,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   const local = useLocation()
   const pode = (p: string) => usuario?.permissoes.includes(p) ?? false
 
-  const [grupo, setGrupo] = useState(true)
+  const [grupo, setGrupo] = useState(false)   // todos os grupos começam recolhidos
   const [grupoRel, setGrupoRel] = useState(false)
   const [grupoDoc, setGrupoDoc] = useState(false)
   const [grupoEqp, setGrupoEqp] = useState(false)

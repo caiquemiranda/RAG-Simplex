@@ -49,6 +49,9 @@ Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **Mais melhorias:** filtros (status multi/cliente/técnico) + **gráfico por status** na tela
   Atividades · status **pendente** · **lightbox** da imagem na atividade · sidebar com
   espaçamento simétrico e `<main>` com scroll (não quebra mais).
+- ✅ **UX/mobile:** login cai na **#home** + grupos da sidebar recolhidos (#HOME-FIRST) ·
+  **notificações linkam** à atividade/calendário (#NOTIF-LINK) · **app responsivo** mobile
+  (#MOBILE: Consulta full-screen, modal do dia, calendário compacto).
 
 **Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
 

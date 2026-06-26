@@ -215,7 +215,7 @@ export default function Cronograma() {
                         ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' }
                         : undefined
                   }
-                  className="min-h-[100px] border-b border-r p-1.5 text-left hover:bg-accent"
+                  className="min-h-[64px] border-b border-r p-1 text-left hover:bg-accent sm:min-h-[100px] sm:p-1.5"
                 >
                   <div className="flex justify-end">
                     <span className={`flex h-7 min-w-[28px] items-center justify-center rounded-full px-1 text-base font-bold ${c.ehHoje ? 'bg-primary text-primary-foreground' : c.fds ? 'text-brand-2' : 'text-foreground'}`}>
@@ -253,7 +253,7 @@ export default function Cronograma() {
                   </div>
                 </button>
               ) : (
-                <div key={i} className="min-h-[92px] border-b border-r bg-muted/20" />
+                <div key={i} className="min-h-[64px] border-b border-r bg-muted/20 sm:min-h-[92px]" />
               ),
             )}
           </div>
@@ -268,7 +268,7 @@ export default function Cronograma() {
       {diaSel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button className="absolute inset-0 bg-black/40" aria-label="Fechar" onClick={() => setDiaSel(null)} />
-          <div className="relative z-10 w-full max-w-4xl rounded-xl border bg-card p-4 shadow-xl">
+          <div className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl border bg-card p-4 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold">
                 {new Date(diaSel + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}

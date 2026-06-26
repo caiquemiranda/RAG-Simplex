@@ -22,6 +22,15 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       `test_email_case_insensitive`.
 
 **Melhorias do Lote 5 (UI/UX):**
+- [x] **#HOME-FIRST — login cai na #home + grupos recolhidos**: rota `/` → `/inicio`;
+      todos os grupos da sidebar começam **recolhidos** (Consulta deixou de abrir por padrão).
+- [x] **#NOTIF-LINK — notificações direcionam à atividade**: notificação `cronograma`
+      (com `ref_id`) vira **link** para `/cronograma/atividade/{ref_id}`; feriado (`tipo=feriado`)
+      leva ao calendário.
+- [x] **#MOBILE — app responsivo**: `<main>` rola; split-screen da Consulta vira tela cheia
+      no mobile (chat oculto, doc full); modal do dia com `max-h-[90vh]` e 1 coluna no mobile;
+      calendário com células compactas em telas pequenas; tabelas com scroll horizontal.
+- [x] **#ATV-FILTROS — filtros + gráfico na tela Atividades**:
 - [x] **#ATV-FILTROS — filtros + gráfico na tela Atividades**: filtros multi **Status**
       (agendada/pendente/concluída/cancelada), **Clientes** e **Técnicos** (opções derivadas
       das atividades) + **gráfico de barras por status** (`MultiFiltro` agora componente

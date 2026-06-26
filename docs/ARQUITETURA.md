@@ -92,7 +92,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
 | POST/DELETE | `/cronograma/{id}/anexos[/{anexo_id}]` | atribuído ou admin | Anexa/remove **imagem** (`/arquivos/atividades/`). |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
-| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
+| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). `tipo`=`cronograma` (link→atividade `ref_id`) / `feriado` (link→calendário). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
 | GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos **empresa/marca/cliente** (`?categoria=&cliente_id=&busca=`); `oculto` só p/ admin. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |

@@ -446,7 +446,7 @@ def criar_feriado(dados: FeriadoIn,
     tecnicos = {t.id: t for v in visitas_no_dia for t in v.tecnicos}
     for t in tecnicos.values():
         sessao.add(Notificacao(
-            usuario_id=t.id, tipo="cronograma",
+            usuario_id=t.id, tipo="feriado",
             titulo=f"Feriado em {dados.data.isoformat()}: atividades suspensas",
             texto=f"{f.descricao} — o dia ficará sem atividades.", ref_id=f.id,
         ))
