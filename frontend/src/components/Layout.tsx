@@ -40,7 +40,7 @@ export default function Layout() {
           <Link to="/inicio"><Logo className="h-7" /></Link>
         </header>
 
-        <main className="min-h-0 flex-1">
+        <main className="min-h-0 flex-1 overflow-y-auto">
           <Outlet />
         </main>
 
@@ -66,7 +66,7 @@ export default function Layout() {
         onAbrir={() => setAberta(true)}
         onFechar={() => setAberta(false)}
       />
-      <main className="min-h-0 min-w-0 flex-1">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>

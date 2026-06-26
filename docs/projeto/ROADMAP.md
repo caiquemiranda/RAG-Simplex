@@ -23,7 +23,7 @@ administrativo e controle de acesso por usuário**.
 | 8 | Frontend — chat do técnico (dupla camada + streaming) | ❌ Não | ✅ |
 | 9 | Frontend — painel ADM | ❌ Não | ✅ |
 | 10 | **Estratégias de nuvem (Claude/Gemini/Groq) + Híbrido + Arena** | ✅ **Sim** | ⬜ |
-| 11 | Avaliação de qualidade (RAGAS-lite) & hardening | parcial | ⬜ |
+| 11 | Avaliação (RAGAS-lite) & hardening — **Alembic/migrações ✅ (D-022)**; reranker (D-020) + RAGAS pendentes | parcial | 🔄 |
 
 > Tudo até a Fase 9 roda no note fraco, **sem chave de API e sem custo**. A Fase 10
 > é onde se adiciona a API key (guia em [`docs/CONFIGURAR_APIKEYS.md`](../CONFIGURAR_APIKEYS.md)).

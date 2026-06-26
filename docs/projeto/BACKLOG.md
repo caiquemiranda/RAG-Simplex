@@ -21,30 +21,70 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       **backfill** dos existentes via migração Alembic `5c77258e6fc6`. Teste
       `test_email_case_insensitive`.
 
-**Cronograma:**
+**Melhorias do Lote 5 (UI/UX):**
+- [x] **#CR-DIA2 — modal do dia: scroll único + cards-resumo + editar (admin)**: o modal
+      virou header fixo + **corpo com um único scroll** (não esconde mais topo/rodapé);
+      cards de atividade são **resumo** [cliente · título · técnicos · status] que **abre a
+      página da atividade** ao clicar; **admin** tem botão **editar** (form inline:
+      título/cliente/técnicos/status/obs/remover).
+- [x] **#HOME-FIRST — login cai na #home + grupos recolhidos**: rota `/` → `/inicio`;
+      todos os grupos da sidebar começam **recolhidos** (Consulta deixou de abrir por padrão).
+- [x] **#NOTIF-LINK — notificações direcionam à atividade**: notificação `cronograma`
+      (com `ref_id`) vira **link** para `/cronograma/atividade/{ref_id}`; feriado (`tipo=feriado`)
+      leva ao calendário.
+- [x] **#MOBILE — app responsivo**: `<main>` rola; split-screen da Consulta vira tela cheia
+      no mobile (chat oculto, doc full); modal do dia com `max-h-[90vh]` e 1 coluna no mobile;
+      calendário com células compactas em telas pequenas; tabelas com scroll horizontal.
+- [x] **#ATV-FILTROS — filtros + gráfico na tela Atividades**:
+- [x] **#ATV-FILTROS — filtros + gráfico na tela Atividades**: filtros multi **Status**
+      (agendada/pendente/concluída/cancelada), **Clientes** e **Técnicos** (opções derivadas
+      das atividades) + **gráfico de barras por status** (`MultiFiltro` agora componente
+      compartilhado e genérico).
+- [x] **#ATV-STATUS — status "pendente"** + **lightbox** da imagem: novo status `pendente`
+      (válido no backend, cor âmbar); na página da atividade, a imagem **amplia na própria
+      página** (overlay) com **X** para fechar (antes abria em nova aba).
+- [x] **#SB-ESPACO — espaçamento simétrico da sidebar**: grupos de abas em `space-y-0.5`
+      uniforme (removido o `pt-2` que criava distância desigual).
+- [x] **#SB-QUEBRA — sidebar quebrando em algumas páginas**: `<main>` ganhou
+      `overflow-y-auto` (conteúdo rola dentro do main; não empurra mais a sidebar).
+- [x] **#CR-DIA — modal do dia em 2 colunas**: ao abrir o dia, **esquerda** = equipe e onde
+      cada um está; **direita** = **cards das atividades** (avatares dos técnicos, status,
+      editar, abrir). Modal alargado (`max-w-4xl`).
+- [x] **#CR-ATV — sidebar Cronograma → Atividades**: grupo "Cronograma" (Calendário/Atividades);
+      tela **Atividades** lista todas com resumo + **faltam N dias** / **atrasada há N**;
+      abre a página da atividade. Endpoint `GET /cronograma/atividades`.
+- [x] **#FIX-AUDIT — auditoria com colunas cortadas**: tabela em `overflow-x-auto`
+      (`min-w`) — não corta mais as últimas colunas (Estratégia/Fallback/Feedback).
+- [x] **#CR-FILTROS — filtros Equipe + Clientes (multi) + #ALOC só dias úteis** (Lote 5):
+      `listar` aceita `tecnico_ids`/`cliente_ids` (multi); a alocação fixa virtual (#ALOC) só
+      aparece **seg–sex** (fim de semana só com agendamento explícito). Frontend: dropdowns
+      multi-seleção **Equipe** e **Clientes**. Teste `test_filtros_equipe_clientes_e_aloc_dias_uteis`.
 - [x] **#FER-1 — feriado sem atividades** (item 1): `listar` suprime visitas reais +
       virtuais (#ALOC) em datas de feriado (dia mostra só "Feriado"); `criar_feriado`
       **notifica** os técnicos com atividade no dia; `criar` **bloqueia** (400) agendar em
       feriado. Teste `test_feriado_suprime_atividades_e_notifica`.
-- [ ] **#ATV-1 — card/página de atividade** (item 3): hierarquia na navegação
-      **Cronograma → Cliente → Atividade**. Cada `Visita` vira um **card-atividade** com
-      **página própria**: `status` (select), **vários técnicos** (executam e **comentam**),
-      **anexar imagens** (reusa #FILES) exibidas na página. Novas entidades: `ComentarioVisita`
-      e `AnexoVisita` (ou anexos via campo). dep: #FILES ✅, `visita_tecnico` ✅ (#CR8).
+- [x] **#ATV-1 — card/página de atividade** (item 3): página `/cronograma/atividade/:id`
+      (cascata Cronograma → Cliente → Atividade) com `status`, técnicos, **galeria de imagens**
+      e **comentários**. Entidades `ComentarioVisita` + `AnexoVisita` (migração Alembic
+      `7330e27f4c89`); acesso = atribuído ou admin. Spec
+      [`specs/spec-atv1-pagina-atividade.md`](specs/spec-atv1-pagina-atividade.md).
 
 **Equipamentos & cliente (fundação Equipamento primeiro):**
-- [ ] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade
-      `Equipamento` (`cliente_id`; colunas **painel, loop, add, type, model**); **upload de CSV**
-      para popular a lista do cliente. **Fases seguintes:** (b) +colunas **última manutenção**
-      e **último teste**; (c) **histórico do painel** do cliente — *adiado* (usuário vai ajustar
-      os dados baixados antes). ⚑ *Fundação* de #CLI-PG e #EQP-2.
-- [ ] **#CLI-PG — página do cliente (como a do usuário)** (item 6): editar cliente em
-      **página própria** com **endereço, contatos** e demais campos; dentro dela, a **lista de
-      equipamentos** (CSV do #EQP-1). dep: #EQP-1.
-- [ ] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): renomear *"Buscar equipamento"*
-      para **grupo "Equipamentos"** com sub-abas **[Buscar equipamento · Sobre equipamento ·
-      Lista de equipamentos]**; em *Lista*, **card por cliente** → abre a lista daquele cliente
-      (espelha Relatórios/Documentos). dep: #EQP-1 (lista por cliente).
+- [x] **#EQP-1 — entidade `Equipamento` + import CSV por cliente** (item 6, núcleo): entidade
+      `Equipamento` (`cliente_id`; **painel, loop, add, type, model**); endpoints
+      `GET/POST /admin/clientes/{id}/equipamentos[/importar]` (CSV, delimitador auto,
+      `substituir`) + DELETE. Migração `2681a9da4b28`. Spec
+      [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md). **Fases seguintes
+      adiadas:** (b) colunas última manutenção/teste; (c) histórico do painel. UI no #CLI-PG.
+- [x] **#CLI-PG — página do cliente (como a do usuário)** (item 6): `Cliente` ganhou
+      `endereco/contato/telefone/email/observacoes` (migração `84ff7bfcb358`); `GET
+      /admin/clientes/{id}` (detalhe + equipamentos); página `pages/ClienteAdmin.tsx`
+      (`/admin/cliente/:id`) com dados, logo, **import CSV** e lista de equipamentos.
+      Teste `test_cliente_detalhe_e_campos`.
+- [x] **#EQP-2 — sidebar "Equipamentos" (grupo)** (item 5): grupo colapsável **Equipamentos**
+      com sub-abas **Buscar · Sobre · Lista**; em *Lista*, **card por cliente** → lista daquele
+      cliente (`/equipamentos/lista[/:id]`, página `EquipamentosLista.tsx`). Endpoint visível
+      `GET /clientes/{id}/equipamentos` (RBAC). Teste `test_equipamentos_visiveis_por_papel`.
 
 > **Sequência sem retrabalho:** (1) #FIX-TOKEN + #FIX-EMAIL → (2) #FER-1 → (3) #ATV-1 →
 > (4) **#EQP-1** (fundação) → #CLI-PG → #EQP-2. Equipamento vem **antes** das telas que o
@@ -106,7 +146,8 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 ### D. Modelo de dados (consolidação — evita retrabalho)
 - [x] Trocar `Usuario.clientes` (CSV placeholder) por **relação N:N `usuario↔cliente`**
       (`usuario_cliente`). Coluna CSV permanece como legado sem uso na API.
-- [ ] (Opcional) Entidade **Unidade/Local** se "local de trabalho" virar cadastro.
+- [x] Entidade **Unidade** (D-021): "local de trabalho" virou cadastro + visão por unidade.
+      Spec [`specs/spec-unidade.md`](specs/spec-unidade.md).
 
 ### E. Núcleo RAG / fases pendentes
 - [ ] **Fase 10** — estratégias de nuvem (Claude) + arena. dep: API key.

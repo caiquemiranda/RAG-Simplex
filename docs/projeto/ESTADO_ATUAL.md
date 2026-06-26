@@ -13,8 +13,8 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote4-fixes` (PR #6 da robustez/Alembic já mergeado em `main`).
-  **Backend: 90 testes** passando.
+- **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
+  **Backend: 97 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -31,21 +31,35 @@
   - **Documentos:** biblioteca **Empresa / Clientes / Marcas** (cards + grupo na sidebar +
     **busca**), CRUD de arquivos (#DOC1–#DOC4).
   - **Cronograma (real):** visitas com **vários técnicos** (#CR8), **card do dia** por papel,
-    **fechamento**, **cliente fixo + relocação** (#ALOC), **visão por unidade** (D-021),
-    agrupamento por **cliente** (cor/logo + avatares), **editar**, feriados, **notificações**.
+    **fechamento**, **cliente fixo + relocação** (#ALOC, só seg–sex), **visão por unidade** (D-021),
+    **filtros Equipe + Clientes** (multi), **página de atividade** (#ATV-1: status, imagens,
+    comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Lote 4 (em andamento, branch `feat/lote4-fixes`)
+## ⏭️ PRÓXIMO PASSO — Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
 
-Sequência sem retrabalho (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
-1. ✅ **#FIX-TOKEN** (token 1 dia) + **#FIX-EMAIL** (e-mail case-insensitive).
-2. ✅ **#FER-1** — feriado sem atividades (suprime visitas/#ALOC no dia + notifica + bloqueia agendar).
-3. ⏭️ **#ATV-1** — página de atividade (status, multi-técnico, anexar imagens, comentários).
-4. **#EQP-1** (fundação: entidade `Equipamento` + CSV) → **#CLI-PG** (página do cliente
-   com endereço/contatos) → **#EQP-2** (sidebar "Equipamentos" com sub-abas + lista por cliente).
+Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
+- ✅ **#CR-FILTROS** — filtros Equipe/Clientes (multi) + #ALOC só seg–sex.
+- ✅ **#ATV-1** — página de atividade (status, técnicos, galeria de imagens, comentários).
+- ✅ **#EQP-1** — entidade `Equipamento` + import CSV por cliente.
+- ✅ **#CLI-PG** — página do cliente (`/admin/cliente/:id`) com endereço/contatos + CSV.
+- ✅ **#EQP-2** — sidebar "Equipamentos" (Buscar/Sobre/Lista) + lista por cliente.
+- ✅ **Melhorias UI:** modal do dia em 2 colunas (#CR-DIA) · sidebar Cronograma→Atividades
+  (#CR-ATV, com "faltam N / atrasada há N") · fix da auditoria com colunas cortadas (#FIX-AUDIT).
+- ✅ **Mais melhorias:** filtros (status multi/cliente/técnico) + **gráfico por status** na tela
+  Atividades · status **pendente** · **lightbox** da imagem na atividade · sidebar com
+  espaçamento simétrico e `<main>` com scroll (não quebra mais).
+- ✅ **UX/mobile:** login cai na **#home** + grupos da sidebar recolhidos (#HOME-FIRST) ·
+  **notificações linkam** à atividade/calendário (#NOTIF-LINK) · **app responsivo** mobile
+  (#MOBILE: Consulta full-screen, modal do dia, calendário compacto).
+- ✅ **Modal do dia v2 (#CR-DIA2):** scroll único (não esconde mais topo/rodapé) · cards =
+  **resumo** clicável (abre a atividade) · **admin** com botão **editar** (form inline).
 
-**Depois do Lote 4:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem,
-*requer API key*) · #1 (alinhamento ChatGPT).
+**Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
+
+**Depois do Lote 5:** equipamentos fase b/c (colunas últ. manutenção/teste; histórico do
+painel — *adiado pelo usuário*) · Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) ·
+Fase 10 (nuvem, *requer API key*) · #1 (alinhamento ChatGPT).
 
 ## 🔧 Para rodar na sua máquina
 

@@ -48,7 +48,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import Cliente, LogConsulta, Unidade, Usuario
+from app.modelos import Cliente, Equipamento, LogConsulta, Unidade, Usuario
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -256,6 +256,33 @@ def unidades_visiveis(
         select(Unidade).where(Unidade.ativo.is_(True)).order_by(Unidade.nome)
     ).all()
     return [UnidadePublica(id=u.id, nome=u.nome, cidade=u.cidade) for u in unidades]
+
+
+class EquipamentoPublico(BaseModel):
+    id: int
+    painel: str
+    loop: str
+    add: str
+    type: str
+    model: str
+
+
+@app.get("/clientes/{cliente_id}/equipamentos", response_model=list[EquipamentoPublico])
+def equipamentos_do_cliente(
+    cliente_id: int,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[EquipamentoPublico]:
+    """Equipamentos de um cliente (#EQP-2): admin vê de todos; técnico só dos seus clientes."""
+    cliente = sessao.get(Cliente, cliente_id)
+    if cliente is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado.")
+    if not usuario.tem_permissao("gerir_usuarios") and cliente not in usuario.clientes_rel:
+        raise HTTPException(status_code=403, detail="Sem acesso a este cliente.")
+    return [
+        EquipamentoPublico(id=e.id, painel=e.painel, loop=e.loop, add=e.add, type=e.type, model=e.model)
+        for e in cliente.equipamentos
+    ]
 
 
 # --------------------------------------------------------------------------- #

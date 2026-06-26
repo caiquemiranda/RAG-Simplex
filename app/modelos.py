@@ -164,11 +164,44 @@ class Cliente(Base):
     # Identidade visual do cliente (usada onde ele aparecer) — #CLIV.
     cor: Mapped[str | None] = mapped_column(String(9), default=None)        # hex #RRGGBB
     logo_url: Mapped[str | None] = mapped_column(Text, default=None)        # /arquivos/...
+    # Cadastro completo (página do cliente) — #CLI-PG.
+    endereco: Mapped[str | None] = mapped_column(Text, default=None)
+    contato: Mapped[str | None] = mapped_column(String(120), default=None)  # nome do responsável
+    telefone: Mapped[str | None] = mapped_column(String(40), default=None)
+    email: Mapped[str | None] = mapped_column(String(255), default=None)
+    observacoes: Mapped[str | None] = mapped_column(Text, default=None)
 
     tecnicos: Mapped[list[Usuario]] = relationship(
         secondary=usuario_cliente, back_populates="clientes_rel"
     )
     unidade_rel: Mapped[Unidade | None] = relationship(foreign_keys=[unidade_id])
+    # Equipamentos do cliente (importados por CSV) — #EQP-1.
+    equipamentos: Mapped[list[Equipamento]] = relationship(
+        back_populates="cliente", cascade="all, delete-orphan"
+    )
+
+
+class Equipamento(Base):
+    """Equipamento (dispositivo do painel) de um cliente — #EQP-1.
+
+    Colunas vindas do CSV: `painel`, `loop`, `add` (endereço no loop), `type`, `model`.
+    Fases seguintes (adiadas): última manutenção / último teste; histórico do painel.
+    """
+
+    __tablename__ = "equipamento"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    painel: Mapped[str] = mapped_column(String(80), default="")
+    loop: Mapped[str] = mapped_column(String(40), default="")
+    add: Mapped[str] = mapped_column(String(40), default="")     # endereço do dispositivo
+    type: Mapped[str] = mapped_column(String(80), default="")
+    model: Mapped[str] = mapped_column(String(80), default="")
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
 
 
 class Visita(Base):
@@ -188,6 +221,48 @@ class Visita(Base):
     usuario: Mapped[Usuario] = relationship()
     cliente: Mapped[Cliente | None] = relationship()
     tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
+    # Página da atividade (#ATV-1): comentários e anexos de imagem.
+    comentarios: Mapped[list[ComentarioVisita]] = relationship(
+        back_populates="visita", cascade="all, delete-orphan", order_by="ComentarioVisita.criado_em"
+    )
+    anexos: Mapped[list[AnexoVisita]] = relationship(
+        back_populates="visita", cascade="all, delete-orphan", order_by="AnexoVisita.criado_em"
+    )
+
+
+class ComentarioVisita(Base):
+    """Comentário de um técnico/admin numa atividade do cronograma (#ATV-1)."""
+
+    __tablename__ = "comentario_visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    visita_id: Mapped[int] = mapped_column(ForeignKey("visita.id", ondelete="CASCADE"))
+    autor_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)
+    texto: Mapped[str] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    visita: Mapped[Visita] = relationship(back_populates="comentarios")
+    autor: Mapped[Usuario | None] = relationship()
+
+
+class AnexoVisita(Base):
+    """Anexo de imagem de uma atividade (#ATV-1) — arquivo em /arquivos/atividades/."""
+
+    __tablename__ = "anexo_visita"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    visita_id: Mapped[int] = mapped_column(ForeignKey("visita.id", ondelete="CASCADE"))
+    autor_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)
+    url: Mapped[str] = mapped_column(Text)                       # /arquivos/atividades/...
+    nome: Mapped[str] = mapped_column(String(200), default="")   # nome original
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    visita: Mapped[Visita] = relationship(back_populates="anexos")
+    autor: Mapped[Usuario | None] = relationship()
 
 
 class Feriado(Base):

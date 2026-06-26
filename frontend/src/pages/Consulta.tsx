@@ -46,7 +46,7 @@ export default function Consulta() {
 
   return (
     <div className="flex h-full">
-      <div className={doc ? 'flex h-full w-1/2 flex-col' : 'flex h-full w-full flex-col'}>
+      <div className={doc ? 'hidden h-full flex-col md:flex md:w-1/2' : 'flex h-full w-full flex-col'}>
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-4 p-4">
             {vazio && (

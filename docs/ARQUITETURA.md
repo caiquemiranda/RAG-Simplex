@@ -78,15 +78,21 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | PUT | `/admin/usuarios/{id}/permissoes-extra` | `gerir_usuarios` | Permissões extra do usuário. |
 | GET/PUT | `/admin/usuarios/{id}/estrategia` | `gerir_estrategias` | Estratégia/persona/camadas por usuário. |
 | POST/DELETE | `/admin/usuarios/{id}/documentos[/{doc_id}]` | `gerir_usuarios` | Documentos do técnico (validade). |
-| GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário; `unidade_id` D-021). |
+| GET/POST/PATCH/DELETE | `/admin/clientes[/{id}]` | `gerir_usuarios` | CRUD de clientes (técnicos via `cliente_ids` no usuário; `unidade_id` D-021). `GET /{id}` traz **detalhe** (endereço/contatos + equipamentos, #CLI-PG). |
 | GET/POST/PATCH/DELETE | `/admin/unidades[/{id}]` | `gerir_usuarios` | CRUD de **unidades** (base/regional, D-021); DELETE bloqueia se em uso (409). |
+| GET/POST | `/admin/clientes/{id}/equipamentos[/importar]` · DELETE `/admin/equipamentos/{id}` | `gerir_usuarios` | **Equipamentos** do cliente (#EQP-1): listar + **import CSV** (`painel,loop,add,type,model`; `substituir`). |
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
+| GET | `/clientes/{id}/equipamentos` | autenticado | **Equipamentos do cliente** (#EQP-2): admin todos; técnico só dos seus clientes (403). |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
-| GET | `/cronograma?de=&ate=&tecnico_id=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas; filtro por **unidade** do cliente). |
+| GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
+| GET | `/cronograma/atividades` | autenticado | **Lista de atividades** (sidebar Cronograma→Atividades): técnico as suas; admin todas. |
+| GET | `/cronograma/{id}` | atribuído ou admin | **Detalhe da atividade** (#ATV-1): comentários + anexos. |
+| POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
+| POST/DELETE | `/cronograma/{id}/anexos[/{anexo_id}]` | atribuído ou admin | Anexa/remove **imagem** (`/arquivos/atividades/`). |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
-| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). |
+| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). `tipo`=`cronograma` (link→atividade `ref_id`) / `feriado` (link→calendário). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
 | GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos **empresa/marca/cliente** (`?categoria=&cliente_id=&busca=`); `oculto` só p/ admin. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
@@ -161,7 +167,7 @@ técnico/analista recebem também "🔧 resolução técnica".
 
 ## 7. Testes
 
-**59 testes** (pytest), sem rede nem download de modelo. Detalhe em
+**97 testes** (pytest), sem rede nem download de modelo. Detalhe em
 [`TESTES.md`](TESTES.md).
 
 ## 8. Status por fase

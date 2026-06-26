@@ -18,6 +18,9 @@ erDiagram
   USUARIO ||--o{ VISITA : "1:N (responsável)"
   USUARIO }o--o{ VISITA : "N:N visita_tecnico (atribuídos)"
   CLIENTE ||--o{ VISITA : "0..1 (cliente_id)"
+  VISITA ||--o{ COMENTARIO_VISITA : "1:N (cascade, #ATV-1)"
+  VISITA ||--o{ ANEXO_VISITA : "1:N (cascade, #ATV-1)"
+  CLIENTE ||--o{ EQUIPAMENTO : "1:N (cascade, #EQP-1)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -63,6 +66,11 @@ erDiagram
     bool ativo
     string cor "hex (identidade visual)"
     text logo_url "/arquivos/..."
+    text endereco "#CLI-PG"
+    string contato "responsável"
+    string telefone
+    string email
+    text observacoes
   }
   VISITA {
     int id PK
@@ -70,8 +78,33 @@ erDiagram
     int cliente_id FK "opcional"
     date data
     string titulo "atividade"
-    string status "agendada|concluida|cancelada"
+    string status "agendada|pendente|concluida|cancelada"
     text observacoes
+  }
+  EQUIPAMENTO {
+    int id PK
+    int cliente_id FK "cascade"
+    string painel
+    string loop
+    string add "endereço no loop"
+    string type
+    string model
+    datetime criado_em
+  }
+  COMENTARIO_VISITA {
+    int id PK
+    int visita_id FK "cascade"
+    int autor_id FK "usuario"
+    text texto
+    datetime criado_em
+  }
+  ANEXO_VISITA {
+    int id PK
+    int visita_id FK "cascade"
+    int autor_id FK "usuario"
+    text url "/arquivos/atividades/..."
+    string nome "nome original"
+    datetime criado_em
   }
   FERIADO {
     int id PK
@@ -151,6 +184,11 @@ Técnicos são associados a clientes via `usuario_cliente` (N:N) — define **ac
 **cronograma por local**. Substitui o campo legado `Usuario.clientes` (CSV), que permanece
 na tabela mas não é mais usado pela API.
 
+### Cliente — cadastro completo (#CLI-PG)
+Além de `nome/unidade_id/cor/logo_url`, o cliente tem **página própria** com `endereco`,
+`contato` (responsável), `telefone`, `email`, `observacoes`. `GET /admin/clientes/{id}`
+devolve o detalhe (campos + `equipamentos[]`). UI em `pages/ClienteAdmin.tsx`.
+
 ### Unidade (D-021)
 Base/regional operacional (`nome` único, `cidade`, `ativo`). Promove o antigo texto livre
 `unidade` (em `Usuario`/`Cliente`) a **entidade**, para a **"visão por unidade"** do
@@ -164,7 +202,22 @@ Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), c
 `status`. **Vários técnicos** podem ser atribuídos (N:N `visita_tecnico`, #CR8);
 `usuario_id` é o responsável (1º) por compatibilidade. Técnico vê visitas em que está
 atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
+**Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
 Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### Equipamento (#EQP-1)
+Dispositivo do painel de incêndio de um **cliente** (`cliente_id`, cascade), importado por
+**CSV**. Colunas: `painel`, `loop`, `add` (endereço no loop), `type`, `model`. Fases
+seguintes (adiadas): `ultima_manutencao`/`ultimo_teste` e histórico do painel. A UI (lista +
+upload) vive na **página do cliente** (#CLI-PG) e na sidebar "Equipamentos" (#EQP-2).
+Ver [`projeto/specs/spec-eqp1-equipamento-csv.md`](projeto/specs/spec-eqp1-equipamento-csv.md).
+
+### ComentarioVisita / AnexoVisita (página da atividade, #ATV-1)
+A atividade (`Visita`) tem uma **página própria** com **comentários** e **anexos de
+imagem** (ambos `cascade` na visita). `ComentarioVisita`: `autor_id`, `texto`, `criado_em`.
+`AnexoVisita`: imagem em `/arquivos/atividades/` (`url`, `nome`, `autor_id`, `criado_em`).
+Acesso (ver/comentar/anexar/mudar status): **técnico atribuído ou admin**. Reusa #FILES.
+Ver [`projeto/specs/spec-atv1-pagina-atividade.md`](projeto/specs/spec-atv1-pagina-atividade.md).
 
 ### Feriado / Notificacao
 `Feriado` (global): data única + descrição; destaca o dia no cronograma.

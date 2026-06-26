@@ -68,9 +68,24 @@ export type AdminCliente = {
   ativo: boolean
   cor: string | null
   logo_url: string | null
+  // Cadastro completo (#CLI-PG)
+  endereco: string | null
+  contato: string | null
+  telefone: string | null
+  email: string | null
+  observacoes: string | null
 }
-export type ClienteEntrada = { nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean; cor?: string | null; logo_url?: string | null }
+export type ClienteEntrada = {
+  nome?: string; unidade?: string | null; unidade_id?: number | null; ativo?: boolean
+  cor?: string | null; logo_url?: string | null
+  endereco?: string | null; contato?: string | null; telefone?: string | null; email?: string | null; observacoes?: string | null
+}
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
+
+// Equipamento do cliente (#EQP-1) — importado por CSV.
+export type Equipamento = { id: number; painel: string; loop: string; add: string; type: string; model: string }
+export type ImportEquipResultado = { importados: number; total: number }
+export type ClienteDetalhe = AdminCliente & { equipamentos: Equipamento[] }
 
 // Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
 export type AdminUnidade = { id: number; nome: string; cidade: string | null; ativo: boolean }
@@ -96,6 +111,10 @@ export type Visita = {
   observacoes: string | null
   fixo: boolean
 }
+// Página da atividade (#ATV-1).
+export type ComentarioVisita = { id: number; autor_id: number | null; autor_nome: string | null; texto: string; criado_em: string }
+export type AnexoVisita = { id: number; url: string; nome: string; autor_id: number | null; criado_em: string }
+export type VisitaDetalhe = Visita & { comentarios: ComentarioVisita[]; anexos: AnexoVisita[] }
 export type NovaVisita = {
   usuario_ids: number[]
   cliente_id?: number | null
@@ -310,6 +329,24 @@ export async function uploadArquivo(file: File, subpasta = ''): Promise<{ url: s
   return res.json()
 }
 
+/** POST multipart de um único arquivo (campo `arquivo`) para um endpoint qualquer. */
+export async function uploadMultipart<T>(path: string, file: File): Promise<T> {
+  const token = getToken()
+  const fd = new FormData()
+  fd.append('arquivo', file)
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  })
+  if (!res.ok) {
+    let detalhe = res.statusText
+    try { detalhe = (await res.json()).detail ?? detalhe } catch { /* sem JSON */ }
+    throw new Error(detalhe)
+  }
+  return res.json()
+}
+
 export const api = {
   login: (email: string, senha: string) =>
     request<{ access_token: string; refresh_token?: string }>('/auth/login', {
@@ -320,6 +357,7 @@ export const api = {
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
   unidadesVisiveis: () => request<UnidadeVisivel[]>('/unidades'),
+  equipamentosCliente: (clienteId: number) => request<Equipamento[]>(`/clientes/${clienteId}/equipamentos`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -375,12 +413,19 @@ export const api = {
       }),
     auditoria: (limite = 50) => request<AdminAuditoria[]>(`/admin/auditoria?limite=${limite}`),
     clientes: () => request<AdminCliente[]>('/admin/clientes'),
+    cliente: (id: number) => request<ClienteDetalhe>(`/admin/clientes/${id}`),
     criarCliente: (dados: ClienteEntrada & { nome: string }) =>
       request<AdminCliente>('/admin/clientes', { method: 'POST', body: JSON.stringify(dados) }),
     atualizarCliente: (id: number, dados: ClienteEntrada) =>
       request<AdminCliente>(`/admin/clientes/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerCliente: (id: number) =>
       request<void>(`/admin/clientes/${id}`, { method: 'DELETE' }),
+    // Equipamentos do cliente (#EQP-1)
+    equipamentos: (clienteId: number) => request<Equipamento[]>(`/admin/clientes/${clienteId}/equipamentos`),
+    importarEquipamentos: (clienteId: number, file: File, substituir = false) =>
+      uploadMultipart<ImportEquipResultado>(`/admin/clientes/${clienteId}/equipamentos/importar?substituir=${substituir}`, file),
+    removerEquipamento: (eqpId: number) =>
+      request<void>(`/admin/equipamentos/${eqpId}`, { method: 'DELETE' }),
     banco: () => request<BancoStatus>('/admin/banco'),
     bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),
@@ -392,14 +437,27 @@ export const api = {
       request<void>(`/admin/unidades/${id}`, { method: 'DELETE' }),
   },
   cronograma: {
-    listar: (de: string, ate: string, tecnicoId?: number | null, unidadeId?: number | null) =>
-      request<Visita[]>(`/cronograma?de=${de}&ate=${ate}` +
-        `${tecnicoId ? `&tecnico_id=${tecnicoId}` : ''}${unidadeId ? `&unidade_id=${unidadeId}` : ''}`),
+    listar: (de: string, ate: string, opts?: { tecnicoIds?: number[]; clienteIds?: number[]; unidadeId?: number | null }) => {
+      const p = new URLSearchParams({ de, ate })
+      opts?.tecnicoIds?.forEach((id) => p.append('tecnico_ids', String(id)))
+      opts?.clienteIds?.forEach((id) => p.append('cliente_ids', String(id)))
+      if (opts?.unidadeId) p.append('unidade_id', String(opts.unidadeId))
+      return request<Visita[]>(`/cronograma?${p.toString()}`)
+    },
     criar: (dados: NovaVisita) =>
       request<Visita>('/cronograma', { method: 'POST', body: JSON.stringify(dados) }),
     atualizar: (id: number, dados: Partial<NovaVisita>) =>
       request<Visita>(`/cronograma/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/cronograma/${id}`, { method: 'DELETE' }),
+    // Lista de todas as atividades (sidebar Cronograma → Atividades)
+    atividades: () => request<Visita[]>('/cronograma/atividades'),
+    // Página da atividade (#ATV-1)
+    obter: (id: number) => request<VisitaDetalhe>(`/cronograma/${id}`),
+    comentar: (id: number, texto: string) =>
+      request<VisitaDetalhe>(`/cronograma/${id}/comentarios`, { method: 'POST', body: JSON.stringify({ texto }) }),
+    anexar: (id: number, file: File) => uploadMultipart<VisitaDetalhe>(`/cronograma/${id}/anexos`, file),
+    removerAnexo: (id: number, anexoId: number) =>
+      request<VisitaDetalhe>(`/cronograma/${id}/anexos/${anexoId}`, { method: 'DELETE' }),
     feriados: (de: string, ate: string) =>
       request<Feriado[]>(`/cronograma/feriados/intervalo?de=${de}&ate=${ate}`),
     criarFeriado: (dados: { data: string; descricao: string }) =>

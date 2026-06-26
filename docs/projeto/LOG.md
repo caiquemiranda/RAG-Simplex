@@ -4,6 +4,178 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — Lote 5 (9): modal do dia — scroll único, cards-resumo, editar (admin)
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#CR-DIA2:** modal do dia reestruturado em **header fixo (shrink-0) + corpo `flex-1
+  overflow-y-auto`** (um único scroll; removido o `max-h-[62vh]` aninhado do painel direito
+  que escondia topo/rodapé — img do usuário).
+- **Cards = resumo** [cliente · título · avatares dos técnicos · status]; clicar abre
+  `/cronograma/atividade/{id}`. **Admin** ganha botão **editar** → form inline
+  (título/cliente/status/técnicos/observações/remover), via estado `editandoId`.
+- Técnico vê o resumo e edita status/comentários na **página da atividade**.
+- **97 passed**; `tsc` OK.
+
+**Arquivos:** `frontend/src/pages/Cronograma.tsx`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (8): home-first, notificações com link, responsivo mobile
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#HOME-FIRST:** rota `/` e `*` → **`/inicio`** (login cai na #home); sidebar com **todos os
+  grupos recolhidos** por padrão (grupo Consulta deixou de iniciar aberto).
+- **#NOTIF-LINK:** notificação de atividade (`tipo=cronograma`, `ref_id`=visita) vira **link**
+  para `/cronograma/atividade/{ref_id}`; feriado passou a `tipo=feriado` → link p/ o calendário.
+  Página `Notificacoes.tsx` renderiza `Link`/`button` conforme o destino.
+- **#MOBILE:** `<main>` rola (já corrigido em (6)); split-screen da Consulta vira **tela cheia**
+  no mobile (`hidden md:flex` no chat; `DocumentoPanel` `w-full md:w-1/2`); modal do dia
+  `max-h-[90vh] overflow-y-auto` e 1 coluna no mobile; calendário com células compactas
+  (`min-h-[64px] sm:min-h-[100px]`).
+- **Teste:** `tipo=feriado` coberto em `test_feriado_suprime_atividades_e_notifica`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{App.tsx,components/{Sidebar,DocumentoPanel}.tsx,pages/{Notificacoes,Consulta,Cronograma}.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (7): filtros+gráfico em Atividades, status pendente, lightbox, sidebar
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#ATV-FILTROS:** tela Atividades com filtros multi **Status/Clientes/Técnicos** (opções
+  derivadas das atividades) + **gráfico de barras por status**. `MultiFiltro` extraído para
+  `components/MultiFiltro.tsx` (genérico `string|number`); Cronograma reusa.
+- **#ATV-STATUS:** novo status **`pendente`** (`_STATUS_VALIDOS`, cor âmbar em `format.ts`,
+  selects do Cronograma e da Atividade). **Lightbox**: imagem da atividade amplia na própria
+  página (overlay com X) em vez de abrir nova aba.
+- **#SB-ESPACO:** sidebar — abas em `space-y-0.5` uniforme (removido `pt-2`).
+- **#SB-QUEBRA:** `<main>` (Layout) ganhou `overflow-y-auto` → conteúdo rola dentro do main,
+  não empurra/quebra mais a sidebar (corrige as páginas novas sem wrapper `h-full`).
+- **Teste:** status `pendente` coberto em `test_tecnico_fecha_propria_visita`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{components/{Layout,Sidebar,MultiFiltro,AuditoriaView}.tsx,lib/format.ts,pages/{Atividades,Atividade,Cronograma}.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (6): melhorias UI — modal do dia, Atividades, fix auditoria
+
+**Branch:** `feat/lote5-fixes`.
+
+- **#CR-DIA:** modal do dia reescrito em **2 colunas** (`max-w-4xl`): esquerda = **equipe
+  do dia** (`equipeDia`, dedup, onde cada um está); direita = **cards das atividades**
+  (linha de avatares de todos os técnicos, status, editar, abrir). Fixos só à esquerda.
+- **#CR-ATV:** sidebar "Cronograma" vira **grupo** (Calendário/Atividades). Nova tela
+  `pages/Atividades.tsx` (`/cronograma/atividades`): resumo + **faltam N / atrasada há N**
+  (calculado de `data`/`status`), abre a página da atividade. Backend `GET
+  /cronograma/atividades` (técnico as suas; admin todas). `api.cronograma.atividades()`.
+- **#FIX-AUDIT:** `AuditoriaView` — tabela em `overflow-x-auto` + `min-w-[760px]` (não corta
+  mais as últimas colunas).
+- **Testes** `test_lista_atividades`. **97 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,components/Sidebar.tsx,components/AuditoriaView.tsx,pages/Cronograma.tsx,pages/Atividades.tsx,App.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (5): #EQP-2 — sidebar "Equipamentos" + lista por cliente
+
+**Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp2-cli-pg.md`](specs/spec-eqp2-cli-pg.md).
+
+- **API visível:** `GET /clientes/{id}/equipamentos` (`EquipamentoPublico`) — admin todos;
+  técnico só dos seus clientes (403 caso contrário).
+- **Sidebar:** "Buscar Equipamento" → **grupo "Equipamentos"** (Buscar/Sobre/Lista).
+- **Frontend:** `pages/EquipamentosLista.tsx` (`/equipamentos/lista[/:id]`) — cards de
+  clientes → tabela de equipamentos do cliente; `/equipamentos/sobre` placeholder.
+  `api.equipamentosCliente(id)`.
+- **Teste** `test_equipamentos_visiveis_por_papel`. **96 passed**; `tsc` OK. **Lote 5 completo.**
+
+**Arquivos:** `app/main.py`, `tests/test_admin.py`,
+`frontend/src/{App.tsx,lib/api.ts,components/Sidebar.tsx,pages/EquipamentosLista.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (4): #CLI-PG — página do cliente (endereço/contatos + equipamentos)
+
+**Branch:** `feat/lote5-fixes`.
+
+- **Modelo:** `Cliente` ganhou `endereco/contato/telefone/email/observacoes` (migração Alembic
+  `84ff7bfcb358`, batch add_column; ruído de FK removido).
+- **API (`admin.py`):** `ClienteIn/Atualizar/Resumo` com os campos; `ClienteDetalhe`
+  (resumo + `equipamentos[]`); novo `GET /admin/clientes/{id}` (detalhe).
+- **Frontend:** página `pages/ClienteAdmin.tsx` (rota `/admin/cliente/:id`) — dados do
+  cliente, logo, endereço/contatos, e seção **Equipamentos** (import CSV com `substituir`,
+  tabela, remover). Nome do cliente na lista do painel vira **link** para a página.
+  `api.ts`: `AdminCliente` estendido + `ClienteDetalhe` + `api.admin.cliente(id)`.
+- **Teste** `test_cliente_detalhe_e_campos`. **95 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin}.py`, `alembic/versions/84ff7bfcb358_*.py`,
+`tests/test_admin.py`, `frontend/src/{App.tsx,lib/api.ts,pages/ClienteAdmin.tsx,pages/Admin.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (3): #EQP-1 — entidade Equipamento + import CSV (backend)
+
+**Branch:** `feat/lote5-fixes`. Spec: [`specs/spec-eqp1-equipamento-csv.md`](specs/spec-eqp1-equipamento-csv.md).
+
+- **Modelo:** `Equipamento` (cliente_id cascade; `painel, loop, add, type, model`, `criado_em`);
+  `Cliente.equipamentos`. Migração Alembic `2681a9da4b28` (limpei o ruído de FK do SQLite).
+- **API (`admin.py`):** `GET /admin/clientes/{id}/equipamentos`, `POST .../importar`
+  (CSV multipart; delimitador `,`/`;` via Sniffer; cabeçalho case-insensitive; `substituir`),
+  `DELETE /admin/equipamentos/{id}`. Perm. `gerir_usuarios`.
+- **api.ts:** tipos `Equipamento`/`ImportEquipResultado` + `equipamentos/importarEquipamentos/
+  removerEquipamento`. (UI fica no #CLI-PG.)
+- **Teste** `test_equipamentos_import_csv`. **94 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,admin}.py`, `alembic/versions/2681a9da4b28_*.py`,
+`tests/test_admin.py`, `frontend/src/lib/api.ts`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (2): #CR-FILTROS — Equipe/Clientes (multi) + #ALOC só dias úteis
+
+**Branch:** `feat/lote5-fixes`.
+
+- **Backend (`cronograma.listar`):** `tecnico_id` (single) → **`tecnico_ids`** (multi, filtro
+  "Equipe") + novo **`cliente_ids`** (multi, filtro "Clientes"); ambos aplicados a visitas
+  reais e às alocações fixas (#ALOC). **#ALOC só seg–sex** (`dia.weekday() < 5`) — fim de
+  semana só com agendamento explícito.
+- **Frontend (`Cronograma.tsx`):** componente reutilizável **`MultiFiltro`** (botão + dropdown
+  de checkboxes); filtros **Equipe** (técnicos) e **Clientes** (via `clientesVisiveis`).
+  `api.cronograma.listar(de, ate, {tecnicoIds, clienteIds, unidadeId})`.
+- **Teste** `test_filtros_equipe_clientes_e_aloc_dias_uteis`. **93 passed**; `tsc` OK.
+
+**Arquivos:** `app/cronograma.py`, `tests/test_cronograma.py`,
+`frontend/src/{lib/api.ts,pages/Cronograma.tsx}`, `docs/**`.
+
+---
+
+## 2026-06-25 — Lote 5 (1): #ATV-1 página de atividade (comentários + anexos)
+
+**Branch:** `feat/lote5-fixes` (do `main` após o merge do Lote 4, PR #7).
+Spec: [`specs/spec-atv1-pagina-atividade.md`](specs/spec-atv1-pagina-atividade.md).
+
+- **Modelo:** entidades `ComentarioVisita` e `AnexoVisita` (cascade em `Visita`); migração
+  Alembic `7330e27f4c89` (limpei o ruído de FK do autogenerate no SQLite — só as 2 tabelas).
+- **API (`cronograma.py`):** `GET /cronograma/{id}` (detalhe), `POST .../comentarios`,
+  `POST/DELETE .../anexos` (imagem via #FILES → `/arquivos/atividades/`). RBAC: técnico
+  **atribuído** ou **admin** (`_pode_gerir_visita`).
+- **Frontend:** página `pages/Atividade.tsx` (rota `/cronograma/atividade/:id`) — breadcrumb
+  Cronograma→Cliente→Atividade, status, técnicos, galeria de imagens (anexar/remover),
+  thread de comentários. Card do dia ganhou link **"abrir ↗"** (só visitas reais).
+  `api.ts`: tipos + métodos `obter/comentar/anexar/removerAnexo` + helper `uploadMultipart`.
+- **Higiene:** recuperei (cherry-pick) o doc backfill do Lote 4 que ficou fora do PR #7.
+- **Testes:** `test_atividade_detalhe_e_comentario`, `test_atividade_anexo_imagem`. **92 passed**; `tsc` OK.
+
+**Arquivos:** `app/{modelos,cronograma}.py`, `alembic/versions/7330e27f4c89_*.py`,
+`tests/test_cronograma.py`, `frontend/src/{App.tsx,lib/api.ts,pages/Atividade.tsx,pages/Cronograma.tsx}`,
+`docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 4 (2): #FER-1 feriado sem atividades
 
 **Branch:** `feat/lote4-fixes`.

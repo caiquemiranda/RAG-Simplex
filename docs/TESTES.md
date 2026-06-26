@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**90 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**97 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -89,10 +89,13 @@ pytest
 - `test_montar_texto_filtra_camadas` — filtragem do texto por papel.
 - `test_operador_bloqueado_em_ingest` / `test_analista_pode_ingerir` — gating de `/ingest`.
 
-### `test_admin.py` (12) — painel ADM
+### `test_admin.py` (15) — painel ADM
 - `test_nao_admin_barrado` — sem `gerir_usuarios` → 403.
 - `test_admin_lista_e_cria_usuario` — CRUD de usuário.
 - `test_email_case_insensitive` — e-mail normalizado (minúsculo) no cadastro/login; duplicado por caixa → 409.
+- `test_equipamentos_import_csv` — #EQP-1: importa CSV (vírgula/ponto-e-vírgula), `substituir`, remove, RBAC.
+- `test_cliente_detalhe_e_campos` — #CLI-PG: endereço/contatos no cadastro + `GET /admin/clientes/{id}` com equipamentos.
+- `test_equipamentos_visiveis_por_papel` — #EQP-2: `GET /clientes/{id}/equipamentos` admin vê; técnico só dos seus (403).
 - `test_admin_troca_estrategia_vale_na_consulta` — estratégia aplicada na consulta.
 - `test_estrategia_por_usuario_get_e_put` — GET nulo → PUT → GET com valor.
 - `test_perfil_e_documentos_do_usuario` — perfil + documentos (add/list/remove).
@@ -118,12 +121,14 @@ pytest
 - `test_documento_cliente_e_busca` — categoria `cliente` (exige `cliente_id`) + busca por nome.
 - `test_categoria_invalida_e_op_nao_sobe` — 400 (categoria) e 403 (operador).
 
-### `test_cronograma.py` (13) — cronograma (multi-técnico, cliente fixo, unidade, feriados, notificações)
+### `test_cronograma.py` (16) — cronograma (multi-técnico, cliente fixo, unidade, atividade, feriados, notificações)
 - `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.
 - `test_unidade_crud_e_visao_por_unidade` — CRUD de unidade (409 duplicado); vincula cliente;
   `/cronograma?unidade_id=` filtra pela unidade do cliente; `/unidades`; DELETE em uso → 409.
 - `test_multiplos_tecnicos_por_atividade` — vários técnicos numa visita; todos veem/são notificados; qualquer um fecha.
 - `test_cliente_fixo_alocacao` — cliente fixo aparece (`fixo`); visita real sobrescreve.
+- `test_filtros_equipe_clientes_e_aloc_dias_uteis` — filtros multi **Equipe**/**Clientes**
+  (`tecnico_ids`/`cliente_ids`) e alocação fixa (#ALOC) **só de segunda a sexta**.
 - `test_tecnico_fecha_propria_visita` — técnico fecha a própria (status/observações); 403/400 nos limites.
 - `test_admin_cria_e_filtra_por_intervalo` — cria visita; filtra por intervalo de datas.
 - `test_tecnico_ve_apenas_as_proprias` — técnico só enxerga as próprias visitas.
@@ -132,6 +137,10 @@ pytest
 - `test_feriado_crud` — cria (409 se duplicado), lista por intervalo, remove.
 - `test_feriado_suprime_atividades_e_notifica` — #FER-1: feriado some com atividades/fixos
   no dia, notifica os técnicos do dia, e bloqueia (400) agendar em feriado.
+- `test_atividade_detalhe_e_comentario` — #ATV-1: detalhe/comentário só p/ atribuído ou admin
+  (não-atribuído → 403; vazio → 400).
+- `test_atividade_anexo_imagem` — #ATV-1: anexa imagem (não-imagem → 400) e remove o anexo.
+- `test_lista_atividades` — `/cronograma/atividades`: admin vê todas; técnico só as suas.
 - `test_notificacao_ao_criar_atividade` — criar visita gera notificação só para o
   técnico; marcar como lida.
 

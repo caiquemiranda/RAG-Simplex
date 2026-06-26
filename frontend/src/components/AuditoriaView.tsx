@@ -24,7 +24,8 @@ export function AuditoriaView({ emailPorId }: { emailPorId: Record<number, strin
     <Card>
       <CardContent className="p-0">
         {erro && <p className="p-3 text-sm text-destructive">{erro}</p>}
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="border-b text-left text-muted-foreground">
             <tr>
               <th className="p-3">Quando</th>
@@ -61,6 +62,7 @@ export function AuditoriaView({ emailPorId }: { emailPorId: Record<number, strin
             )}
           </tbody>
         </table>
+        </div>
       </CardContent>
     </Card>
   )

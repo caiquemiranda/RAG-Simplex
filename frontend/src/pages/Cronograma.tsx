@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type AdminCliente, type AdminUsuario, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
+import { Link } from 'react-router-dom'
+import { api, type AdminCliente, type AdminUsuario, type ClienteVisivel, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar } from '../components/Avatar'
+import { MultiFiltro } from '../components/MultiFiltro'
 import { STATUS_VISITA, isoData as fmt } from '../lib/format'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -39,12 +41,15 @@ export default function Cronograma() {
   const [novoFeriado, setNovoFeriado] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [diaSel, setDiaSel] = useState<string | null>(null)
+  const [editandoId, setEditandoId] = useState<number | null>(null)  // card de atividade em edição (admin)
 
-  const [tecnicoFiltro, setTecnicoFiltro] = useState<number | ''>('')
-  const [unidadeFiltro, setUnidadeFiltro] = useState<number | ''>('')   // visão por unidade (D-021)
+  const [equipeFiltro, setEquipeFiltro] = useState<Set<number>>(new Set())   // Equipe (técnicos) — multi
+  const [clienteFiltro, setClienteFiltro] = useState<Set<number>>(new Set()) // Clientes — multi
+  const [unidadeFiltro, setUnidadeFiltro] = useState<number | ''>('')        // visão por unidade (D-021)
   const [unidades, setUnidades] = useState<UnidadeVisivel[]>([])
   const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
+  const [clientesVis, setClientesVis] = useState<ClienteVisivel[]>([])       // opções do filtro Clientes (todos os papéis)
   const [nova, setNova] = useState<{ usuarioIds: Set<number>; cliente_id: number | ''; titulo: string }>({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
 
   const de = fmt(new Date(ref.ano, ref.mes, 1))
@@ -53,7 +58,11 @@ export default function Cronograma() {
   async function recarregar() {
     try {
       const [vs, fs] = await Promise.all([
-        api.cronograma.listar(de, ate, podeGerir ? tecnicoFiltro || undefined : undefined, unidadeFiltro || undefined),
+        api.cronograma.listar(de, ate, {
+          tecnicoIds: podeGerir && equipeFiltro.size ? Array.from(equipeFiltro) : undefined,
+          clienteIds: clienteFiltro.size ? Array.from(clienteFiltro) : undefined,
+          unidadeId: unidadeFiltro || undefined,
+        }),
         api.cronograma.feriados(de, ate),
       ])
       setVisitas(vs)
@@ -77,13 +86,17 @@ export default function Cronograma() {
     try { await api.cronograma.removerFeriado(id); recarregar() } catch { /* ignore */ }
   }
 
+  // Chaves estáveis dos filtros multi para o array de dependências.
+  const equipeKey = Array.from(equipeFiltro).sort().join(',')
+  const clienteKey = Array.from(clienteFiltro).sort().join(',')
   useEffect(() => {
     recarregar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref, tecnicoFiltro, unidadeFiltro])
+  }, [ref, equipeKey, clienteKey, unidadeFiltro])
 
   useEffect(() => {
     api.unidadesVisiveis().then(setUnidades).catch(() => {})
+    api.clientesVisiveis().then(setClientesVis).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -143,6 +156,16 @@ export default function Cronograma() {
   }
 
   const visitasDoDia = diaSel ? porDia[diaSel] ?? [] : []
+  // Equipe do dia: cada técnico (dedup) e onde está (cliente), para o painel esquerdo.
+  const equipeDia = (() => {
+    const m = new Map<number, { id: number; nome: string; foto: string | null; local: string; fixo: boolean; titulo?: string }>()
+    for (const v of visitasDoDia) {
+      for (const t of v.tecnicos) {
+        if (!m.has(t.id)) m.set(t.id, { id: t.id, nome: t.nome, foto: t.foto, local: v.cliente_nome ?? '—', fixo: v.fixo, titulo: v.fixo ? undefined : v.titulo })
+      }
+    }
+    return [...m.values()].sort((a, b) => a.nome.localeCompare(b.nome))
+  })()
 
   return (
     <div className="h-full overflow-y-auto">
@@ -164,11 +187,12 @@ export default function Cronograma() {
               </select>
             )}
             {podeGerir && (
-              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={tecnicoFiltro}
-                      onChange={(e) => setTecnicoFiltro(e.target.value ? Number(e.target.value) : '')}>
-                <option value="">Todos os técnicos</option>
-                {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nome || t.email}</option>)}
-              </select>
+              <MultiFiltro label="Equipe" todosLabel="Toda a equipe" sel={equipeFiltro} setSel={setEquipeFiltro}
+                           opcoes={tecnicos.map((t) => ({ id: t.id, nome: t.nome || t.email }))} />
+            )}
+            {clientesVis.length > 0 && (
+              <MultiFiltro label="Clientes" todosLabel="Todos os clientes" sel={clienteFiltro} setSel={setClienteFiltro}
+                           opcoes={clientesVis.map((c) => ({ id: c.id, nome: c.nome }))} />
             )}
           </div>
         </div>
@@ -192,7 +216,7 @@ export default function Cronograma() {
                         ? { backgroundColor: 'hsl(var(--brand-2) / 0.08)' }
                         : undefined
                   }
-                  className="min-h-[100px] border-b border-r p-1.5 text-left hover:bg-accent"
+                  className="min-h-[64px] border-b border-r p-1 text-left hover:bg-accent sm:min-h-[100px] sm:p-1.5"
                 >
                   <div className="flex justify-end">
                     <span className={`flex h-7 min-w-[28px] items-center justify-center rounded-full px-1 text-base font-bold ${c.ehHoje ? 'bg-primary text-primary-foreground' : c.fds ? 'text-brand-2' : 'text-foreground'}`}>
@@ -230,7 +254,7 @@ export default function Cronograma() {
                   </div>
                 </button>
               ) : (
-                <div key={i} className="min-h-[92px] border-b border-r bg-muted/20" />
+                <div key={i} className="min-h-[64px] border-b border-r bg-muted/20 sm:min-h-[92px]" />
               ),
             )}
           </div>
@@ -245,13 +269,17 @@ export default function Cronograma() {
       {diaSel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button className="absolute inset-0 bg-black/40" aria-label="Fechar" onClick={() => setDiaSel(null)} />
-          <div className="relative z-10 w-full max-w-lg rounded-xl border bg-card p-4 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-semibold">
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col rounded-xl border bg-card shadow-xl">
+            {/* Cabeçalho fixo */}
+            <div className="flex shrink-0 items-center justify-between border-b p-4">
+              <h2 className="font-semibold capitalize">
                 {new Date(diaSel + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
               </h2>
               <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={() => setDiaSel(null)}>✕</button>
             </div>
+
+            {/* Corpo rolável (único scroll) */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
 
             {/* Feriado (#CR3) */}
             {(() => {
@@ -275,46 +303,49 @@ export default function Cronograma() {
               return null
             })()}
 
-            <div className="max-h-72 space-y-2 overflow-y-auto">
-              {visitasDoDia.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}
-              {visitasDoDia.map((v) =>
-                v.fixo ? (
-                  <div key={`fixo-${v.usuario_id}`} className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/30 p-2 text-sm">
-                    <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{v.tecnico_nome}</span>
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">fixo</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}</div>
+            <div className="grid gap-4 md:grid-cols-[240px_1fr]">
+              {/* Esquerda: a equipe do dia e onde cada um está */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Equipe hoje ({equipeDia.length})</h3>
+                {equipeDia.length === 0 && <p className="text-sm text-muted-foreground">Ninguém alocado.</p>}
+                {equipeDia.map((e) => (
+                  <div key={e.id} className="flex items-center gap-2 rounded-lg border p-2">
+                    <Avatar nome={e.nome} fotoUrl={e.foto ?? undefined} className="h-9 w-9" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{e.nome}</div>
+                      <div className="truncate text-xs text-muted-foreground">📍 {e.local}{e.fixo ? ' · fixo' : e.titulo ? ` · ${e.titulo}` : ''}</div>
                     </div>
                   </div>
-                ) : (
-                <div key={v.id} className="flex gap-2 rounded-lg border p-2 text-sm">
-                  <Avatar nome={v.tecnico_nome} fotoUrl={v.tecnico_foto} className="h-9 w-9" />
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      {podeGerir ? (
-                        <input
-                          defaultValue={v.titulo}
-                          onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
-                          className="min-w-0 flex-1 rounded border bg-background px-2 py-0.5 text-sm font-medium"
-                        />
-                      ) : (
-                        <span className="font-medium">{v.titulo}</span>
-                      )}
-                      <select
-                        value={v.status}
-                        onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
-                        className={`rounded border px-1 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}
-                      >
-                        <option value="agendada">agendada</option>
-                        <option value="concluida">concluída</option>
-                        <option value="cancelada">cancelada</option>
-                      </select>
-                    </div>
-                    {podeGerir ? (
-                      <div className="space-y-1">
+                ))}
+              </div>
+
+              {/* Direita: cards-resumo das atividades do dia */}
+              <div className="space-y-3">
+                {visitasDoDia.filter((v) => !v.fixo).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade neste dia.</p>}
+                {visitasDoDia.filter((v) => !v.fixo).map((v) => (
+                  <div key={v.id} className="rounded-xl border bg-card text-sm shadow-sm">
+                    {editandoId === v.id && podeGerir ? (
+                      /* ---- Edição inline (apenas admin) ---- */
+                      <div className="space-y-2 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold uppercase text-muted-foreground">Editar atividade</span>
+                          <button className="text-xs text-primary hover:underline" onClick={() => setEditandoId(null)}>concluir</button>
+                        </div>
+                        <input defaultValue={v.titulo}
+                               onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
+                               className="w-full rounded border bg-background px-2 py-1 text-sm font-medium" />
+                        <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
+                                onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
+                          <option value="">sem cliente</option>
+                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                        </select>
+                        <select value={v.status} onChange={(e) => atualizarVisita(v.id, { status: e.target.value })}
+                                className={`h-8 w-full rounded border px-1 text-xs ${STATUS_COR[v.status] ?? 'bg-muted'}`}>
+                          <option value="agendada">agendada</option>
+                          <option value="pendente">pendente</option>
+                          <option value="concluida">concluída</option>
+                          <option value="cancelada">cancelada</option>
+                        </select>
                         <div className="flex flex-wrap gap-1">
                           {tecnicos.map((t) => {
                             const marcado = v.tecnicos.some((x) => x.id === t.id)
@@ -330,34 +361,37 @@ export default function Cronograma() {
                             )
                           })}
                         </div>
-                        <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
-                                onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
-                          <option value="">sem cliente</option>
-                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                        </select>
+                        <textarea defaultValue={v.observacoes ?? ''} rows={2} placeholder="observações…"
+                                  onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
+                                  className="w-full rounded border bg-background px-2 py-1 text-xs" />
+                        <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover atividade</button>
                       </div>
                     ) : (
-                      <div className="text-xs text-muted-foreground">
-                        📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
+                      /* ---- Resumo (clica → página da atividade) ---- */
+                      <div className="flex items-stretch">
+                        <Link to={`/cronograma/atividade/${v.id}`} className="min-w-0 flex-1 space-y-1.5 p-3 hover:bg-accent/40">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate font-medium">{v.titulo}</span>
+                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground">📍 {v.cliente_nome ?? 'sem cliente'}</div>
+                          <div className="flex -space-x-2">
+                            {v.tecnicos.map((t) => (
+                              <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-7 w-7 border-2 border-card text-[9px]" title={t.nome} />
+                            ))}
+                          </div>
+                        </Link>
+                        {podeGerir && (
+                          <button className="shrink-0 border-l px-3 text-xs text-primary hover:bg-accent" title="Editar atividade" onClick={() => setEditandoId(v.id)}>editar</button>
+                        )}
                       </div>
                     )}
-                    <textarea
-                      defaultValue={v.observacoes ?? ''}
-                      rows={1}
-                      placeholder="observações do fechamento…"
-                      onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
-                      className="w-full rounded border bg-background px-2 py-1 text-xs"
-                    />
-                    {podeGerir && (
-                      <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover</button>
-                    )}
                   </div>
-                </div>
-                ),
-              )}
-              {podeGerir && visitasDoDia.some((v) => v.fixo) && (
-                <p className="text-[11px] text-muted-foreground">Técnicos “fixos” aparecem por padrão; adicione uma atividade para <strong>relocar</strong> alguém neste dia.</p>
-              )}
+                ))}
+                {podeGerir && visitasDoDia.some((v) => v.fixo) && (
+                  <p className="text-[11px] text-muted-foreground">Técnicos “fixos” aparecem à esquerda; adicione uma atividade para <strong>relocar</strong> alguém neste dia.</p>
+                )}
+              </div>
             </div>
 
             {podeGerir && (
@@ -392,6 +426,7 @@ export default function Cronograma() {
                 <Button size="sm" onClick={adicionar} disabled={nova.usuarioIds.size === 0 || !nova.titulo.trim()}>Adicionar</Button>
               </div>
             )}
+            </div>{/* fim do corpo rolável */}
           </div>
         </div>
       )}

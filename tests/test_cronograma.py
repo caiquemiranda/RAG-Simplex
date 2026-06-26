@@ -120,6 +120,8 @@ def test_tecnico_fecha_propria_visita(ctx):
     vid = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "titulo": "X"}).json()["id"]
     tec = _login(client, "tec@x.com")
 
+    # Status "pendente" é válido (novo status).
+    assert client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "pendente"}).json()["status"] == "pendente"
     # Técnico fecha a própria visita (status + observações).
     r = client.patch(f"/cronograma/{vid}", headers=tec, json={"status": "concluida", "observacoes": "feito"})
     assert r.status_code == 200 and r.json()["status"] == "concluida"
@@ -168,6 +170,35 @@ def test_cliente_fixo_alocacao(ctx):
     assert len(vis) == 1 and vis[0]["fixo"] is False and vis[0]["titulo"] == "Relocado"
 
 
+def test_filtros_equipe_clientes_e_aloc_dias_uteis(ctx):
+    """Filtros multi (Equipe/Clientes) + alocação fixa (#ALOC) só de segunda a sexta."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    c2 = client.post("/admin/clientes", headers=admin, json={"nome": "Hospital Z"}).json()["id"]
+    # Sexta 2026-07-10: uma visita em cada cliente (técnicos diferentes).
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-07-10", "titulo": "A"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "cliente_id": c2, "data": "2026-07-10", "titulo": "B"})
+
+    base = "/cronograma?de=2026-07-10&ate=2026-07-10"
+    # Filtro por Clientes (multi com 1 valor).
+    vis = client.get(f"{base}&cliente_ids={ids['cliente']}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"A"}
+    # Filtro por Equipe (tecnico_ids).
+    vis = client.get(f"{base}&tecnico_ids={ids['tec2']}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"B"}
+    # Multi: os dois clientes.
+    vis = client.get(f"{base}&cliente_ids={ids['cliente']}&cliente_ids={c2}", headers=admin).json()
+    assert {v["titulo"] for v in vis} == {"A", "B"}
+
+    # #ALOC só dias úteis: tec fixo no cliente.
+    client.patch(f"/admin/usuarios/{ids['tec']}", headers=admin, json={"cliente_padrao_id": ids["cliente"]})
+    # Sábado 2026-07-11 → nenhum fixo.
+    assert client.get("/cronograma?de=2026-07-11&ate=2026-07-11", headers=admin).json() == []
+    # Segunda 2026-07-13 (dia útil, sem visita) → aparece o fixo.
+    seg = client.get("/cronograma?de=2026-07-13&ate=2026-07-13", headers=admin).json()
+    assert any(v["fixo"] for v in seg)
+
+
 def test_unidade_crud_e_visao_por_unidade(ctx):
     client, ids = ctx
     admin = _login(client, "admin@x.com")
@@ -200,6 +231,62 @@ def test_unidade_crud_e_visao_por_unidade(ctx):
     assert client.delete(f"/admin/unidades/{uid}", headers=admin).status_code == 409
     client.patch(f"/admin/clientes/{ids['cliente']}", headers=admin, json={"unidade_id": None})
     assert client.delete(f"/admin/unidades/{uid}", headers=admin).status_code == 204
+
+
+def test_atividade_detalhe_e_comentario(ctx):
+    """#ATV-1: detalhe e comentário só para técnico atribuído ou admin."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    vid = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-08-01", "titulo": "Inspeção"}).json()["id"]
+
+    # Atribuído vê o detalhe; não-atribuído (tec2) → 403.
+    assert client.get(f"/cronograma/{vid}", headers=_login(client, "tec@x.com")).status_code == 200
+    assert client.get(f"/cronograma/{vid}", headers=_login(client, "tec2@x.com")).status_code == 403
+
+    # Comentário do atribuído aparece; vazio → 400; não-atribuído → 403.
+    r = client.post(f"/cronograma/{vid}/comentarios", headers=_login(client, "tec@x.com"), json={"texto": "Cheguei ao local"})
+    assert r.status_code == 201 and r.json()["comentarios"][0]["texto"] == "Cheguei ao local"
+    assert r.json()["comentarios"][0]["autor_nome"] == "Tecnico"
+    assert client.post(f"/cronograma/{vid}/comentarios", headers=admin, json={"texto": "  "}).status_code == 400
+    assert client.post(f"/cronograma/{vid}/comentarios", headers=_login(client, "tec2@x.com"), json={"texto": "x"}).status_code == 403
+
+
+def test_atividade_anexo_imagem(ctx, monkeypatch, tmp_path):
+    """#ATV-1: anexar imagem na atividade e remover (técnico atribuído)."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "arquivos_dir", tmp_path)
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    vid = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"], "data": "2026-08-02", "titulo": "Foto"}).json()["id"]
+    tec = _login(client, "tec@x.com")
+
+    # Não-imagem → 400.
+    assert client.post(f"/cronograma/{vid}/anexos", headers=tec,
+                       files={"arquivo": ("nota.txt", b"x", "text/plain")}).status_code == 400
+    # Imagem → 201 e aparece nos anexos.
+    r = client.post(f"/cronograma/{vid}/anexos", headers=tec,
+                    files={"arquivo": ("foto.png", b"\x89PNG\r\n", "image/png")})
+    assert r.status_code == 201 and len(r.json()["anexos"]) == 1
+    anexo = r.json()["anexos"][0]
+    assert anexo["url"].startswith("/arquivos/atividades/")
+
+    # Remover anexo.
+    r = client.delete(f"/cronograma/{vid}/anexos/{anexo['id']}", headers=tec)
+    assert r.status_code == 200 and r.json()["anexos"] == []
+
+
+def test_lista_atividades(ctx):
+    """Tela 'Atividades' (sidebar): admin vê todas; técnico só as suas."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-09-01", "titulo": "X"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec2"]], "data": "2026-09-02", "titulo": "Y"})
+
+    assert len(client.get("/cronograma/atividades", headers=admin).json()) >= 2
+    tec = client.get("/cronograma/atividades", headers=_login(client, "tec@x.com")).json()
+    assert {v["titulo"] for v in tec} == {"X"}
 
 
 def test_feriado_crud(ctx):
@@ -236,9 +323,9 @@ def test_feriado_suprime_atividades_e_notifica(ctx):
     depois = client.get(f"/cronograma?de={dia}&ate={dia}", headers=admin).json()
     assert depois == []
 
-    # O técnico da atividade foi notificado do feriado.
+    # O técnico da atividade foi notificado do feriado (tipo 'feriado' → link p/ o calendário).
     notifs = client.get("/notificacoes", headers=_login(client, "tec@x.com")).json()
-    assert any("Feriado" in n["titulo"] for n in notifs)
+    assert any(n["tipo"] == "feriado" and "Feriado" in n["titulo"] for n in notifs)
 
     # Não se agenda nova atividade num dia de feriado.
     bloq = client.post("/cronograma", headers=admin, json={

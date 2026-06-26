@@ -7,16 +7,25 @@ Router montado em `/cronograma`. Visão por papel:
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.arquivos import remover_arquivo, salvar_upload
 from app.auth import requer, usuario_atual
 from app.db import get_session
-from app.modelos import Cliente, Feriado, Notificacao, Usuario, Visita
+from app.modelos import (
+    AnexoVisita,
+    Cliente,
+    ComentarioVisita,
+    Feriado,
+    Notificacao,
+    Usuario,
+    Visita,
+)
 
 router = APIRouter(prefix="/cronograma", tags=["cronograma"])
 
@@ -75,6 +84,32 @@ class VisitaResumo(BaseModel):
     fixo: bool = False                # alocação fixa virtual (#ALOC), não é uma visita real
 
 
+# --- Página da atividade (#ATV-1) ---
+class ComentarioOut(BaseModel):
+    id: int
+    autor_id: int | None = None
+    autor_nome: str | None = None
+    texto: str
+    criado_em: datetime
+
+
+class AnexoOut(BaseModel):
+    id: int
+    url: str
+    nome: str
+    autor_id: int | None = None
+    criado_em: datetime
+
+
+class ComentarioIn(BaseModel):
+    texto: str
+
+
+class VisitaDetalhe(VisitaResumo):
+    comentarios: list[ComentarioOut] = []
+    anexos: list[AnexoOut] = []
+
+
 def _nome_unidade(cli: Cliente | None) -> str | None:
     """Nome da unidade do cliente: prioriza a entidade (D-021), cai para o texto legado."""
     if cli is None:
@@ -114,7 +149,8 @@ def _carregar_tecnicos(sessao: Session, ids: list[int]) -> list[Usuario]:
 def listar(
     de: date = Query(..., description="data inicial (YYYY-MM-DD)"),
     ate: date = Query(..., description="data final (YYYY-MM-DD)"),
-    tecnico_id: int | None = Query(None),
+    tecnico_ids: list[int] = Query(default_factory=list, description="filtra por Equipe (1+ técnicos)"),
+    cliente_ids: list[int] = Query(default_factory=list, description="filtra por Clientes (1+)"),
     unidade_id: int | None = Query(None, description="filtra pela unidade do cliente (D-021)"),
     usuario: Usuario = Depends(usuario_atual),
     sessao: Session = Depends(get_session),
@@ -124,8 +160,11 @@ def listar(
     # Técnico (sem gestão) só vê visitas em que está atribuído.
     if not admin:
         consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
-    elif tecnico_id is not None:
-        consulta = consulta.where(Visita.tecnicos.any(id=tecnico_id))
+    elif tecnico_ids:
+        consulta = consulta.where(Visita.tecnicos.any(Usuario.id.in_(tecnico_ids)))
+    # Filtro de Clientes (multi): só visitas desses clientes.
+    if cliente_ids:
+        consulta = consulta.where(Visita.cliente_id.in_(cliente_ids))
     # Visão por unidade: só visitas cujo cliente pertence à unidade (D-021).
     if unidade_id is not None:
         consulta = consulta.where(Visita.cliente.has(Cliente.unidade_id == unidade_id))
@@ -141,8 +180,8 @@ def listar(
     # #ALOC: técnicos com cliente fixo aparecem no cliente nos dias SEM visita explícita.
     if admin:
         q_fix = select(Usuario).where(Usuario.cliente_padrao_id.is_not(None))
-        if tecnico_id is not None:
-            q_fix = q_fix.where(Usuario.id == tecnico_id)
+        if tecnico_ids:
+            q_fix = q_fix.where(Usuario.id.in_(tecnico_ids))
         fixos = list(sessao.scalars(q_fix))
     else:
         fixos = [usuario] if usuario.cliente_padrao_id else []
@@ -156,9 +195,13 @@ def listar(
         # Visão por unidade: ignora o fixo cujo cliente não é da unidade filtrada.
         if unidade_id is not None and cli.unidade_id != unidade_id:
             continue
+        # Filtro de Clientes: ignora o fixo cujo cliente não está selecionado.
+        if cliente_ids and cli.id not in cliente_ids:
+            continue
         dia = de
         while dia <= ate:
-            if dia in feriados:        # #FER-1: feriado não tem alocação fixa
+            # #FER-1: feriado não tem alocação fixa · seg–sex apenas (sem fim de semana).
+            if dia in feriados or dia.weekday() >= 5:
                 dia += timedelta(days=1)
                 continue
             if (dia, tec.id) not in ocupado:
@@ -173,6 +216,20 @@ def listar(
             dia += timedelta(days=1)
 
     return [_resumo(v) for v in reais] + virtuais
+
+
+@router.get("/atividades", response_model=list[VisitaResumo])
+def atividades(usuario: Usuario = Depends(usuario_atual),
+               sessao: Session = Depends(get_session)) -> list[VisitaResumo]:
+    """Todas as atividades (visitas reais) do usuário — para a tela 'Atividades' da sidebar.
+
+    Técnico vê as próprias; admin vê todas. Ordenadas por data (mais antigas primeiro);
+    o frontend calcula 'faltam N dias' / 'atrasada há N dias' a partir de `data`/`status`.
+    """
+    consulta = select(Visita).order_by(Visita.data)
+    if not usuario.tem_permissao("gerir_usuarios"):
+        consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
+    return [_resumo(v) for v in sessao.scalars(consulta)]
 
 
 def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:
@@ -212,7 +269,7 @@ def criar(dados: VisitaIn,
     return _resumo(v)
 
 
-_STATUS_VALIDOS = {"agendada", "concluida", "cancelada"}
+_STATUS_VALIDOS = {"agendada", "pendente", "concluida", "cancelada"}
 
 
 @router.patch("/{visita_id}", response_model=VisitaResumo)
@@ -268,6 +325,98 @@ def remover(visita_id: int,
 
 
 # --------------------------------------------------------------------------- #
+# Página da atividade (#ATV-1) — detalhe, comentários e anexos de imagem       #
+# --------------------------------------------------------------------------- #
+def _carregar_visita(sessao: Session, visita_id: int) -> Visita:
+    v = sessao.get(Visita, visita_id)
+    if v is None:
+        raise HTTPException(status_code=404, detail="Atividade não encontrada.")
+    return v
+
+
+def _pode_gerir_visita(usuario: Usuario, v: Visita) -> bool:
+    """Técnico atribuído (em visita_tecnico) ou admin (gerir_usuarios)."""
+    return usuario.tem_permissao("gerir_usuarios") or any(t.id == usuario.id for t in v.tecnicos)
+
+
+def _detalhe(v: Visita) -> VisitaDetalhe:
+    return VisitaDetalhe(
+        **_resumo(v).model_dump(),
+        comentarios=[
+            ComentarioOut(id=c.id, autor_id=c.autor_id,
+                          autor_nome=(c.autor.nome or c.autor.email) if c.autor else None,
+                          texto=c.texto, criado_em=c.criado_em)
+            for c in v.comentarios
+        ],
+        anexos=[
+            AnexoOut(id=a.id, url=a.url, nome=a.nome, autor_id=a.autor_id, criado_em=a.criado_em)
+            for a in v.anexos
+        ],
+    )
+
+
+@router.get("/{visita_id}", response_model=VisitaDetalhe)
+def detalhe(visita_id: int,
+            usuario: Usuario = Depends(usuario_atual),
+            sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    return _detalhe(v)
+
+
+@router.post("/{visita_id}/comentarios", response_model=VisitaDetalhe,
+             status_code=status.HTTP_201_CREATED)
+def comentar(visita_id: int, dados: ComentarioIn,
+             usuario: Usuario = Depends(usuario_atual),
+             sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    if not dados.texto.strip():
+        raise HTTPException(status_code=400, detail="Comentário vazio.")
+    v.comentarios.append(ComentarioVisita(autor_id=usuario.id, texto=dados.texto.strip()))
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
+
+
+@router.post("/{visita_id}/anexos", response_model=VisitaDetalhe,
+             status_code=status.HTTP_201_CREATED)
+def anexar(visita_id: int,
+           arquivo: UploadFile = File(...),
+           usuario: Usuario = Depends(usuario_atual),
+           sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    if not (arquivo.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=400, detail="Anexo deve ser uma imagem.")
+    url = salvar_upload(arquivo, "atividades")
+    v.anexos.append(AnexoVisita(autor_id=usuario.id, url=url, nome=arquivo.filename or "imagem"))
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
+
+
+@router.delete("/{visita_id}/anexos/{anexo_id}", response_model=VisitaDetalhe)
+def remover_anexo(visita_id: int, anexo_id: int,
+                  usuario: Usuario = Depends(usuario_atual),
+                  sessao: Session = Depends(get_session)) -> VisitaDetalhe:
+    v = _carregar_visita(sessao, visita_id)
+    if not _pode_gerir_visita(usuario, v):
+        raise HTTPException(status_code=403, detail="Sem acesso a esta atividade.")
+    anexo = sessao.get(AnexoVisita, anexo_id)
+    if anexo is None or anexo.visita_id != visita_id:
+        raise HTTPException(status_code=404, detail="Anexo não encontrado.")
+    remover_arquivo(anexo.url)
+    sessao.delete(anexo)
+    sessao.commit()
+    sessao.refresh(v)
+    return _detalhe(v)
+
+
+# --------------------------------------------------------------------------- #
 # Feriados (globais) — #CR3                                                    #
 # --------------------------------------------------------------------------- #
 @router.get("/feriados/intervalo", response_model=list[FeriadoResumo])
@@ -297,7 +446,7 @@ def criar_feriado(dados: FeriadoIn,
     tecnicos = {t.id: t for v in visitas_no_dia for t in v.tecnicos}
     for t in tecnicos.values():
         sessao.add(Notificacao(
-            usuario_id=t.id, tipo="cronograma",
+            usuario_id=t.id, tipo="feriado",
             titulo=f"Feriado em {dados.data.isoformat()}: atividades suspensas",
             texto=f"{f.descricao} — o dia ficará sem atividades.", ref_id=f.id,
         ))

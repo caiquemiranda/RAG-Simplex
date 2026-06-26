@@ -69,7 +69,7 @@ export function DocumentoPanel({
   }, [secoes, alvoHeader])
 
   return (
-    <div className="flex h-full w-1/2 flex-col border-l">
+    <div className="flex h-full w-full flex-col border-l md:w-1/2">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b p-3">
         <div className="truncate text-sm font-medium" title={nome}>
           📄 {nome}
