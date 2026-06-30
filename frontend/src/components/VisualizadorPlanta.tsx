@@ -11,14 +11,15 @@ export type Marcador = { id: number; x: number; y: number; cor?: string }
  * - `renderPopup`: conteúdo do popup do marcador ativo (`ativoId`).
  */
 export function VisualizadorPlanta({
-  imagemUrl, largura, altura, marcadores, ativoId, focoId, onMarcador, onClicarPlanta, renderPopup, altura_px = '62vh',
+  imagemUrl, largura, altura, marcadores, ativoId, foco, onMarcador, onClicarPlanta, renderPopup, altura_px = '62vh',
 }: {
   imagemUrl: string
   largura: number
   altura: number
   marcadores: Marcador[]
   ativoId?: number | null
-  focoId?: number | null
+  /** Centraliza/zoom num marcador. `nonce` muda a cada pedido p/ re-disparar mesmo no mesmo id. */
+  foco?: { id: number; nonce: number } | null
   onMarcador?: (id: number) => void
   onClicarPlanta?: (x: number, y: number) => void
   renderPopup?: (id: number) => ReactNode
@@ -46,10 +47,10 @@ export function VisualizadorPlanta({
   }
   useEffect(() => { ajustar() /* eslint-disable-next-line */ }, [imagemUrl, largura, altura])
 
-  // Centraliza (com zoom) num marcador quando `focoId` muda.
+  // Centraliza (com zoom) num marcador quando `foco` é pedido (nonce muda a cada clique).
   useEffect(() => {
-    if (focoId == null) return
-    const m = marcadores.find((x) => x.id === focoId)
+    if (!foco) return
+    const m = marcadores.find((x) => x.id === foco.id)
     if (!m) return
     const { w, h } = caixa()
     const s = Math.max(2, escala)
@@ -57,7 +58,7 @@ export function VisualizadorPlanta({
     setTx(w / 2 - m.x * s)
     setTy(h / 2 - m.y * s)
     // eslint-disable-next-line
-  }, [focoId])
+  }, [foco?.nonce])
 
   function zoom(fator: number, cx?: number, cy?: number) {
     const { w, h } = caixa()

@@ -21,7 +21,8 @@ export default function Equipamentos() {
   const [plantaSel, setPlantaSel] = useState<number | ''>('')
   const [busca, setBusca] = useState('')
   const [selId, setSelId] = useState<number | null>(null)
-  const [foco, setFoco] = useState<number | null>(null)
+  const [foco, setFoco] = useState<{ id: number; nonce: number } | null>(null)
+  const focar = (id: number) => setFoco((f) => ({ id, nonce: (f?.nonce ?? 0) + 1 }))
   const [historico, setHistorico] = useState<OrdemServico[]>([])
   const [erro, setErro] = useState<string | null>(null)
 
@@ -61,8 +62,7 @@ export default function Equipamentos() {
     setBusca(e.tag || e.add || '')
     if (e.planta_id != null) {
       setPlantaSel(e.planta_id)
-      setFoco(e.id)
-      setTimeout(() => setFoco(e.id), 0)  // re-dispara o foco mesmo se o id repetir
+      focar(e.id)
     }
   }
 
@@ -111,7 +111,7 @@ export default function Equipamentos() {
         {planta && (
           <VisualizadorPlanta
             imagemUrl={planta.imagem_url} largura={planta.largura} altura={planta.altura}
-            marcadores={marcadores} ativoId={selId} focoId={foco}
+            marcadores={marcadores} ativoId={selId} foco={foco}
             onMarcador={(id) => { const e = equip.find((x) => x.id === id); if (e) selecionar(e) }}
             renderPopup={(id) => {
               const e = equip.find((x) => x.id === id)
@@ -134,7 +134,7 @@ export default function Equipamentos() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{selecionado.tag || `Equipamento #${selecionado.id}`}</CardTitle>
               {selecionado.planta_id != null && (
-                <button className="text-xs text-primary hover:underline" onClick={() => { setPlantaSel(selecionado.planta_id as number); setFoco(selecionado.id); setTimeout(() => setFoco(selecionado.id), 0) }}>Localizar no mapa</button>
+                <button className="text-xs text-primary hover:underline" onClick={() => { setPlantaSel(selecionado.planta_id as number); focar(selecionado.id) }}>Localizar no mapa</button>
               )}
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
