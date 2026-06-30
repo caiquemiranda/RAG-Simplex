@@ -178,3 +178,14 @@ estáticos em `Dispositivos.js`) para dentro do RAG-Simplex, nativo na stack atu
   adiada do #EQP-1); **histórico detalhado** virá da futura **O.S. (Ordem de Serviço)**.
 **Escopo:** trazer só o módulo **plantas + buscar/mapa**; ordens de serviço/RAS do legado ficam
 para depois (a O.S. terá um campo "equipamento"). Spec: `specs/spec-map-mapa-dispositivos.md`.
+
+### D-024 ✅ Ordem de Serviço (O.S.) é entidade separada da atividade (#OS)
+**2026-06-26.** A **O.S.** (registro de manutenção) é entidade **própria** (`OrdemServico`),
+distinta da `Visita`/atividade do cronograma. **Por quê:** semânticas diferentes — atividade =
+agendamento no calendário; O.S. = ordem de manutenção ligada a **equipamento**/cliente (com
+tipo corretiva/preventiva/planejada). Manter separadas evita poluir o cronograma e dá o
+**histórico por equipamento** (#MAP-4). **Regra:** O.S. **concluída** com data grava
+`equipamento.ultima_manutencao` (fonte automática da manutenção, antes manual). Tipos:
+corretiva/preventiva/planejada; status: aberta/em_andamento/concluida/cancelada. Gestão por
+`gerir_usuarios`; histórico do equipamento visível ao técnico do cliente. Spec
+`specs/spec-os-ordem-servico.md`.

@@ -4,6 +4,25 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #OS-1: backend da Ordem de Serviço (manutenção) + histórico do equipamento
+
+**Branch:** `feat/buscar-equipamento`. Decisão **D-024**. Spec
+[`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
+
+- **Modelo:** `OrdemServico` (entidade **separada** da `Visita`): cliente/equipamento/técnico/
+  data/tipo(corretiva|preventiva|planejada)/status(aberta|em_andamento|concluida|cancelada)/
+  descrição/solução. Migração `58e01d15fabc`.
+- **`app/ordens.py`:** CRUD `/admin/ordens` (filtros cliente/equipamento/status; valida tipo/
+  status) + `GET /equipamentos/{id}/ordens` (**histórico** visível, RBAC pelo cliente). **Concluir
+  com data → grava `equipamento.ultima_manutencao`** (`_aplicar_manutencao`).
+- **Testes** `test_ordens` (2). **101 passed**. Falta o frontend (#OS-2) e o histórico no detalhe
+  do equipamento (#MAP-4 — backend já pronto).
+
+**Arquivos:** `app/{modelos,ordens,main}.py`, `alembic/versions/58e01d15fabc_*.py`,
+`tests/test_ordens.py`, `docs/**`.
+
+---
+
 ## 2026-06-26 — #MAP-3: editor de mapa na página do cliente (plantas + posicionar)
 
 **Branch:** `feat/buscar-equipamento`. Frontend-only (reusa endpoints do #MAP-1).

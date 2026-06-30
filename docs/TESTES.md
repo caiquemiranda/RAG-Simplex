@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**99 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**101 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -66,6 +66,11 @@ pytest
 - `test_resolucao_precedencia` — usuário > papel > global > settings.
 - `test_resolucao_sem_config_usa_settings` — fallback de configuração.
 - `test_cifrar_decifrar_roundtrip` / `test_mascarar` / `test_cifrar_sem_chave_erro_claro` — chaves nunca em claro.
+
+### `test_ordens.py` (2) — ordens de serviço (#OS)
+- `test_os_crud_conclusao_atualiza_manutencao` — CRUD; tipo/status inválidos → 400; **concluir**
+  grava `ultima_manutencao` no equipamento; histórico visível lista a O.S.
+- `test_os_rbac` — técnico não gerencia (`/admin/ordens` 403); histórico do equipamento só do seu cliente.
 
 ### `test_plantas.py` (2) — mapa de dispositivos (#MAP)
 - `test_upload_pdf_gera_plantas_e_remove` — PDF 2 páginas → 2 plantas (PNG, dimensões);

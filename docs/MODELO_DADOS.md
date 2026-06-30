@@ -23,6 +23,8 @@ erDiagram
   CLIENTE ||--o{ EQUIPAMENTO : "1:N (cascade, #EQP-1)"
   CLIENTE ||--o{ PLANTA : "1:N (cascade, #MAP)"
   PLANTA ||--o{ EQUIPAMENTO : "0..1 (planta_id, posição #MAP)"
+  CLIENTE ||--o{ ORDEM_SERVICO : "1:N (cascade, #OS)"
+  EQUIPAMENTO ||--o{ ORDEM_SERVICO : "0..1 (histórico #MAP-4)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -108,6 +110,18 @@ erDiagram
     int largura "px"
     int altura "px"
     int ordem
+    datetime criado_em
+  }
+  ORDEM_SERVICO {
+    int id PK
+    int cliente_id FK "cascade"
+    int equipamento_id FK "opcional (#MAP-4)"
+    int usuario_id FK "técnico"
+    date data
+    string tipo "corretiva|preventiva|planejada"
+    string status "aberta|em_andamento|concluida|cancelada"
+    text descricao
+    text solucao
     datetime criado_em
   }
   COMENTARIO_VISITA {
@@ -223,6 +237,14 @@ Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), c
 atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
 **Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
 Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+
+### OrdemServico (O.S., #OS)
+Registro de **manutenção**, entidade **separada** da `Visita`/atividade (D-024). Pertence a um
+`cliente`, pode referenciar um `equipamento` (alimenta o histórico do dispositivo, #MAP-4) e um
+`usuario` (técnico). `tipo` ∈ corretiva/preventiva/planejada; `status` ∈ aberta/em_andamento/
+concluida/cancelada. **Concluir** com data grava `equipamento.ultima_manutencao`. Gestão por
+`gerir_usuarios`; histórico por equipamento é **visível** ao técnico do cliente. Ver
+[`projeto/specs/spec-os-ordem-servico.md`](projeto/specs/spec-os-ordem-servico.md).
 
 ### Planta + Equipamento no mapa (#MAP)
 **Planta** = uma imagem (PNG) de projeto do cliente; o admin sobe um **PDF** e o servidor

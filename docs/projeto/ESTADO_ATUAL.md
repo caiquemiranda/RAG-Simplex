@@ -15,10 +15,14 @@
 
 - **Branch:** `feat/buscar-equipamento` (Lote 5 mergeado, PR #8; `feat/relatorio-cliente`/#R2
   é PR separado em aberto). **Backend: 99 testes** passando.
-- **#MAP** (Buscar equipamento / mapa de dispositivos, D-023) — **#MAP-1/2/3 ✅** (backend +
-  visualizador custom + busca + **editor**: subir plantas e posicionar equipamentos). **Completo
-  de ponta a ponta.** Falta só **#MAP-4** (página de detalhes do equipamento + histórico, via
-  futura **O.S.**). Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+- **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3 ✅** (backend + visualizador + busca
+  + editor). **Completo de ponta a ponta.**
+- **#OS** (Ordem de Serviço, D-024) — **#OS-1 backend ✅** (entidade `OrdemServico`; CRUD;
+  **concluir grava `ultima_manutencao`**; histórico visível por equipamento). Falta **#OS-2**
+  (frontend: página de O.S.) e **#MAP-4** (mostrar o histórico no detalhe do equipamento —
+  backend já pronto). Specs [`spec-os-ordem-servico`](specs/spec-os-ordem-servico.md),
+  [`spec-map`](specs/spec-map-mapa-dispositivos.md).
+- **Backend: 101 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,

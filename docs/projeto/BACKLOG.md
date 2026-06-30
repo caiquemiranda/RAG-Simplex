@@ -27,7 +27,16 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
       plantas, remover) + card **Posicionar no mapa** (escolhe planta + equipamento, clica na
       planta p/ gravar `pos_x/pos_y/planta_id`; "tirar do mapa"). Reusa `VisualizadorPlanta`
       com `onClicarPlanta`. dep: #MAP-1/#MAP-2.
-- [ ] **#MAP-4 (depois):** página de **detalhes do equipamento** com histórico (via futura O.S.).
+- [ ] **#MAP-4:** **histórico de manutenção** (O.S.) no detalhe do equipamento (Buscar
+      equipamento). Backend pronto (`GET /equipamentos/{id}/ordens`); falta o frontend. dep: #OS-1.
+
+### I. #OS — Ordem de Serviço (manutenção, D-024)
+Entidade separada da atividade; liga-se a equipamento (histórico #MAP-4). Spec
+[`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
+- [x] **#OS-1 (backend):** entidade `OrdemServico` (cliente/equipamento/técnico/data/tipo/
+      status/descrição/solução); migração `58e01d15fabc`; CRUD `/admin/ordens` + histórico
+      visível `/equipamentos/{id}/ordens`; **concluir grava `ultima_manutencao`**. Testes `test_ordens`.
+- [ ] **#OS-2 (frontend):** página de O.S. (`/ordens`) — lista/filtros + criar/editar; sidebar.
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 

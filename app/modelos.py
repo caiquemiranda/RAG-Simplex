@@ -235,6 +235,31 @@ class Equipamento(Base):
     planta: Mapped[Planta | None] = relationship()
 
 
+class OrdemServico(Base):
+    """Ordem de Serviço (O.S.) — registro de manutenção (#OS). Entidade **separada** da
+    `Visita`/atividade do cronograma. Pode referenciar um `Equipamento` (histórico do
+    dispositivo, #MAP-4). Concluir com data atualiza `equipamento.ultima_manutencao`."""
+
+    __tablename__ = "ordem_servico"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
+    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)  # técnico responsável
+    data: Mapped[date] = mapped_column(Date)
+    tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # corretiva|preventiva|planejada
+    status: Mapped[str] = mapped_column(String(20), default="aberta")    # aberta|em_andamento|concluida|cancelada
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    solucao: Mapped[str | None] = mapped_column(Text, default=None)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship()
+    equipamento: Mapped[Equipamento | None] = relationship()
+    usuario: Mapped[Usuario | None] = relationship()
+
+
 class Visita(Base):
     """Visita/atividade agendada de um técnico no cronograma (por dia e cliente/local)."""
 

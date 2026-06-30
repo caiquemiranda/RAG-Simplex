@@ -57,6 +57,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
 | `banco.py` | Router `/admin/banco`: **status** do banco (tamanho, migração Alembic, contagem por tabela, blocos Chroma) + **backup** do SQLite. |
 | `plantas.py` | Router `/admin/.../plantas`: **upload de PDF → PNG** (PyMuPDF, 1 página = 1 planta) + CRUD das plantas do cliente (#MAP). |
+| `ordens.py` | Router `/admin/ordens` (CRUD de **O.S.**) + `/equipamentos/{id}/ordens` (histórico visível). Concluir grava `ultima_manutencao` (#OS). |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
 | `db.py` | Engine/Session; **`aplicar_migracoes`** (Alembic `upgrade head`, banco real, D-022); `criar_tabelas` (create_all + micro-migração — testes/fallback); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
@@ -88,6 +89,8 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET | `/clientes/{id}/plantas` | autenticado | **Plantas** (projetos) do cliente — visualizador #MAP (RBAC igual). |
 | GET/POST/DELETE | `/admin/clientes/{id}/plantas` · `/admin/plantas/{id}` | `gerir_usuarios` | Plantas: **upload PDF→PNG** (1 pág=1 planta), listar, remover (#MAP). |
 | PATCH | `/admin/equipamentos/{id}` | `gerir_usuarios` | Edita equipamento + **posição na planta** (`planta_id`/`pos_x`/`pos_y`) — editor de mapa. |
+| GET/POST/PATCH/DELETE | `/admin/ordens[/{id}]` | `gerir_usuarios` | **Ordens de serviço** (#OS): CRUD + filtros (cliente/equipamento/status). Concluir grava `ultima_manutencao`. |
+| GET | `/equipamentos/{id}/ordens` | autenticado | **Histórico de manutenção** (O.S.) do equipamento (#MAP-4); RBAC pelo cliente. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
