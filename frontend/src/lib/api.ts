@@ -446,6 +446,8 @@ export const api = {
       uploadMultipart<ImportEquipResultado>(`/admin/clientes/${clienteId}/equipamentos/importar?substituir=${substituir}`, file),
     removerEquipamento: (eqpId: number) =>
       request<void>(`/admin/equipamentos/${eqpId}`, { method: 'DELETE' }),
+    criarEquipamento: (clienteId: number, dados: Partial<Equipamento>) =>
+      request<Equipamento>(`/admin/clientes/${clienteId}/equipamentos`, { method: 'POST', body: JSON.stringify(dados) }),
     atualizarEquipamento: (eqpId: number, dados: Partial<Equipamento>) =>
       request<Equipamento>(`/admin/equipamentos/${eqpId}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     // Plantas (#MAP)

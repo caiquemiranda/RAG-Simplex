@@ -20,7 +20,10 @@
 - **#OS** (Ordem de Serviço, D-024) — **#OS-1/2 ✅ completo** (entidade; CRUD; **concluir grava
   `ultima_manutencao`**; histórico por equipamento; **página `/ordens`** + sidebar). Specs
   [`spec-os`](specs/spec-os-ordem-servico.md), [`spec-map`](specs/spec-map-mapa-dispositivos.md).
-- **Backend: 101 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS) aguardando merge.
+- **#MAP-5** (melhorias do editor) ✅ — scroll só no mapa; **posicionar em 2 passos** (caixa +
+  Salvar); **autocomplete** por tag (+ alerta sem registro); **Ver todos**; **cadastro avulso**
+  de equipamento + **tag composta** (painel+loop+add+type) + colunas Tag/Coordenadas/Últ. manut.
+- **Backend: 102 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS) aguardando merge.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,

@@ -4,6 +4,28 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #MAP-5: melhorias do cadastro/editor de equipamentos
+
+**Branch:** `feat/buscar-equipamento`.
+
+- **Item 1 (scroll):** `VisualizadorPlanta` — zoom da roda via **listener `wheel` nativo
+  `{passive:false}`** (preventDefault funciona; a página não rola sobre o mapa).
+- **Item 2 (caixa + salvar):** no editor, clicar na planta cria um **marcador pendente** e abre
+  uma **caixa** com os campos (painel/loop/add/type/model) + coordenadas → **Salvar** grava
+  (`PATCH` com planta_id/pos + campos). Antes salvava direto no clique.
+- **Item 3 (autocomplete):** seletor do editor virou **busca por tag** (dropdown) com alerta
+  **"sem registro"** quando não há correspondência (Enter/blur).
+- **Item 4 (ver todos):** botão lista os equipamentos **posicionados** na planta (focar ao clicar).
+- **Item 5 (cadastro):** **`POST /admin/clientes/{id}/equipamentos`** (criar avulso) +
+  **tag composta** (painel+loop+add+type) quando vazia (também no CSV). Tabela de equipamentos
+  ganhou **Tag** (1ª col), **Coordenadas** e **Última manutenção** + form de cadastro manual.
+- **Teste** `test_equipamento_criar_avulso_e_tag_composta`. **102 passed**; `tsc` OK.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{components/VisualizadorPlanta.tsx,pages/ClienteAdmin.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
 ## 2026-06-26 — #OS-2 + #MAP-4: página de O.S. + histórico no detalhe do equipamento (frontend)
 
 **Branch:** `feat/buscar-equipamento`. Frontend-only (backend em 101 testes).

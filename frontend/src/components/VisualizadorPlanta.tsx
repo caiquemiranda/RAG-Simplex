@@ -70,11 +70,28 @@ export function VisualizadorPlanta({
     setEscala(nova)
   }
 
-  function onWheel(e: React.WheelEvent) {
-    e.preventDefault()
-    const r = refBox.current!.getBoundingClientRect()
-    zoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top)
-  }
+  // Zoom com a roda do mouse via listener NATIVO não-passivo — só assim `preventDefault`
+  // funciona e a **página não rola** quando o cursor está sobre o mapa (item 1).
+  const vals = useRef({ escala, tx, ty })
+  vals.current = { escala, tx, ty }
+  useEffect(() => {
+    const box = refBox.current
+    if (!box) return
+    function aoRolar(e: WheelEvent) {
+      e.preventDefault()
+      const r = box!.getBoundingClientRect()
+      const px = e.clientX - r.left
+      const py = e.clientY - r.top
+      const { escala: es, tx: x, ty: y } = vals.current
+      const nova = Math.min(8, Math.max(0.1, es * (e.deltaY < 0 ? 1.15 : 1 / 1.15)))
+      setTx(px - ((px - x) * nova) / es)
+      setTy(py - ((py - y) * nova) / es)
+      setEscala(nova)
+    }
+    box.addEventListener('wheel', aoRolar, { passive: false })
+    return () => box.removeEventListener('wheel', aoRolar)
+  }, [])
+
   function onDown(e: React.MouseEvent) {
     arrasto.current = { x: e.clientX, y: e.clientY, tx, ty, moveu: false }
   }
@@ -104,7 +121,7 @@ export function VisualizadorPlanta({
       ref={refBox}
       className="relative overflow-hidden rounded-lg border bg-muted/30 select-none"
       style={{ height: altura_px, cursor: arrasto.current ? 'grabbing' : 'grab' }}
-      onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => (arrasto.current = null)}
+      onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => (arrasto.current = null)}
     >
       {/* Palco transformado (imagem + marcadores) */}
       <div className="absolute left-0 top-0 origin-top-left"

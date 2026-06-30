@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**101 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**102 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -106,6 +106,7 @@ pytest
 - `test_email_case_insensitive` — e-mail normalizado (minúsculo) no cadastro/login; duplicado por caixa → 409.
 - `test_equipamentos_import_csv` — #EQP-1: importa CSV (vírgula/ponto-e-vírgula), `substituir`, remove, RBAC.
 - `test_cliente_detalhe_e_campos` — #CLI-PG: endereço/contatos no cadastro + `GET /admin/clientes/{id}` com equipamentos.
+- `test_equipamento_criar_avulso_e_tag_composta` — cria equipamento manual; tag vazia compõe de painel+loop+add+type.
 - `test_equipamentos_visiveis_por_papel` — #EQP-2: `GET /clientes/{id}/equipamentos` admin vê; técnico só dos seus (403).
 - `test_admin_troca_estrategia_vale_na_consulta` — estratégia aplicada na consulta.
 - `test_estrategia_por_usuario_get_e_put` — GET nulo → PUT → GET com valor.

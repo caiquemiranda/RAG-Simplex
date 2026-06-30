@@ -237,6 +237,24 @@ def test_equipamentos_visiveis_por_papel(ctx):
     assert len(client.get(f"/clientes/{cid}/equipamentos", headers=_login(client, "tec@x.com")).json()) == 1
 
 
+def test_equipamento_criar_avulso_e_tag_composta(ctx):
+    """Item 5: cria equipamento manual; tag vazia compõe de painel+loop+add+type."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli F"}).json()["id"]
+
+    # Tag explícita é mantida.
+    r = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin,
+                    json={"tag": "N2-L23-DF-003", "type": "Sensor"})
+    assert r.status_code == 201 and r.json()["tag"] == "N2-L23-DF-003"
+
+    # Tag vazia → composta de painel+loop+add+type.
+    r = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin,
+                    json={"painel": "N2", "loop": "L23", "add": "DF", "type": "006"})
+    assert r.status_code == 201 and r.json()["tag"] == "N2-L23-DF-006"
+    assert len(client.get(f"/admin/clientes/{cid}/equipamentos", headers=admin).json()) == 2
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx

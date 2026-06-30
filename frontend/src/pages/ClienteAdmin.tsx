@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, uploadArquivo, type AdminUnidade, type ClienteDetalhe, type Planta } from '../lib/api'
+import { api, uploadArquivo, type AdminUnidade, type ClienteDetalhe, type Equipamento, type Planta } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
@@ -40,6 +40,13 @@ export default function ClienteAdmin() {
   const [plantaEditId, setPlantaEditId] = useState<number | ''>('')
   const [colocarId, setColocarId] = useState<number | null>(null)  // equipamento a posicionar/mover
   const pdfRef = useRef<HTMLInputElement>(null)
+  // Cadastro manual de equipamento (item 5)
+  const [novoEq, setNovoEq] = useState({ tag: '', painel: '', loop: '', add: '', type: '', model: '' })
+  // Editor: autocomplete + caixa de posicionamento (itens 2/3/4)
+  const [buscaEd, setBuscaEd] = useState('')
+  const [verTodos, setVerTodos] = useState(false)
+  const [pendente, setPendente] = useState<{ x: number; y: number } | null>(null)
+  const [boxFields, setBoxFields] = useState({ painel: '', loop: '', add: '', type: '', model: '' })
 
   async function carregar() {
     setErro(null)
@@ -72,14 +79,23 @@ export default function ClienteAdmin() {
     try { await api.admin.removerPlanta(plantaId); if (plantaEditId === plantaId) setPlantaEditId(''); carregarPlantas(); carregar() }
     catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao remover a planta') }
   }
-  async function posicionar(x: number, y: number) {
-    if (colocarId == null || plantaEditId === '') return
-    try { await api.admin.atualizarEquipamento(colocarId, { planta_id: plantaEditId, pos_x: x, pos_y: y }); carregar() }
-    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao posicionar') }
-  }
   async function tirarDoMapa(eqpId: number) {
     try { await api.admin.atualizarEquipamento(eqpId, { planta_id: null, pos_x: null, pos_y: null }); carregar() }
     catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao remover do mapa') }
+  }
+  async function criarEquip() {
+    if (!novoEq.tag.trim() && !novoEq.painel.trim() && !novoEq.add.trim()) return
+    setErro(null)
+    try { await api.admin.criarEquipamento(cid, novoEq); setNovoEq({ tag: '', painel: '', loop: '', add: '', type: '', model: '' }); carregar() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao cadastrar equipamento') }
+  }
+  // Item 2: clicar na planta abre a caixa (não salva ainda); "Salvar" grava a posição.
+  async function salvarPosicao(campos: { painel: string; loop: string; add: string; type: string; model: string }) {
+    if (colocarId == null || plantaEditId === '' || !pendente) return
+    try {
+      await api.admin.atualizarEquipamento(colocarId, { planta_id: plantaEditId, pos_x: pendente.x, pos_y: pendente.y, ...campos })
+      setPendente(null); carregar()
+    } catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao salvar posição') }
   }
 
   async function salvar() {
@@ -183,23 +199,36 @@ export default function ClienteAdmin() {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="mb-2 text-xs text-muted-foreground">Colunas do CSV: <span className="font-mono">painel, loop, add, type, model</span> (delimitador <span className="font-mono">,</span> ou <span className="font-mono">;</span>).</p>
+          <p className="mb-2 text-xs text-muted-foreground">Colunas do CSV: <span className="font-mono">tag, painel, loop, add, type, model, status, ultima_manutencao</span> — se a <strong>tag</strong> faltar, é composta de painel+loop+add+type.</p>
+          {/* Cadastro manual (item 5) — campos vazios podem ser preenchidos depois */}
+          <div className="mb-3 grid grid-cols-2 gap-1.5 rounded-lg border bg-muted/20 p-2 sm:grid-cols-7">
+            <Input className="h-8 sm:col-span-2" value={novoEq.tag} onChange={(e) => setNovoEq({ ...novoEq, tag: e.target.value })} placeholder="Tag (ou auto)" />
+            <Input className="h-8" value={novoEq.painel} onChange={(e) => setNovoEq({ ...novoEq, painel: e.target.value })} placeholder="Painel" />
+            <Input className="h-8" value={novoEq.loop} onChange={(e) => setNovoEq({ ...novoEq, loop: e.target.value })} placeholder="Loop" />
+            <Input className="h-8" value={novoEq.add} onChange={(e) => setNovoEq({ ...novoEq, add: e.target.value })} placeholder="Add" />
+            <Input className="h-8" value={novoEq.type} onChange={(e) => setNovoEq({ ...novoEq, type: e.target.value })} placeholder="Type" />
+            <Input className="h-8" value={novoEq.model} onChange={(e) => setNovoEq({ ...novoEq, model: e.target.value })} placeholder="Model" />
+            <div className="sm:col-span-7"><Button size="sm" variant="outline" onClick={criarEquip}>Adicionar equipamento</Button></div>
+          </div>
           {cli.equipamentos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum equipamento. Importe um CSV.</p>
+            <p className="text-sm text-muted-foreground">Nenhum equipamento. Cadastre acima ou importe um CSV.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="py-1 pr-2">Painel</th><th className="py-1 pr-2">Loop</th><th className="py-1 pr-2">Add</th><th className="py-1 pr-2">Type</th><th className="py-1 pr-2">Model</th><th></th>
+                  <th className="py-1 pr-2">Tag</th><th className="py-1 pr-2">Painel</th><th className="py-1 pr-2">Loop</th><th className="py-1 pr-2">Add</th><th className="py-1 pr-2">Type</th><th className="py-1 pr-2">Model</th><th className="py-1 pr-2">Coordenadas</th><th className="py-1 pr-2">Últ. manut.</th><th></th>
                 </tr></thead>
                 <tbody>
                   {cli.equipamentos.map((e) => (
                     <tr key={e.id} className="border-b">
+                      <td className="py-1 pr-2 font-mono text-xs font-medium">{e.tag || '—'}</td>
                       <td className="py-1 pr-2 font-mono text-xs">{e.painel}</td>
                       <td className="py-1 pr-2 font-mono text-xs">{e.loop}</td>
                       <td className="py-1 pr-2 font-mono text-xs">{e.add}</td>
                       <td className="py-1 pr-2">{e.type}</td>
                       <td className="py-1 pr-2">{e.model}</td>
+                      <td className="py-1 pr-2 text-xs text-muted-foreground">{e.pos_x != null ? `X ${e.pos_x}, Y ${e.pos_y}` : '—'}</td>
+                      <td className="py-1 pr-2 text-xs text-muted-foreground">{e.ultima_manutencao ?? '—'}</td>
                       <td className="py-1 text-right"><button className="text-xs text-destructive hover:underline" onClick={() => removerEquip(e.id)}>remover</button></td>
                     </tr>
                   ))}
@@ -238,43 +267,100 @@ export default function ClienteAdmin() {
       </Card>
 
       {/* Editor de mapa (#MAP-3): posicionar equipamentos */}
-      {plantaEditId !== '' && (() => {
+      {plantaEditId !== '' && cli && (() => {
+        const eqs: Equipamento[] = cli.equipamentos
         const planta = plantas.find((p) => p.id === plantaEditId)
         if (!planta) return null
-        const marcadores: Marcador[] = cli.equipamentos
-          .filter((e) => e.planta_id === plantaEditId && e.pos_x != null && e.pos_y != null)
-          .map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status) }))
-        const aColocar = cli.equipamentos.find((e) => e.id === colocarId) ?? null
+        const posicionados = eqs.filter((e) => e.planta_id === plantaEditId && e.pos_x != null && e.pos_y != null)
+        const marcadores: Marcador[] = posicionados.map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status) }))
+        if (pendente && colocarId != null) marcadores.push({ id: -1, x: pendente.x, y: pendente.y, cor: '#6366f1' })
+        const aColocar = eqs.find((e) => e.id === colocarId) ?? null
+        const t = buscaEd.trim().toLowerCase()
+        const sugestoes = t ? eqs.filter((e) => (e.tag || '').toLowerCase().includes(t) || (e.add || '').toLowerCase().includes(t)).slice(0, 10) : []
+
+        function escolher(e: Equipamento) {
+          setColocarId(e.id); setBuscaEd(e.tag || e.add || `#${e.id}`); setPendente(null)
+        }
+        function validarBusca() {
+          const v = buscaEd.trim().toLowerCase()
+          if (!v) return
+          const achado = eqs.find((e) => (e.tag || '').toLowerCase() === v || (e.add || '').toLowerCase() === v)
+          if (achado) escolher(achado)
+          else if (!eqs.some((e) => (e.tag || '').toLowerCase().includes(v) || (e.add || '').toLowerCase().includes(v))) {
+            window.alert(`Sem registro para "${buscaEd}".`)
+          }
+        }
         return (
           <Card>
             <CardHeader><CardTitle className="text-base">Posicionar no mapa — {planta.nome}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
+              {/* Item 3: autocomplete por tag + Item 4: ver todos */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground">Equipamento:</span>
-                <select className="h-8 rounded-md border bg-background px-2 text-sm" value={colocarId ?? ''}
-                        onChange={(e) => setColocarId(e.target.value ? Number(e.target.value) : null)}>
-                  <option value="">— selecione p/ posicionar —</option>
-                  {cli.equipamentos.map((e) => (
-                    <option key={e.id} value={e.id}>{(e.tag || e.add || `#${e.id}`)}{e.planta_id != null ? ' ✓' : ''}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Input className="w-64" value={buscaEd} placeholder="Equipamento (digite a tag)…"
+                         onChange={(e) => { setBuscaEd(e.target.value); setColocarId(null) }}
+                         onKeyDown={(e) => { if (e.key === 'Enter') validarBusca() }} onBlur={validarBusca} />
+                  {sugestoes.length > 0 && colocarId == null && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-72 overflow-auto rounded-md border bg-card shadow-lg">
+                      {sugestoes.map((e) => (
+                        <button key={e.id} className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm hover:bg-accent" onClick={() => escolher(e)}>
+                          <span className="truncate font-medium">{e.tag || e.add || `#${e.id}`}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">{e.planta_id != null ? '✓ no mapa' : e.type}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setVerTodos((v) => !v)}>{verTodos ? 'Ocultar lista' : 'Ver todos'}</Button>
                 {aColocar && aColocar.planta_id != null && (
                   <button className="text-xs text-destructive hover:underline" onClick={() => tirarDoMapa(aColocar.id)}>tirar do mapa</button>
                 )}
               </div>
+
+              {/* Item 4: lista de todos os posicionados */}
+              {verTodos && (
+                <div className="flex flex-wrap gap-1.5 rounded-md border p-2">
+                  {posicionados.length === 0 && <span className="text-xs text-muted-foreground">Nenhum equipamento posicionado nesta planta.</span>}
+                  {posicionados.map((e) => (
+                    <button key={e.id} className={`rounded-full border px-2 py-0.5 text-xs hover:bg-accent ${e.id === colocarId ? 'border-primary bg-accent' : ''}`} onClick={() => { setColocarId(e.id); setBuscaEd(e.tag || '') }}>{e.tag || e.add || `#${e.id}`}</button>
+                  ))}
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
-                {colocarId ? 'Clique na planta para posicionar/mover o equipamento selecionado.' : 'Selecione um equipamento e clique na planta.'}
+                {colocarId ? 'Clique na planta para marcar a posição — depois confira os dados e clique em Salvar.' : 'Escolha um equipamento (busca ou "Ver todos") e clique na planta.'}
               </p>
+
               <VisualizadorPlanta
                 imagemUrl={planta.imagem_url} largura={planta.largura} altura={planta.altura}
-                marcadores={marcadores} ativoId={colocarId}
-                onMarcador={(id) => setColocarId(id)}
-                onClicarPlanta={(x, y) => posicionar(x, y)}
-                renderPopup={(id) => {
-                  const e = cli.equipamentos.find((x) => x.id === id)
-                  return e ? <div className="text-xs"><div className="font-semibold">{e.tag || `#${e.id}`}</div>{e.type} · {e.status || '—'}</div> : null
+                marcadores={marcadores} ativoId={pendente ? -1 : colocarId}
+                onMarcador={(id) => { if (id !== -1) { setColocarId(id); setBuscaEd(eqs.find((e) => e.id === id)?.tag ?? '') } }}
+                onClicarPlanta={(x, y) => {
+                  if (colocarId == null) { window.alert('Selecione um equipamento primeiro.'); return }
+                  const e = eqs.find((q) => q.id === colocarId)
+                  setBoxFields({ painel: e?.painel ?? '', loop: e?.loop ?? '', add: e?.add ?? '', type: e?.type ?? '', model: e?.model ?? '' })
+                  setPendente({ x, y })
                 }}
+                renderPopup={() => null}
               />
+
+              {/* Item 2: caixa com os dados + Salvar (após marcar a posição) */}
+              {pendente && aColocar && (
+                <div className="rounded-lg border bg-card p-3">
+                  <div className="mb-2 text-sm font-semibold">{aColocar.tag || `#${aColocar.id}`} — posição X {pendente.x}, Y {pendente.y}</div>
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+                    <Input className="h-8" value={boxFields.painel} onChange={(e) => setBoxFields({ ...boxFields, painel: e.target.value })} placeholder="Painel" />
+                    <Input className="h-8" value={boxFields.loop} onChange={(e) => setBoxFields({ ...boxFields, loop: e.target.value })} placeholder="Loop" />
+                    <Input className="h-8" value={boxFields.add} onChange={(e) => setBoxFields({ ...boxFields, add: e.target.value })} placeholder="Add" />
+                    <Input className="h-8" value={boxFields.type} onChange={(e) => setBoxFields({ ...boxFields, type: e.target.value })} placeholder="Type" />
+                    <Input className="h-8" value={boxFields.model} onChange={(e) => setBoxFields({ ...boxFields, model: e.target.value })} placeholder="Model" />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <Button size="sm" onClick={() => salvarPosicao(boxFields)}>Salvar</Button>
+                    <Button size="sm" variant="outline" onClick={() => setPendente(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )

@@ -148,6 +148,26 @@ class EquipamentoAtualizar(BaseModel):
     pos_y: float | None = None
 
 
+class EquipamentoIn(BaseModel):
+    tag: str = ""
+    painel: str = ""
+    loop: str = ""
+    add: str = ""
+    type: str = ""
+    model: str = ""
+    status: str = ""
+    ultima_manutencao: date | None = None
+    ultimo_teste: date | None = None
+
+
+def _tag_composta(tag: str, painel: str, loop: str, add: str, type_: str) -> str:
+    """Tag = identificação. Se vazia, compõe de painel+loop+add+type (item 5)."""
+    if tag.strip():
+        return tag.strip()
+    partes = [p.strip() for p in (painel, loop, add, type_) if p.strip()]
+    return "-".join(partes)
+
+
 class ClienteDetalhe(ClienteResumo):
     equipamentos: list[EquipamentoResumo] = []
 
@@ -608,6 +628,27 @@ def listar_equipamentos(cliente_id: int,
     return [_resumo_equip(e) for e in c.equipamentos]
 
 
+@router.post("/clientes/{cliente_id}/equipamentos", response_model=EquipamentoResumo,
+             status_code=status.HTTP_201_CREATED)
+def criar_equipamento(cliente_id: int, dados: EquipamentoIn,
+                      _: Usuario = Depends(requer("gerir_usuarios")),
+                      sessao: Session = Depends(get_session)) -> EquipamentoResumo:
+    """Cadastra **um** equipamento (manual). `tag` é a identificação; se vazia, compõe de
+    painel+loop+add+type (item 5). Campos sem dado ficam vazios e são editáveis depois."""
+    c = _cliente_ou_404(sessao, cliente_id)
+    e = Equipamento(
+        cliente_id=c.id,
+        tag=_tag_composta(dados.tag, dados.painel, dados.loop, dados.add, dados.type),
+        painel=dados.painel.strip(), loop=dados.loop.strip(), add=dados.add.strip(),
+        type=dados.type.strip(), model=dados.model.strip(), status=dados.status.strip(),
+        ultima_manutencao=dados.ultima_manutencao, ultimo_teste=dados.ultimo_teste,
+    )
+    sessao.add(e)
+    sessao.commit()
+    sessao.refresh(e)
+    return _resumo_equip(e)
+
+
 @router.post("/clientes/{cliente_id}/equipamentos/importar", response_model=ImportEquipOut,
              status_code=status.HTTP_201_CREATED)
 async def importar_equipamentos(cliente_id: int,
@@ -646,6 +687,7 @@ async def importar_equipamentos(cliente_id: int,
         u_teste = _parse_data(_col(linha, "ultimo_teste", "ultimo teste", "último teste"))
         if not any(valores.values()) and not u_manut and not u_teste:
             continue  # ignora linha vazia
+        valores["tag"] = _tag_composta(valores["tag"], valores["painel"], valores["loop"], valores["add"], valores["type"])
         c.equipamentos.append(Equipamento(**valores, ultima_manutencao=u_manut, ultimo_teste=u_teste))
         importados += 1
     sessao.commit()

@@ -30,6 +30,18 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
 - [x] **#MAP-4:** **histórico de manutenção** (O.S.) no detalhe do equipamento (Buscar
       equipamento) — seção lista as O.S. do equipamento (data/tipo/status/descrição/técnico).
 
+**Melhorias do cadastro/editor de equipamentos (#MAP-5):**
+- [x] **Scroll só no mapa**: `VisualizadorPlanta` usa listener `wheel` **nativo não-passivo**
+      (a página não rola quando o cursor está sobre o mapa).
+- [x] **Posicionar em 2 passos**: clicar na planta abre uma **caixa** com os dados (painel/
+      loop/add/type/model + coordenadas) e botão **Salvar** (antes salvava no clique).
+- [x] **Autocomplete por tag** no seletor do editor + alerta **"sem registro"** se a tag
+      digitada não existir.
+- [x] **"Ver todos"**: lista os equipamentos **posicionados** na planta (clique para focar).
+- [x] **Cadastro completo**: `POST /admin/clientes/{id}/equipamentos` (criar avulso);
+      **tag** composta de painel+loop+add+type quando vazia; tabela mostra **Tag** (1ª coluna),
+      **Coordenadas** e **Última manutenção**. Teste `test_equipamento_criar_avulso_e_tag_composta`.
+
 ### I. #OS — Ordem de Serviço (manutenção, D-024)
 Entidade separada da atividade; liga-se a equipamento (histórico #MAP-4). Spec
 [`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
