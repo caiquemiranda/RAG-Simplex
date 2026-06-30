@@ -27,8 +27,8 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
       plantas, remover) + card **Posicionar no mapa** (escolhe planta + equipamento, clica na
       planta p/ gravar `pos_x/pos_y/planta_id`; "tirar do mapa"). Reusa `VisualizadorPlanta`
       com `onClicarPlanta`. dep: #MAP-1/#MAP-2.
-- [ ] **#MAP-4:** **histórico de manutenção** (O.S.) no detalhe do equipamento (Buscar
-      equipamento). Backend pronto (`GET /equipamentos/{id}/ordens`); falta o frontend. dep: #OS-1.
+- [x] **#MAP-4:** **histórico de manutenção** (O.S.) no detalhe do equipamento (Buscar
+      equipamento) — seção lista as O.S. do equipamento (data/tipo/status/descrição/técnico).
 
 ### I. #OS — Ordem de Serviço (manutenção, D-024)
 Entidade separada da atividade; liga-se a equipamento (histórico #MAP-4). Spec
@@ -36,7 +36,9 @@ Entidade separada da atividade; liga-se a equipamento (histórico #MAP-4). Spec
 - [x] **#OS-1 (backend):** entidade `OrdemServico` (cliente/equipamento/técnico/data/tipo/
       status/descrição/solução); migração `58e01d15fabc`; CRUD `/admin/ordens` + histórico
       visível `/equipamentos/{id}/ordens`; **concluir grava `ultima_manutencao`**. Testes `test_ordens`.
-- [ ] **#OS-2 (frontend):** página de O.S. (`/ordens`) — lista/filtros + criar/editar; sidebar.
+- [x] **#OS-2 (frontend):** página `pages/Ordens.tsx` (`/ordens`, admin) — filtros
+      (cliente/status), **nova O.S.** (cliente/equipamento/técnico/data/tipo/status/descrição/
+      solução), lista com status editável e excluir; entrada na sidebar.
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 

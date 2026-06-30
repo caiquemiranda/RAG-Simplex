@@ -91,6 +91,17 @@ export type Equipamento = {
 export type ImportEquipResultado = { importados: number; total: number }
 // Planta (projeto) do cliente — #MAP.
 export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }
+// Ordem de Serviço (#OS).
+export type OrdemServico = {
+  id: number; cliente_id: number; cliente_nome: string | null
+  equipamento_id: number | null; equipamento_tag: string | null
+  usuario_id: number | null; tecnico_nome: string | null
+  data: string; tipo: string; status: string; descricao: string; solucao: string | null
+}
+export type OrdemEntrada = {
+  cliente_id?: number; equipamento_id?: number | null; usuario_id?: number | null
+  data?: string; tipo?: string; status?: string; descricao?: string; solucao?: string | null
+}
 export type ClienteDetalhe = AdminCliente & { equipamentos: Equipamento[] }
 
 // Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
@@ -366,6 +377,7 @@ export const api = {
   equipamentosCliente: (clienteId: number, busca?: string) =>
     request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
+  ordensEquipamento: (equipamentoId: number) => request<OrdemServico[]>(`/equipamentos/${equipamentoId}/ordens`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -442,6 +454,20 @@ export const api = {
       uploadMultipart<Planta[]>(`/admin/clientes/${clienteId}/plantas`, file),
     removerPlanta: (plantaId: number) =>
       request<void>(`/admin/plantas/${plantaId}`, { method: 'DELETE' }),
+    // Ordens de serviço (#OS)
+    ordens: (params?: { cliente_id?: number; equipamento_id?: number; status?: string }) => {
+      const p = new URLSearchParams()
+      if (params?.cliente_id) p.append('cliente_id', String(params.cliente_id))
+      if (params?.equipamento_id) p.append('equipamento_id', String(params.equipamento_id))
+      if (params?.status) p.append('status', params.status)
+      const s = p.toString()
+      return request<OrdemServico[]>(`/admin/ordens${s ? `?${s}` : ''}`)
+    },
+    criarOrdem: (dados: OrdemEntrada & { cliente_id: number; data: string }) =>
+      request<OrdemServico>('/admin/ordens', { method: 'POST', body: JSON.stringify(dados) }),
+    atualizarOrdem: (id: number, dados: OrdemEntrada) =>
+      request<OrdemServico>(`/admin/ordens/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    removerOrdem: (id: number) => request<void>(`/admin/ordens/${id}`, { method: 'DELETE' }),
     banco: () => request<BancoStatus>('/admin/banco'),
     bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),

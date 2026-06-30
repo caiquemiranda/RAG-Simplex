@@ -4,6 +4,22 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #OS-2 + #MAP-4: página de O.S. + histórico no detalhe do equipamento (frontend)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (backend em 101 testes).
+
+- **#OS-2:** `pages/Ordens.tsx` (`/ordens`, admin) — filtros (cliente/status), form **Nova O.S.**
+  (cliente/equipamento/técnico/data/tipo/status/descrição/solução), lista com **status editável**
+  e excluir. Entrada **"Ordens de Serviço"** na sidebar (admin). `api.admin.{ordens,criarOrdem,
+  atualizarOrdem,removerOrdem}`.
+- **#MAP-4:** na página **Buscar equipamento**, o card de detalhes ganhou **Histórico de
+  manutenção** (lista as O.S. do equipamento via `api.ordensEquipamento`). Fecha o épico #MAP.
+- `api.ts`: tipos `OrdemServico`/`OrdemEntrada`. `tsc` OK.
+
+**Arquivos:** `frontend/src/{pages/Ordens.tsx,pages/Equipamentos.tsx,components/Sidebar.tsx,App.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
 ## 2026-06-26 — #OS-1: backend da Ordem de Serviço (manutenção) + histórico do equipamento
 
 **Branch:** `feat/buscar-equipamento`. Decisão **D-024**. Spec

@@ -1,6 +1,6 @@
 # Spec — #OS: Ordem de Serviço (manutenção)
 
-**Status:** ✅ #OS-1 backend (101 testes); frontend (#OS-2) e detalhe do equipamento (#MAP-4) pendentes
+**Status:** ✅ #OS-1/2 + #MAP-4 (backend + página + histórico no equipamento) · 101 testes
 **Data:** 2026-06-26 · **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-024](../DECISOES.md)
 
 Registro de **manutenção** (ordem de serviço), entidade **separada** da atividade do

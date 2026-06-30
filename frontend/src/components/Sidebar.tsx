@@ -19,6 +19,7 @@ const IconRelatorios = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><
 const IconEquipamento = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></svg>)
 const IconDocumentos = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>)
 const IconCronograma = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /></svg>)
+const IconOrdens = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z" /></svg>)
 const IconSino = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>)
 const IconLixeira = () => (<svg className="h-4 w-4" viewBox="0 0 24 24" {...svg}><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>)
 const Chevron = ({ aberto }: { aberto: boolean }) => (
@@ -224,6 +225,9 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
               <NavLink to="/cronograma" end className={linkCls} onClick={navegou}>Calendário</NavLink>
               <NavLink to="/cronograma/atividades" className={linkCls} onClick={navegou}>Atividades</NavLink>
             </div>
+          )}
+          {pode('gerir_usuarios') && (
+            <NavLink to="/ordens" className={linkCls} onClick={navegou}><IconOrdens /> Ordens de Serviço</NavLink>
           )}
         </div>
       </nav>

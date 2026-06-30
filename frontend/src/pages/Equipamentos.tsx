@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type ClienteVisivel, type Equipamento, type Planta } from '../lib/api'
+import { api, type ClienteVisivel, type Equipamento, type OrdemServico, type Planta } from '../lib/api'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -22,9 +22,16 @@ export default function Equipamentos() {
   const [busca, setBusca] = useState('')
   const [selId, setSelId] = useState<number | null>(null)
   const [foco, setFoco] = useState<number | null>(null)
+  const [historico, setHistorico] = useState<OrdemServico[]>([])
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => { api.clientesVisiveis().then(setClientes).catch(() => {}) }, [])
+
+  // Histórico de manutenção (O.S.) do equipamento selecionado (#MAP-4).
+  useEffect(() => {
+    if (selId == null) { setHistorico([]); return }
+    api.ordensEquipamento(selId).then(setHistorico).catch(() => setHistorico([]))
+  }, [selId])
 
   // Ao trocar de cliente, carrega plantas + equipamentos.
   useEffect(() => {
@@ -140,6 +147,24 @@ export default function Equipamentos() {
               <div><span className="text-muted-foreground">Última manutenção:</span> {selecionado.ultima_manutencao ?? '—'}</div>
               <div><span className="text-muted-foreground">Último teste:</span> {selecionado.ultimo_teste ?? '—'}</div>
               <div><span className="text-muted-foreground">Coordenadas:</span> {selecionado.pos_x != null ? `X ${selecionado.pos_x}, Y ${selecionado.pos_y}` : '—'}</div>
+            </CardContent>
+            {/* Histórico de manutenção (O.S.) — #MAP-4 */}
+            <CardContent className="border-t pt-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Histórico de manutenção ({historico.length})</div>
+              {historico.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma ordem de serviço registrada.</p>
+              ) : (
+                <div className="space-y-2">
+                  {historico.map((o) => (
+                    <div key={o.id} className="rounded-md border-l-2 border-primary bg-muted/30 p-2">
+                      <div className="text-xs font-medium text-primary">{o.data} · {o.tipo} · {o.status}</div>
+                      <div className="text-sm">{o.descricao || '—'}</div>
+                      {o.solucao && <div className="text-xs text-muted-foreground">Solução: {o.solucao}</div>}
+                      {o.tecnico_nome && <div className="text-xs text-muted-foreground">Técnico: {o.tecnico_nome}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
