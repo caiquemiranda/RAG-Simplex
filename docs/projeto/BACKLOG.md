@@ -42,15 +42,18 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
       **tag** composta de painel+loop+add+type quando vazia; tabela mostra **Tag** (1ª coluna),
       **Coordenadas** e **Última manutenção**. Teste `test_equipamento_criar_avulso_e_tag_composta`.
 
-### I. #OS — Ordem de Serviço (manutenção, D-024)
-Entidade separada da atividade; liga-se a equipamento (histórico #MAP-4). Spec
+### I. #OS — Ordem de Serviço unifica a atividade do cronograma (D-025, reverte D-024)
+A **O.S. = atividade do cronograma** (entidade `Visita`); `OrdemServico` foi removida. Spec
 [`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
-- [x] **#OS-1 (backend):** entidade `OrdemServico` (cliente/equipamento/técnico/data/tipo/
-      status/descrição/solução); migração `58e01d15fabc`; CRUD `/admin/ordens` + histórico
-      visível `/equipamentos/{id}/ordens`; **concluir grava `ultima_manutencao`**. Testes `test_ordens`.
-- [x] **#OS-2 (frontend):** página `pages/Ordens.tsx` (`/ordens`, admin) — filtros
-      (cliente/status), **nova O.S.** (cliente/equipamento/técnico/data/tipo/status/descrição/
-      solução), lista com status editável e excluir; entrada na sidebar.
+- [x] **Backend (D-025):** `Visita` ganhou `tipo` (preventiva/corretiva/avulsa), `equipamento_id`,
+      `falha_id` + 12 campos do documento de corretiva; entidade `Falha` (catálogo `/admin/falhas`);
+      sem técnicos → **fixos do cliente**; **concluir grava `ultima_manutencao`**; histórico
+      `/cronograma/equipamento/{id}`; notificação "Nova O.S.". Migração `34b255a20aa8`. Teste
+      `test_os_unificada_falha_equipamento_manutencao`. **`OrdemServico`/`app/ordens.py` removidos.**
+- [ ] **Frontend (Fase 2):** renomear **Atividades → "Ordem de Serviço"** (mover ao grupo
+      Cronograma); form com `tipo`/equipamento/falha/campos-doc/técnicos(default fixos)/anexos;
+      **admin de Falhas** (CRUD); **remover** `pages/Ordens.tsx` + link + `api.admin.ordens*`;
+      **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 

@@ -23,8 +23,8 @@ erDiagram
   CLIENTE ||--o{ EQUIPAMENTO : "1:N (cascade, #EQP-1)"
   CLIENTE ||--o{ PLANTA : "1:N (cascade, #MAP)"
   PLANTA ||--o{ EQUIPAMENTO : "0..1 (planta_id, posição #MAP)"
-  CLIENTE ||--o{ ORDEM_SERVICO : "1:N (cascade, #OS)"
-  EQUIPAMENTO ||--o{ ORDEM_SERVICO : "0..1 (histórico #MAP-4)"
+  EQUIPAMENTO ||--o{ VISITA : "0..1 (alvo/histórico #MAP-4)"
+  FALHA ||--o{ VISITA : "0..1 (catálogo #OS)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -77,13 +77,23 @@ erDiagram
     text observacoes
   }
   VISITA {
-    int id PK
+    int id PK "= Ordem de Serviço (D-025)"
     int usuario_id FK "responsável (1º); demais em visita_tecnico"
     int cliente_id FK "opcional"
     date data
-    string titulo "atividade"
+    string titulo "O.S./atividade"
     string status "agendada|pendente|concluida|cancelada"
     text observacoes
+    string tipo "manutenção: preventiva|corretiva|avulsa"
+    int equipamento_id FK "SET NULL (alvo da O.S.)"
+    int falha_id FK "SET NULL (catálogo)"
+    string campos_doc "12 campos de corretiva (especialidade…ação_aplicada)"
+  }
+  FALHA {
+    int id PK
+    string nome UK "ex.: No Answer, Dirty, Head Missing"
+    string termo_en "display do painel (opcional)"
+    datetime criado_em
   }
   EQUIPAMENTO {
     int id PK
@@ -110,18 +120,6 @@ erDiagram
     int largura "px"
     int altura "px"
     int ordem
-    datetime criado_em
-  }
-  ORDEM_SERVICO {
-    int id PK
-    int cliente_id FK "cascade"
-    int equipamento_id FK "opcional (#MAP-4)"
-    int usuario_id FK "técnico"
-    date data
-    string tipo "corretiva|preventiva|planejada"
-    string status "aberta|em_andamento|concluida|cancelada"
-    text descricao
-    text solucao
     datetime criado_em
   }
   COMENTARIO_VISITA {
@@ -231,20 +229,25 @@ O filtro `GET /cronograma?unidade_id=` mostra só as visitas cujo **cliente** pe
 unidade. O texto livre legado permanece como fallback de exibição (sem migração obrigatória).
 
 ### Visita (cronograma)
-Atividade agendada num dia (`data`), opcionalmente num cliente (`cliente_id`), com
-`status`. **Vários técnicos** podem ser atribuídos (N:N `visita_tecnico`, #CR8);
-`usuario_id` é o responsável (1º) por compatibilidade. Técnico vê visitas em que está
-atribuído; admin vê todas. Notificação ao criar vai para **todos** os atribuídos.
-**Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações fixas.
-Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
+**= Ordem de Serviço (D-025).** Atividade/O.S. agendada num dia (`data`), opcionalmente num
+cliente (`cliente_id`), com `status`. **Vários técnicos** podem ser atribuídos (N:N
+`visita_tecnico`, #CR8); sem técnicos informados na criação, usa os **fixos do cliente**
+(#ALOC). `usuario_id` é o responsável (1º) por compatibilidade. Técnico vê visitas em que está
+atribuído; admin vê todas. Notificação ao criar ("Nova O.S.") vai para **todos** os atribuídos
+e linka à O.S. **Feriado** (#FER-1): no dia de feriado o `listar` suprime visitas e alocações
+fixas. Ver [`projeto/specs/spec-etapa3-cronograma.md`](projeto/specs/spec-etapa3-cronograma.md).
 
-### OrdemServico (O.S., #OS)
-Registro de **manutenção**, entidade **separada** da `Visita`/atividade (D-024). Pertence a um
-`cliente`, pode referenciar um `equipamento` (alimenta o histórico do dispositivo, #MAP-4) e um
-`usuario` (técnico). `tipo` ∈ corretiva/preventiva/planejada; `status` ∈ aberta/em_andamento/
-concluida/cancelada. **Concluir** com data grava `equipamento.ultima_manutencao`. Gestão por
-`gerir_usuarios`; histórico por equipamento é **visível** ao técnico do cliente. Ver
-[`projeto/specs/spec-os-ordem-servico.md`](projeto/specs/spec-os-ordem-servico.md).
+**Campos de O.S.** (D-025): `tipo` ∈ manutenção **preventiva/corretiva/avulsa**;
+`equipamento_id` (alvo, SET NULL → alimenta histórico #MAP-4); `falha_id` (catálogo `Falha`,
+SET NULL); e, para corretiva, os **12 campos do documento**: especialidade, requisitante,
+data_solicitacao, centro_custo, numero_os, reserva_material, material_utilizado, endereco,
+setor, prioridade, data_execucao, acao_aplicada. **Concluir** com data grava
+`equipamento.ultima_manutencao`. Histórico por equipamento: `GET /cronograma/equipamento/{id}`.
+
+### Falha (catálogo, #OS)
+Catálogo cadastrável de **falhas do painel** (`nome` único; `termo_en` = display em inglês,
+ex.: `HEAD MISSING`). 1 falha por O.S. (`Visita.falha_id`). CRUD em `/admin/falhas`
+(`gerir_usuarios`). Ver [`projeto/specs/spec-os-ordem-servico.md`](projeto/specs/spec-os-ordem-servico.md).
 
 ### Planta + Equipamento no mapa (#MAP)
 **Planta** = uma imagem (PNG) de projeto do cliente; o admin sobe um **PDF** e o servidor

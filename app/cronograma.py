@@ -21,6 +21,8 @@ from app.modelos import (
     AnexoVisita,
     Cliente,
     ComentarioVisita,
+    Equipamento,
+    Falha,
     Feriado,
     Notificacao,
     Usuario,
@@ -41,8 +43,34 @@ class FeriadoResumo(BaseModel):
     descricao: str
 
 
-class VisitaIn(BaseModel):
-    usuario_ids: list[int]            # técnicos atribuídos (1+); o 1º é o responsável
+# Campos do documento de O.S. corretiva (todos opcionais) — item 12.
+class _OSDoc(BaseModel):
+    tipo: str | None = None           # preventiva|corretiva|avulsa
+    equipamento_id: int | None = None
+    falha_id: int | None = None
+    especialidade: str | None = None
+    requisitante: str | None = None
+    data_solicitacao: date | None = None
+    centro_custo: str | None = None
+    numero_os: str | None = None
+    reserva_material: str | None = None
+    material_utilizado: str | None = None
+    endereco: str | None = None
+    setor: str | None = None
+    prioridade: str | None = None
+    data_execucao: date | None = None
+    acao_aplicada: str | None = None
+
+
+_OS_CAMPOS = (
+    "especialidade", "requisitante", "data_solicitacao", "centro_custo", "numero_os",
+    "reserva_material", "material_utilizado", "endereco", "setor", "prioridade",
+    "data_execucao", "acao_aplicada",
+)
+
+
+class VisitaIn(_OSDoc):
+    usuario_ids: list[int] = []       # técnicos (1+); vazio → fixos do cliente (item 5)
     cliente_id: int | None = None
     data: date
     titulo: str
@@ -50,7 +78,7 @@ class VisitaIn(BaseModel):
     observacoes: str | None = None
 
 
-class VisitaAtualizar(BaseModel):
+class VisitaAtualizar(_OSDoc):
     usuario_ids: list[int] | None = None
     cliente_id: int | None = None
     data: date | None = None
@@ -82,6 +110,24 @@ class VisitaResumo(BaseModel):
     status: str
     observacoes: str | None = None
     fixo: bool = False                # alocação fixa virtual (#ALOC), não é uma visita real
+    # --- Ordem de Serviço (#OS, D-025) ---
+    tipo: str = "corretiva"
+    equipamento_id: int | None = None
+    equipamento_tag: str | None = None
+    falha_id: int | None = None
+    falha_nome: str | None = None
+    especialidade: str | None = None
+    requisitante: str | None = None
+    data_solicitacao: date | None = None
+    centro_custo: str | None = None
+    numero_os: str | None = None
+    reserva_material: str | None = None
+    material_utilizado: str | None = None
+    endereco: str | None = None
+    setor: str | None = None
+    prioridade: str | None = None
+    data_execucao: date | None = None
+    acao_aplicada: str | None = None
 
 
 # --- Página da atividade (#ATV-1) ---
@@ -130,6 +176,13 @@ def _resumo(v: Visita) -> VisitaResumo:
         unidade=_nome_unidade(v.cliente),
         unidade_id=v.cliente.unidade_id if v.cliente else None,
         data=v.data, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
+        tipo=v.tipo, equipamento_id=v.equipamento_id,
+        equipamento_tag=(v.equipamento.tag or v.equipamento.add) if v.equipamento else None,
+        falha_id=v.falha_id, falha_nome=v.falha.nome if v.falha else None,
+        especialidade=v.especialidade, requisitante=v.requisitante, data_solicitacao=v.data_solicitacao,
+        centro_custo=v.centro_custo, numero_os=v.numero_os, reserva_material=v.reserva_material,
+        material_utilizado=v.material_utilizado, endereco=v.endereco, setor=v.setor,
+        prioridade=v.prioridade, data_execucao=v.data_execucao, acao_aplicada=v.acao_aplicada,
     )
 
 
@@ -238,22 +291,57 @@ def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:
     return cliente_id
 
 
+_TIPOS_OS = {"preventiva", "corretiva", "avulsa"}
+
+
+def _fixos_do_cliente(sessao: Session, cliente_id: int) -> list[Usuario]:
+    """Técnicos fixos (cliente_padrao) do cliente — default da O.S. (item 5, #ALOC)."""
+    return list(sessao.scalars(select(Usuario).where(Usuario.cliente_padrao_id == cliente_id)))
+
+
+def _aplicar_os(sessao: Session, v: Visita, dados: _OSDoc) -> None:
+    """Aplica os campos de O.S. (tipo/equipamento/falha + doc) e a regra de manutenção."""
+    if dados.tipo is not None:
+        if dados.tipo not in _TIPOS_OS:
+            raise HTTPException(status_code=400, detail=f"Tipo de O.S. inválido: {dados.tipo}.")
+        v.tipo = dados.tipo
+    if "equipamento_id" in dados.model_fields_set:
+        if dados.equipamento_id is not None and sessao.get(Equipamento, dados.equipamento_id) is None:
+            raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+        v.equipamento_id = dados.equipamento_id
+    if "falha_id" in dados.model_fields_set:
+        if dados.falha_id is not None and sessao.get(Falha, dados.falha_id) is None:
+            raise HTTPException(status_code=404, detail="Falha não encontrada.")
+        v.falha_id = dados.falha_id
+    for campo in _OS_CAMPOS:
+        if campo in dados.model_fields_set:
+            setattr(v, campo, getattr(dados, campo))
+    # O.S. concluída com data → grava ultima_manutencao do equipamento (#MAP-4).
+    if v.status == "concluida" and v.equipamento_id is not None:
+        eq = sessao.get(Equipamento, v.equipamento_id)
+        if eq is not None:
+            eq.ultima_manutencao = v.data
+
+
 @router.post("", response_model=VisitaResumo, status_code=status.HTTP_201_CREATED)
 def criar(dados: VisitaIn,
           _: Usuario = Depends(requer("gerir_usuarios")),
           sessao: Session = Depends(get_session)) -> VisitaResumo:
-    if not dados.usuario_ids:
-        raise HTTPException(status_code=400, detail="Informe ao menos um técnico.")
-    # #FER-1: não se agenda atividade em dia de feriado (o dia fica sem atividades).
+    # #FER-1: não se agenda O.S. em dia de feriado.
     if sessao.scalar(select(Feriado).where(Feriado.data == dados.data)):
         raise HTTPException(status_code=400, detail="Dia é feriado — sem atividades.")
-    tecnicos = _carregar_tecnicos(sessao, dados.usuario_ids)
     _buscar_cliente(sessao, dados.cliente_id)
+    # Item 5: sem técnicos informados → usa os fixos do cliente.
+    ids = dados.usuario_ids or ([t.id for t in _fixos_do_cliente(sessao, dados.cliente_id)] if dados.cliente_id else [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="Informe ao menos um técnico (ou defina fixos do cliente).")
+    tecnicos = _carregar_tecnicos(sessao, ids)
     v = Visita(
         usuario_id=tecnicos[0].id, cliente_id=dados.cliente_id, data=dados.data,
         titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
     )
     v.tecnicos = tecnicos
+    _aplicar_os(sessao, v, dados)
     sessao.add(v)
     sessao.flush()
     # #CR4/#CR8: notifica TODOS os técnicos atribuídos à atividade.
@@ -261,7 +349,7 @@ def criar(dados: VisitaIn,
     for t in tecnicos:
         sessao.add(Notificacao(
             usuario_id=t.id, tipo="cronograma",
-            titulo=f"Nova atividade: {v.titulo}",
+            titulo=f"Nova O.S.: {v.titulo}",
             texto=f"{v.data.isoformat()}{local}", ref_id=v.id,
         ))
     sessao.commit()
@@ -308,9 +396,32 @@ def atualizar(visita_id: int, dados: VisitaAtualizar,
         v.status = dados.status
     if dados.observacoes is not None:
         v.observacoes = dados.observacoes or None
+    if admin:
+        _aplicar_os(sessao, v, dados)   # tipo/equipamento/falha + campos do documento (#OS)
+    elif v.status == "concluida" and v.equipamento_id is not None:
+        # técnico fechou a O.S. → atualiza a última manutenção do equipamento.
+        eq = sessao.get(Equipamento, v.equipamento_id)
+        if eq is not None:
+            eq.ultima_manutencao = v.data
     sessao.commit()
     sessao.refresh(v)
     return _resumo(v)
+
+
+@router.get("/equipamento/{equipamento_id}", response_model=list[VisitaResumo])
+def ordens_do_equipamento(equipamento_id: int,
+                          usuario: Usuario = Depends(usuario_atual),
+                          sessao: Session = Depends(get_session)) -> list[VisitaResumo]:
+    """Histórico de O.S. de um equipamento (#MAP-4). RBAC pelo cliente do equipamento."""
+    eq = sessao.get(Equipamento, equipamento_id)
+    if eq is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    if not usuario.tem_permissao("gerir_usuarios") and eq.cliente not in usuario.clientes_rel:
+        raise HTTPException(status_code=403, detail="Sem acesso a este equipamento.")
+    ordens = sessao.scalars(
+        select(Visita).where(Visita.equipamento_id == equipamento_id).order_by(Visita.data.desc())
+    ).all()
+    return [_resumo(v) for v in ordens]
 
 
 @router.delete("/{visita_id}", status_code=status.HTTP_204_NO_CONTENT)

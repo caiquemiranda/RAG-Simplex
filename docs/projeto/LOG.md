@@ -4,6 +4,27 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #OS: O.S. unifica a atividade do cronograma (backend, D-025)
+
+**Branch:** `feat/buscar-equipamento`. **Decisão [D-025](DECISOES.md)** (reverte D-024).
+
+- **Unificação:** a entidade `OrdemServico` (D-024) foi **removida** (`app/ordens.py`,
+  `tests/test_ordens.py`, router no `main.py`). A **`Visita` vira a Ordem de Serviço** —
+  reaproveita cronograma, vários técnicos, comentários, anexos, #ALOC e notificação.
+- **Modelo:** `Visita` ganhou `tipo` (manutenção **preventiva/corretiva/avulsa**),
+  `equipamento_id`/`falha_id` (FK SET NULL) e os **12 campos do documento de corretiva**
+  (especialidade…ação_aplicada). Nova entidade **`Falha`** (catálogo: nome único + termo_en).
+- **Migração `34b255a20aa8`:** cria `falha`, **dropa** `ordem_servico`, adiciona 15 colunas à
+  `visita` (batch; `tipo` com `server_default='corretiva'`). FK-noise do autogenerate removido.
+- **Backend:** `app/cronograma.py` — `_aplicar_os` (valida tipo, aplica equipamento/falha/
+  campos-doc, manutenção ao concluir), `criar` usa **fixos do cliente** quando sem técnicos,
+  notificação "Nova O.S.", `GET /cronograma/equipamento/{id}` (histórico #MAP-4). `app/admin.py`
+  — CRUD `/admin/falhas` (409 se duplicado). `VisitaResumo` expõe tipo/equipamento/falha/campos.
+- **Testes:** `test_os_unificada_falha_equipamento_manutencao` (catálogo, criar O.S. corretiva
+  concluída, histórico, tipo inválido 400, default fixos). Suíte: **101 passed**.
+- **Pendente:** frontend (Fase 2) — renomear Atividades→O.S., form com tipo/equipamento/falha/
+  campos-doc, admin de Falhas, remover página `/ordens`, repontar `api.ordensEquipamento`.
+
 ## 2026-06-26 — #MAP-5: melhorias do cadastro/editor de equipamentos
 
 **Branch:** `feat/buscar-equipamento`.

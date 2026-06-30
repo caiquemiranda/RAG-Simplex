@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**102 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**101 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -67,10 +67,12 @@ pytest
 - `test_resolucao_sem_config_usa_settings` — fallback de configuração.
 - `test_cifrar_decifrar_roundtrip` / `test_mascarar` / `test_cifrar_sem_chave_erro_claro` — chaves nunca em claro.
 
-### `test_ordens.py` (2) — ordens de serviço (#OS)
-- `test_os_crud_conclusao_atualiza_manutencao` — CRUD; tipo/status inválidos → 400; **concluir**
-  grava `ultima_manutencao` no equipamento; histórico visível lista a O.S.
-- `test_os_rbac` — técnico não gerencia (`/admin/ordens` 403); histórico do equipamento só do seu cliente.
+### O.S. unificada (#OS, D-025) — em `test_cronograma.py`
+- `test_os_unificada_falha_equipamento_manutencao` — catálogo de falha (`/admin/falhas`, 409 se
+  duplicado); criar **O.S.** corretiva concluída com `tipo`/equipamento/falha/campos-doc →
+  resumo expõe `tipo`/`equipamento_tag`/`falha_nome` e grava `ultima_manutencao`; histórico por
+  equipamento (`GET /cronograma/equipamento/{id}`); tipo inválido → 400; sem técnicos → fixos.
+- `test_ordens.py` **removido** (entidade `OrdemServico` extinta pela unificação).
 
 ### `test_plantas.py` (2) — mapa de dispositivos (#MAP)
 - `test_upload_pdf_gera_plantas_e_remove` — PDF 2 páginas → 2 plantas (PNG, dimensões);

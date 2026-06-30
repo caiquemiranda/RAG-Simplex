@@ -1,29 +1,54 @@
-# Spec — #OS: Ordem de Serviço (manutenção)
+# Spec — #OS: Ordem de Serviço (unifica atividade do cronograma)
 
-**Status:** ✅ #OS-1/2 + #MAP-4 (backend + página + histórico no equipamento) · 101 testes
-**Data:** 2026-06-26 · **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-024](../DECISOES.md)
+**Status:** ✅ Backend (unificação D-025) · 101 testes · Frontend pendente (Fase 2)
+**Data:** 2026-06-30 · **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-025](../DECISOES.md)
+(substitui [D-024](../DECISOES.md))
 
-Registro de **manutenção** (ordem de serviço), entidade **separada** da atividade do
-cronograma. Liga-se a um **equipamento** → alimenta o **histórico** do dispositivo (#MAP-4).
+**Ordem de Serviço = atividade do cronograma** (mesma entidade `Visita`). Reaproveita
+cronograma, **vários técnicos**, comentários, **anexos de imagem** (#ATV-1), #ALOC e
+notificação. Liga-se a um **equipamento** → alimenta o **histórico** do dispositivo (#MAP-4).
 
-## Decisões (D-024)
-- **Entidade própria** `OrdemServico` (≠ `Visita`).
-- **Tipo** ∈ corretiva/preventiva/planejada; **status** ∈ aberta/em_andamento/concluida/cancelada.
-- **Concluir** com data → grava `equipamento.ultima_manutencao` (fonte automática da manutenção).
+## Decisões (D-025 — reverte D-024)
+- A entidade `OrdemServico` (D-024) foi **removida**; a `Visita` **vira a O.S.**
+- **Tipo** = manutenção ∈ **preventiva / corretiva / avulsa**.
+- **Falha** = catálogo cadastrável (`Falha`), **1 por O.S.** (`Visita.falha_id`).
+- Sem técnicos informados → usa os **fixos do cliente** (#ALOC).
+- **Concluir** com data → grava `equipamento.ultima_manutencao` (fonte automática).
+- Campos do **documento de corretiva** embutidos na O.S. (opcionais, só corretiva).
 
 ## Modelo (`app/modelos.py`)
-`OrdemServico`: `cliente_id` (cascade), `equipamento_id` (opcional, SET NULL), `usuario_id`
-(técnico), `data`, `tipo`, `status`, `descricao`, `solucao`, `criado_em`. Migração `58e01d15fabc`.
+- **`Visita`** ganhou: `tipo` (`server_default='corretiva'`), `equipamento_id` (FK SET NULL),
+  `falha_id` (FK SET NULL) e os **12 campos do documento**: `especialidade`, `requisitante`,
+  `data_solicitacao`, `centro_custo`, `numero_os`, `reserva_material`, `material_utilizado`,
+  `endereco`, `setor`, `prioridade`, `data_execucao`, `acao_aplicada`. Relacionamentos
+  `equipamento` e `falha`.
+- **`Falha`**: `nome` (único), `termo_en` (display, opcional), `criado_em`.
+- Migração **`34b255a20aa8`** — cria `falha`, **dropa** `ordem_servico`, adiciona 15 colunas à
+  `visita` (batch). FK-noise do autogenerate (SQLite) removido manualmente.
 
-## Backend (`app/ordens.py`)
-- `GET /admin/ordens?cliente_id=&equipamento_id=&status=` — lista (perm `gerir_usuarios`).
-- `POST /admin/ordens`, `PATCH /admin/ordens/{id}`, `DELETE /admin/ordens/{id}` — CRUD; valida
-  tipo/status; `_aplicar_manutencao` grava `ultima_manutencao` quando `status=concluida`.
-- `GET /equipamentos/{id}/ordens` — **histórico** visível (RBAC pelo cliente do equipamento, #MAP-4).
+## Backend
+**Catálogo de falhas — `app/admin.py`** (perm `gerir_usuarios`):
+- `GET /admin/falhas`, `POST /admin/falhas` (409 se `nome` duplicado), `DELETE /admin/falhas/{id}`.
 
-## Frontend (pendente)
-- **#OS-2:** página de O.S. (`/ordens`) — lista + filtros + criar/editar; entrada na sidebar.
-- **#MAP-4:** no detalhe do equipamento (Buscar equipamento), mostrar o **histórico** de O.S.
+**O.S. = cronograma — `app/cronograma.py`:**
+- `POST /cronograma` / `PATCH /cronograma/{id}` — `_aplicar_os` valida `tipo`, aplica
+  equipamento/falha/campos-doc (via `model_fields_set`) e a manutenção (status `concluida` +
+  equipamento → `ultima_manutencao = data`). `usuario_ids` vazio → técnicos = fixos do cliente.
+- Notificação ao criar: **"Nova O.S.: {titulo}"**, linka à O.S.
+- `GET /cronograma/equipamento/{id}` — **histórico** de O.S. do equipamento (RBAC pelo cliente, #MAP-4).
+- `VisitaResumo` expõe `tipo`, `equipamento_id`/`equipamento_tag`, `falha_id`/`falha_nome` e os 12 campos.
 
-## Testes (`tests/test_ordens.py`, 2)
-- `test_os_crud_conclusao_atualiza_manutencao`; `test_os_rbac`. Suíte: **101 passed**.
+## Frontend (pendente — Fase 2)
+- Renomear **Atividades → "Ordem de Serviço"** (lista, gráfico e filtros já existem); mover para
+  o grupo **Cronograma** na sidebar.
+- Form de O.S.: `tipo` (preventiva/corretiva/avulsa), seleção de **equipamento** e **falha**,
+  campos do documento (só corretiva), técnicos (default = fixos), anexos, comentários.
+- **Remover** a página antiga `/ordens`, o link da sidebar e os métodos mortos `api.admin.ordens*`;
+  **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
+- **Admin de Falhas** (CRUD).
+
+## Testes
+- `tests/test_cronograma.py::test_os_unificada_falha_equipamento_manutencao` — catálogo de falha
+  (incl. 409 duplicado), criar O.S. corretiva concluída com equipamento/falha/campos-doc →
+  resumo + `ultima_manutencao`; histórico por equipamento; tipo inválido → 400; default = fixos.
+- `tests/test_ordens.py` **removido** (entidade extinta). Suíte: **101 passed**.

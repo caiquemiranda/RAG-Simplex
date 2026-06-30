@@ -179,7 +179,7 @@ estáticos em `Dispositivos.js`) para dentro do RAG-Simplex, nativo na stack atu
 **Escopo:** trazer só o módulo **plantas + buscar/mapa**; ordens de serviço/RAS do legado ficam
 para depois (a O.S. terá um campo "equipamento"). Spec: `specs/spec-map-mapa-dispositivos.md`.
 
-### D-024 ✅ Ordem de Serviço (O.S.) é entidade separada da atividade (#OS)
+### D-024 ❌ Ordem de Serviço como entidade separada (Substituída por D-025)
 **2026-06-26.** A **O.S.** (registro de manutenção) é entidade **própria** (`OrdemServico`),
 distinta da `Visita`/atividade do cronograma. **Por quê:** semânticas diferentes — atividade =
 agendamento no calendário; O.S. = ordem de manutenção ligada a **equipamento**/cliente (com
@@ -189,3 +189,16 @@ tipo corretiva/preventiva/planejada). Manter separadas evita poluir o cronograma
 corretiva/preventiva/planejada; status: aberta/em_andamento/concluida/cancelada. Gestão por
 `gerir_usuarios`; histórico do equipamento visível ao técnico do cliente. Spec
 `specs/spec-os-ordem-servico.md`.
+
+### D-025 ✅ Ordem de Serviço unifica a atividade do cronograma (substitui D-024)
+**2026-06-26.** A pedido do usuário, **O.S. e atividade do cronograma são a mesma coisa** —
+nome único **"Ordem de Serviço"**. A entidade **`Visita`** vira a O.S. (reaproveita
+cronograma, **vários técnicos**, comentários, **anexar imagens**, #ALOC, notificação); a
+entidade `OrdemServico` recém-criada (D-024) foi **removida**. **Visita ganhou:** `tipo`
+(manutenção **preventiva/corretiva/avulsa**), `equipamento_id`, `falha_id` e os **campos do
+documento de corretiva** (especialidade, requisitante, data de solicitação/execução, centro
+de custo, nº O.S., reserva/material, endereço, setor, prioridade, ação aplicada). **Falha:**
+catálogo `Falha` (cadastrável; ex.: No Answer, Dirty, Head Missing), 1 por O.S. **Regras:**
+sem técnicos informados → usa os **fixos do cliente** (#ALOC); **concluir** com data grava
+`equipamento.ultima_manutencao`; notificação ao criar linka à O.S. (#NOTIF-LINK). Histórico
+por equipamento: `GET /cronograma/equipamento/{id}`. Spec `specs/spec-os-ordem-servico.md`.

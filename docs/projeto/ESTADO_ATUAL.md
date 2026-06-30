@@ -3,7 +3,7 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-25
+**Última atualização:** 2026-06-30
 
 > **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
 > tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
@@ -17,13 +17,16 @@
   é PR separado em aberto). **Backend: 99 testes** passando.
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
-- **#OS** (Ordem de Serviço, D-024) — **#OS-1/2 ✅ completo** (entidade; CRUD; **concluir grava
-  `ultima_manutencao`**; histórico por equipamento; **página `/ordens`** + sidebar). Specs
-  [`spec-os`](specs/spec-os-ordem-servico.md), [`spec-map`](specs/spec-map-mapa-dispositivos.md).
+- **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`
+  **vira a O.S.** (entidade `OrdemServico` removida). Ganhou `tipo` (manutenção preventiva/
+  corretiva/avulsa), `equipamento_id`, `falha_id` + **12 campos do documento de corretiva**;
+  catálogo `Falha` (CRUD `/admin/falhas`); sem técnicos → **fixos do cliente**; **concluir grava
+  `ultima_manutencao`**; histórico `GET /cronograma/equipamento/{id}`; notificação "Nova O.S.".
+  Migração `34b255a20aa8`. **Frontend pendente (Fase 2)** — ver [`spec-os`](specs/spec-os-ordem-servico.md).
 - **#MAP-5** (melhorias do editor) ✅ — scroll só no mapa; **posicionar em 2 passos** (caixa +
   Salvar); **autocomplete** por tag (+ alerta sem registro); **Ver todos**; **cadastro avulso**
   de equipamento + **tag composta** (painel+loop+add+type) + colunas Tag/Coordenadas/Últ. manut.
-- **Backend: 102 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS) aguardando merge.
+- **Backend: 101 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS unificada D-025).
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -45,7 +48,18 @@
     comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
+## ⏭️ PRÓXIMO PASSO — Fase 2 frontend da O.S. unificada (#OS, D-025)
+
+Backend pronto (101 testes). Falta o frontend:
+- Renomear **Atividades → "Ordem de Serviço"** (lista/gráfico/filtros já existem) e mover ao
+  grupo **Cronograma** na sidebar.
+- Form de O.S.: `tipo` (preventiva/corretiva/avulsa), **equipamento** e **falha** (selects),
+  campos do documento (só corretiva), técnicos (default = fixos), anexos, comentários.
+- **Remover** a página `/ordens`, o link da sidebar e os métodos mortos `api.admin.ordens*`;
+  **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
+- **Admin de Falhas** (CRUD).
+
+## Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
 
 Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **#CR-FILTROS** — filtros Equipe/Clientes (multi) + #ALOC só seg–sex.

@@ -235,33 +235,25 @@ class Equipamento(Base):
     planta: Mapped[Planta | None] = relationship()
 
 
-class OrdemServico(Base):
-    """Ordem de Serviço (O.S.) — registro de manutenção (#OS). Entidade **separada** da
-    `Visita`/atividade do cronograma. Pode referenciar um `Equipamento` (histórico do
-    dispositivo, #MAP-4). Concluir com data atualiza `equipamento.ultima_manutencao`."""
+class Falha(Base):
+    """Catálogo de falhas de painel (#OS) — ex.: No Answer, Dirty, Head Missing. Cadastrável
+    pelo admin; referenciada por uma Ordem de Serviço (corretiva)."""
 
-    __tablename__ = "ordem_servico"
+    __tablename__ = "falha"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
-    equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
-    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), default=None)  # técnico responsável
-    data: Mapped[date] = mapped_column(Date)
-    tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # corretiva|preventiva|planejada
-    status: Mapped[str] = mapped_column(String(20), default="aberta")    # aberta|em_andamento|concluida|cancelada
-    descricao: Mapped[str] = mapped_column(Text, default="")
-    solucao: Mapped[str | None] = mapped_column(Text, default=None)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    termo_en: Mapped[str | None] = mapped_column(String(120), default=None)  # termo do display (ex.: HEAD MISSING)
     criado_em: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
 
-    cliente: Mapped[Cliente] = relationship()
-    equipamento: Mapped[Equipamento | None] = relationship()
-    usuario: Mapped[Usuario | None] = relationship()
-
 
 class Visita(Base):
-    """Visita/atividade agendada de um técnico no cronograma (por dia e cliente/local)."""
+    """**Ordem de Serviço** (O.S., #OS) — unifica a atividade do cronograma com a manutenção
+    (D-025). Por dia e cliente; **vários técnicos** (visita_tecnico); pode referenciar um
+    `Equipamento` e uma `Falha`. `tipo` = manutenção preventiva/corretiva/avulsa. Concluir com
+    data grava `equipamento.ultima_manutencao`. Campos do **documento de corretiva** opcionais."""
 
     __tablename__ = "visita"
 
@@ -270,12 +262,31 @@ class Visita(Base):
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
     cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
     data: Mapped[date] = mapped_column(Date)
-    titulo: Mapped[str] = mapped_column(String(160))            # atividade do dia
-    status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|concluida|cancelada
+    titulo: Mapped[str] = mapped_column(String(160))            # serviço / atividade
+    status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|pendente|concluida|cancelada
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
+    # --- Ordem de Serviço (#OS, D-025) ---
+    tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # preventiva|corretiva|avulsa
+    equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
+    falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
+    # Campos do documento de O.S. corretiva (todos opcionais).
+    especialidade: Mapped[str | None] = mapped_column(String(160), default=None)
+    requisitante: Mapped[str | None] = mapped_column(String(120), default=None)
+    data_solicitacao: Mapped[date | None] = mapped_column(Date, default=None)
+    centro_custo: Mapped[str | None] = mapped_column(String(40), default=None)
+    numero_os: Mapped[str | None] = mapped_column(String(40), default=None)
+    reserva_material: Mapped[str | None] = mapped_column(String(120), default=None)
+    material_utilizado: Mapped[str | None] = mapped_column(Text, default=None)
+    endereco: Mapped[str | None] = mapped_column(String(160), default=None)
+    setor: Mapped[str | None] = mapped_column(String(80), default=None)
+    prioridade: Mapped[str | None] = mapped_column(String(20), default=None)
+    data_execucao: Mapped[date | None] = mapped_column(Date, default=None)
+    acao_aplicada: Mapped[str | None] = mapped_column(Text, default=None)
 
     usuario: Mapped[Usuario] = relationship()
     cliente: Mapped[Cliente | None] = relationship()
+    equipamento: Mapped[Equipamento | None] = relationship()
+    falha: Mapped[Falha | None] = relationship()
     tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
     # Página da atividade (#ATV-1): comentários e anexos de imagem.
     comentarios: Mapped[list[ComentarioVisita]] = relationship(

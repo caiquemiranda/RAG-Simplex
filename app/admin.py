@@ -30,6 +30,7 @@ from app.modelos import (
     ConfigEstrategia,
     DocumentoTecnico,
     Equipamento,
+    Falha,
     LogConsulta,
     Papel,
     Permissao,
@@ -726,6 +727,54 @@ def remover_equipamento(equipamento_id: int,
     if e is None:
         raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
     sessao.delete(e)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Catálogo de falhas (#OS) — No Answer, Dirty, Head Missing…                    #
+# --------------------------------------------------------------------------- #
+class FalhaIn(BaseModel):
+    nome: str
+    termo_en: str | None = None
+
+
+class FalhaResumo(BaseModel):
+    id: int
+    nome: str
+    termo_en: str | None = None
+
+
+@router.get("/falhas", response_model=list[FalhaResumo])
+def listar_falhas(_: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> list[FalhaResumo]:
+    return [FalhaResumo(id=f.id, nome=f.nome, termo_en=f.termo_en)
+            for f in sessao.scalars(select(Falha).order_by(Falha.nome))]
+
+
+@router.post("/falhas", response_model=FalhaResumo, status_code=status.HTTP_201_CREATED)
+def criar_falha(dados: FalhaIn,
+                _: Usuario = Depends(requer("gerir_usuarios")),
+                sessao: Session = Depends(get_session)) -> FalhaResumo:
+    nome = dados.nome.strip()
+    if not nome:
+        raise HTTPException(status_code=400, detail="Nome da falha é obrigatório.")
+    if sessao.scalar(select(Falha).where(Falha.nome == nome)):
+        raise HTTPException(status_code=409, detail="Já existe uma falha com esse nome.")
+    f = Falha(nome=nome, termo_en=(dados.termo_en or None))
+    sessao.add(f)
+    sessao.commit()
+    sessao.refresh(f)
+    return FalhaResumo(id=f.id, nome=f.nome, termo_en=f.termo_en)
+
+
+@router.delete("/falhas/{falha_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_falha(falha_id: int,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)):
+    f = sessao.get(Falha, falha_id)
+    if f is None:
+        raise HTTPException(status_code=404, detail="Falha não encontrada.")
+    sessao.delete(f)
     sessao.commit()
 
 
