@@ -83,8 +83,14 @@ export type ClienteEntrada = {
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
 
 // Equipamento do cliente (#EQP-1) — importado por CSV.
-export type Equipamento = { id: number; painel: string; loop: string; add: string; type: string; model: string }
+export type Equipamento = {
+  id: number; tag: string; painel: string; loop: string; add: string; type: string; model: string
+  status: string; ultima_manutencao: string | null; ultimo_teste: string | null
+  planta_id: number | null; pos_x: number | null; pos_y: number | null
+}
 export type ImportEquipResultado = { importados: number; total: number }
+// Planta (projeto) do cliente — #MAP.
+export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }
 export type ClienteDetalhe = AdminCliente & { equipamentos: Equipamento[] }
 
 // Entidade Unidade (D-021) — base/regional p/ a "visão por unidade" do cronograma.
@@ -357,7 +363,9 @@ export const api = {
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
   unidadesVisiveis: () => request<UnidadeVisivel[]>('/unidades'),
-  equipamentosCliente: (clienteId: number) => request<Equipamento[]>(`/clientes/${clienteId}/equipamentos`),
+  equipamentosCliente: (clienteId: number, busca?: string) =>
+    request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
+  plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',

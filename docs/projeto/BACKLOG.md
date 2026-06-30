@@ -18,9 +18,11 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
       migração `ec6397a8beb8`; **conversor PDF→PNG** (PyMuPDF) + CRUD de plantas; PATCH de
       posição; busca visível por `tag`; endpoints de plantas. Testes `test_plantas`.
       *(fecha a "fase B" do #EQP-1: última manutenção/teste.)*
-- [ ] **#MAP-2 (frontend): visualizador + Buscar equipamento** (`/equipamentos`): componente
-      custom `VisualizadorPlanta` (zoom/pan/marcadores/popup); busca por `tag` → abre a planta
-      → marca o ponto → popup (tipo/status/última manutenção/Ver detalhes) → zoom. dep: #MAP-1.
+- [x] **#MAP-2 (frontend): visualizador + Buscar equipamento** (`/equipamentos`): componente
+      custom `VisualizadorPlanta` (zoom/pan por scroll+arraste, marcadores por coordenadas,
+      popup, foco/zoom no marcador); página de busca: cliente → tag → abre a planta → marca o
+      ponto → popup (tipo/status/última manutenção) + **detalhes** do equipamento + "Localizar
+      no mapa". Reusa endpoints visíveis (#MAP-1). Substitui o placeholder de Equipamentos.
 - [ ] **#MAP-3 (editor, admin):** subir plantas (PDF) na página do cliente + **posicionar**
       equipamentos clicando (grava `pos_x/pos_y`). dep: #MAP-1.
 - [ ] **#MAP-4 (depois):** página de **detalhes do equipamento** com histórico (via futura O.S.).

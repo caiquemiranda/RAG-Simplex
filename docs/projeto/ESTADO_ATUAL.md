@@ -15,10 +15,10 @@
 
 - **Branch:** `feat/buscar-equipamento` (Lote 5 mergeado, PR #8; `feat/relatorio-cliente`/#R2
   é PR separado em aberto). **Backend: 99 testes** passando.
-- **Em andamento:** **#MAP** (Buscar equipamento / mapa de dispositivos, D-023) — **Fase 1
-  backend ✅** (entidade `Planta`; `Equipamento` + tag/status/datas/posição; PDF→PNG via
-  PyMuPDF; CRUD/busca). Falta o **frontend**: visualizador custom + busca (#MAP-2) e editor
-  de posições (#MAP-3). Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+- **Em andamento:** **#MAP** (Buscar equipamento / mapa de dispositivos, D-023) — **backend ✅
+  (#MAP-1)** + **visualizador custom + busca ✅ (#MAP-2)**. Falta o **editor de posições**
+  (#MAP-3: subir plantas + clicar p/ posicionar) e, depois, a página de detalhes do
+  equipamento (#MAP-4, via O.S.). Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,

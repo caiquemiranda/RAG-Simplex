@@ -4,6 +4,25 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #MAP-2: visualizador custom + Buscar equipamento (frontend)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (backend segue em 99 testes).
+
+- **`components/VisualizadorPlanta.tsx`** (zero dependência): imagem com **zoom** (scroll, zoom
+  no cursor) e **pan** (arraste), **marcadores** posicionados por coordenadas (contra-escalados
+  p/ tamanho constante), **popup** do marcador ativo (coords de tela), **foco** (zoom+centro)
+  num marcador, e `onClicarPlanta(x,y)` para o editor (#MAP-3). Controles +/−/ajustar.
+- **`pages/Equipamentos.tsx`** (substitui o placeholder): cliente → busca por **tag** (dropdown
+  de resultados) → abre a planta certa → **localiza** o equipamento (marcador + popup com
+  tipo/status/última manutenção) → card de **detalhes** completo + "Localizar no mapa".
+  Cor do marcador por status (verde/âmbar/vermelho). Seletor de planta (multipágina).
+- `api.ts`: tipo `Equipamento` estendido + `Planta`; `equipamentosCliente(cid, busca?)` +
+  `plantasCliente(cid)`. `tsc` OK.
+
+**Arquivos:** `frontend/src/{components/VisualizadorPlanta.tsx,pages/Equipamentos.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
 ## 2026-06-26 — #MAP-1: backend do "Buscar equipamento" (plantas + posição + manutenção)
 
 **Branch:** `feat/buscar-equipamento` (do `main`). Decisão **D-023**. Spec
