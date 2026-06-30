@@ -4,6 +4,22 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-26 — #MAP-3: editor de mapa na página do cliente (plantas + posicionar)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (reusa endpoints do #MAP-1).
+
+- `ClienteAdmin.tsx` ganhou: card **Plantas** (subir **PDF** → N plantas via
+  `uploadPlanta`; remover) e card **Posicionar no mapa** (seletor de planta + de equipamento;
+  `VisualizadorPlanta` com `onClicarPlanta` grava `pos_x/pos_y/planta_id` via
+  `atualizarEquipamento`; marcador clicável seleciona p/ mover; "tirar do mapa").
+- `api.ts`: `api.admin.{plantas,uploadPlanta,removerPlanta,atualizarEquipamento}`.
+- **Feature #MAP completa de ponta a ponta** (cadastra planta → posiciona → busca/localiza).
+  Falta só #MAP-4 (página de detalhes do equipamento com histórico, via futura O.S.). `tsc` OK.
+
+**Arquivos:** `frontend/src/{pages/ClienteAdmin.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
 ## 2026-06-26 — #MAP-2: visualizador custom + Buscar equipamento (frontend)
 
 **Branch:** `feat/buscar-equipamento`. Frontend-only (backend segue em 99 testes).

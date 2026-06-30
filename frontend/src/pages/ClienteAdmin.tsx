@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, uploadArquivo, type AdminUnidade, type ClienteDetalhe } from '../lib/api'
+import { api, uploadArquivo, type AdminUnidade, type ClienteDetalhe, type Planta } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
+
+function corStatus(s: string): string {
+  const t = (s || '').toLowerCase()
+  if (t.includes('alerta') || t.includes('manuten')) return '#f59e0b'
+  if (t.includes('opera')) return '#10b981'
+  return '#ef4444'
+}
 
 type Form = {
   nome: string; unidadeId: number | ''; cor: string
@@ -27,6 +35,11 @@ export default function ClienteAdmin() {
   const [msg, setMsg] = useState<string | null>(null)
   const [substituir, setSubstituir] = useState(false)
   const csvRef = useRef<HTMLInputElement>(null)
+  // Editor de mapa (#MAP-3)
+  const [plantas, setPlantas] = useState<Planta[]>([])
+  const [plantaEditId, setPlantaEditId] = useState<number | ''>('')
+  const [colocarId, setColocarId] = useState<number | null>(null)  // equipamento a posicionar/mover
+  const pdfRef = useRef<HTMLInputElement>(null)
 
   async function carregar() {
     setErro(null)
@@ -40,11 +53,34 @@ export default function ClienteAdmin() {
       })
     } catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao carregar o cliente') }
   }
+  async function carregarPlantas() {
+    try { const ps = await api.admin.plantas(cid); setPlantas(ps); if (plantaEditId === '' && ps[0]) setPlantaEditId(ps[0].id) }
+    catch { /* ignore */ }
+  }
   useEffect(() => {
-    carregar()
+    carregar(); carregarPlantas()
     if (podeGerir) api.admin.unidades().then(setUnidades).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cid])
+
+  async function subirPlanta(file: File) {
+    setErro(null); setMsg(null)
+    try { const novas = await api.admin.uploadPlanta(cid, file); setMsg(`Planta importada (${novas.length} página(s)).`); carregarPlantas() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao subir a planta (envie um PDF)') }
+  }
+  async function removerPlanta(plantaId: number) {
+    try { await api.admin.removerPlanta(plantaId); if (plantaEditId === plantaId) setPlantaEditId(''); carregarPlantas(); carregar() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao remover a planta') }
+  }
+  async function posicionar(x: number, y: number) {
+    if (colocarId == null || plantaEditId === '') return
+    try { await api.admin.atualizarEquipamento(colocarId, { planta_id: plantaEditId, pos_x: x, pos_y: y }); carregar() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao posicionar') }
+  }
+  async function tirarDoMapa(eqpId: number) {
+    try { await api.admin.atualizarEquipamento(eqpId, { planta_id: null, pos_x: null, pos_y: null }); carregar() }
+    catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao remover do mapa') }
+  }
 
   async function salvar() {
     if (!form) return
@@ -173,6 +209,76 @@ export default function ClienteAdmin() {
           )}
         </CardContent>
       </Card>
+
+      {/* Plantas (#MAP) */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Plantas ({plantas.length})</CardTitle>
+          <>
+            <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="hidden"
+                   onChange={(e) => { const f = e.target.files?.[0]; if (f) subirPlanta(f); e.target.value = '' }} />
+            <Button size="sm" variant="outline" onClick={() => pdfRef.current?.click()}>Subir planta (PDF)</Button>
+          </>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-2 text-xs text-muted-foreground">Cada página do PDF vira uma planta (convertida em imagem no servidor).</p>
+          {plantas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma planta. Suba o PDF do projeto.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {plantas.map((p) => (
+                <span key={p.id} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${p.id === plantaEditId ? 'border-primary bg-accent' : ''}`}>
+                  <button onClick={() => setPlantaEditId(p.id)} className="hover:underline">{p.nome}</button>
+                  <button className="text-destructive hover:underline" title="Remover planta" onClick={() => removerPlanta(p.id)}>✕</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Editor de mapa (#MAP-3): posicionar equipamentos */}
+      {plantaEditId !== '' && (() => {
+        const planta = plantas.find((p) => p.id === plantaEditId)
+        if (!planta) return null
+        const marcadores: Marcador[] = cli.equipamentos
+          .filter((e) => e.planta_id === plantaEditId && e.pos_x != null && e.pos_y != null)
+          .map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status) }))
+        const aColocar = cli.equipamentos.find((e) => e.id === colocarId) ?? null
+        return (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Posicionar no mapa — {planta.nome}</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">Equipamento:</span>
+                <select className="h-8 rounded-md border bg-background px-2 text-sm" value={colocarId ?? ''}
+                        onChange={(e) => setColocarId(e.target.value ? Number(e.target.value) : null)}>
+                  <option value="">— selecione p/ posicionar —</option>
+                  {cli.equipamentos.map((e) => (
+                    <option key={e.id} value={e.id}>{(e.tag || e.add || `#${e.id}`)}{e.planta_id != null ? ' ✓' : ''}</option>
+                  ))}
+                </select>
+                {aColocar && aColocar.planta_id != null && (
+                  <button className="text-xs text-destructive hover:underline" onClick={() => tirarDoMapa(aColocar.id)}>tirar do mapa</button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {colocarId ? 'Clique na planta para posicionar/mover o equipamento selecionado.' : 'Selecione um equipamento e clique na planta.'}
+              </p>
+              <VisualizadorPlanta
+                imagemUrl={planta.imagem_url} largura={planta.largura} altura={planta.altura}
+                marcadores={marcadores} ativoId={colocarId}
+                onMarcador={(id) => setColocarId(id)}
+                onClicarPlanta={(x, y) => posicionar(x, y)}
+                renderPopup={(id) => {
+                  const e = cli.equipamentos.find((x) => x.id === id)
+                  return e ? <div className="text-xs"><div className="font-semibold">{e.tag || `#${e.id}`}</div>{e.type} · {e.status || '—'}</div> : null
+                }}
+              />
+            </CardContent>
+          </Card>
+        )
+      })()}
     </div>
   )
 }

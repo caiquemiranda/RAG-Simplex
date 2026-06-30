@@ -434,6 +434,14 @@ export const api = {
       uploadMultipart<ImportEquipResultado>(`/admin/clientes/${clienteId}/equipamentos/importar?substituir=${substituir}`, file),
     removerEquipamento: (eqpId: number) =>
       request<void>(`/admin/equipamentos/${eqpId}`, { method: 'DELETE' }),
+    atualizarEquipamento: (eqpId: number, dados: Partial<Equipamento>) =>
+      request<Equipamento>(`/admin/equipamentos/${eqpId}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    // Plantas (#MAP)
+    plantas: (clienteId: number) => request<Planta[]>(`/admin/clientes/${clienteId}/plantas`),
+    uploadPlanta: (clienteId: number, file: File) =>
+      uploadMultipart<Planta[]>(`/admin/clientes/${clienteId}/plantas`, file),
+    removerPlanta: (plantaId: number) =>
+      request<void>(`/admin/plantas/${plantaId}`, { method: 'DELETE' }),
     banco: () => request<BancoStatus>('/admin/banco'),
     bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),

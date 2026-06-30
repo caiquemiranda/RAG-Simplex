@@ -1,6 +1,6 @@
 # Spec — #MAP: Buscar equipamento / Mapa de dispositivos
 
-**Status:** 🚧 Em implementação (Fase 1 backend ✅, 99 testes) · **Data:** 2026-06-26
+**Status:** ✅ #MAP-1/2/3 (backend + visualizador + editor); falta #MAP-4 (detalhes via O.S.) · 99 testes · **Data:** 2026-06-26
 **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-023](../DECISOES.md)
 
 Traz o projeto legado `sistema-manutencao-3` (React CRA + Leaflet, dados estáticos) para

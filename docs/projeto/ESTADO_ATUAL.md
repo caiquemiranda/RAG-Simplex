@@ -15,10 +15,10 @@
 
 - **Branch:** `feat/buscar-equipamento` (Lote 5 mergeado, PR #8; `feat/relatorio-cliente`/#R2
   é PR separado em aberto). **Backend: 99 testes** passando.
-- **Em andamento:** **#MAP** (Buscar equipamento / mapa de dispositivos, D-023) — **backend ✅
-  (#MAP-1)** + **visualizador custom + busca ✅ (#MAP-2)**. Falta o **editor de posições**
-  (#MAP-3: subir plantas + clicar p/ posicionar) e, depois, a página de detalhes do
-  equipamento (#MAP-4, via O.S.). Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+- **#MAP** (Buscar equipamento / mapa de dispositivos, D-023) — **#MAP-1/2/3 ✅** (backend +
+  visualizador custom + busca + **editor**: subir plantas e posicionar equipamentos). **Completo
+  de ponta a ponta.** Falta só **#MAP-4** (página de detalhes do equipamento + histórico, via
+  futura **O.S.**). Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,

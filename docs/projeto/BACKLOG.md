@@ -23,8 +23,10 @@ Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md
       popup, foco/zoom no marcador); página de busca: cliente → tag → abre a planta → marca o
       ponto → popup (tipo/status/última manutenção) + **detalhes** do equipamento + "Localizar
       no mapa". Reusa endpoints visíveis (#MAP-1). Substitui o placeholder de Equipamentos.
-- [ ] **#MAP-3 (editor, admin):** subir plantas (PDF) na página do cliente + **posicionar**
-      equipamentos clicando (grava `pos_x/pos_y`). dep: #MAP-1.
+- [x] **#MAP-3 (editor, admin):** na página do cliente — card **Plantas** (subir PDF → N
+      plantas, remover) + card **Posicionar no mapa** (escolhe planta + equipamento, clica na
+      planta p/ gravar `pos_x/pos_y/planta_id`; "tirar do mapa"). Reusa `VisualizadorPlanta`
+      com `onClicarPlanta`. dep: #MAP-1/#MAP-2.
 - [ ] **#MAP-4 (depois):** página de **detalhes do equipamento** com histórico (via futura O.S.).
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
