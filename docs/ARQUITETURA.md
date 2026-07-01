@@ -137,6 +137,7 @@ técnico/analista recebem também "🔧 resolução técnica".
 | `components/DocumentoPanel.tsx` | Split-screen: abre o guia no trecho citado. |
 | `components/AuditoriaView.tsx` | Tabela de auditoria (painel ADM). |
 | `components/Placeholder.tsx` | Páginas "em construção". |
+| `components/TabelaOrdenavel.tsx` | Tabela genérica com **ordenação por coluna** (asc→desc→sem ordem, #TAB-ORDEM) — usada na lista de equipamentos. |
 | `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). Tipos de domínio (ex.: `Visita` = O.S. com `tipo`/`equipamento`/`falha`/campos-doc; `Falha`). |
 | `lib/format.ts` | Helpers de UI: `isoData`, `STATUS_VISITA`, e para O.S. `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`CAMPOS_DOC_OS` (#OS, D-025). |
 | `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos`, `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `Notificacoes`. |

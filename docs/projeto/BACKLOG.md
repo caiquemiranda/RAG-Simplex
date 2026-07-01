@@ -69,15 +69,14 @@ salvas que alimentam documentos de manutenção preventiva).
       `falha_nome`; editor no ClienteAdmin tem **seletor de status + falha**; cor do marcador no mapa
       por estado (`corStatusEquip`). Teste `test_equipamento_status_e_falha`.
 
-- [ ] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Clicar no cabeçalho da coluna
-      ordena **crescente/decrescente** (3º clique limpa). Componente de **tabela reutilizável**
-      (`components/TabelaOrdenavel`), pois será usado na lista de equipamentos e alhures.
-      *Só frontend.* dep: nenhuma (fundação de UI).
+- [x] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Componente reutilizável
+      **`components/TabelaOrdenavel`** (genérico): clicar no cabeçalho ordena **crescente →
+      decrescente → sem ordem** (3º clique); nulos/vazios sempre no fim; compara número vs. texto
+      (`localeCompare` numérico pt-BR). Aplicado à lista de equipamentos por cliente.
 
-- [ ] **#EQP-FILTROS+ — filtros por mais colunas** (item 7). Além de tag/tipo, filtrar por
-      **painel, loop, add, model, status, planta** e datas (últ. manutenção/teste). Integra com
-      `#TAB-ORDEM` (mesma tabela). *Frontend* (o endpoint `equipamentosCliente` já devolve tudo;
-      avaliar filtros server-side se a lista crescer). dep: #TAB-ORDEM.
+- [x] **#EQP-FILTROS+ — filtros por mais colunas** (item 7). Na lista do cliente, além de busca
+      textual (tag/add/painel/loop/model) e **tipo**, filtros por **model** e **status** (com a
+      falha) + botão **limpar**. Usa a `TabelaOrdenavel`. *Frontend* (endpoint já devolve tudo).
 
 - [ ] **#EQP-PAGINA — página por dispositivo** (item 4). Na lista de equipamentos do cliente, cada
       dispositivo abre uma **página própria** (`/equipamentos/:clienteId/:eqpId`) com: **todos os

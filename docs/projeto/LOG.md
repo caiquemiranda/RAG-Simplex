@@ -4,6 +4,17 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #TAB-ORDEM + #EQP-FILTROS+: lista de equipamentos tipo planilha (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only.
+
+- **`components/TabelaOrdenavel.tsx`** (novo, genérico): clicar no cabeçalho ordena
+  **crescente → decrescente → sem ordem**; nulos/vazios no fim; compara número vs. texto
+  (`localeCompare` numérico pt-BR).
+- **`pages/EquipamentosLista.tsx`**: usa a tabela ordenável; filtros por **tipo, model e status**
+  (com a falha) além da busca textual + botão **limpar**; coluna Status com bolinha de cor por
+  estado (`corStatusEquip`). `tsc -b` limpo.
+
 ## 2026-06-30 — #EQP-STATUS: estado do equipamento + falha atual (Lote 6, D-026)
 
 **Branch:** `feat/lote6-equipamentos`. Primeiro item do Lote 6 (fundação).

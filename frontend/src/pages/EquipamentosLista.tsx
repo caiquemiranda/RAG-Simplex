@@ -4,6 +4,13 @@ import { api, type ClienteVisivel, type Equipamento } from '../lib/api'
 import { Avatar } from '../components/Avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { TabelaOrdenavel, type Coluna } from '../components/TabelaOrdenavel'
+import { corStatusEquip } from '../lib/format'
+
+/** Rótulo de estado do equipamento (mostra a falha quando "em falha"). */
+function rotuloStatus(e: Equipamento): string {
+  return e.falha_nome ? `Em falha (${e.falha_nome})` : (e.status || '—')
+}
 
 /** Lista de equipamentos por cliente (#EQP-2): cards de clientes → lista do cliente. */
 export default function EquipamentosLista() {
@@ -12,6 +19,8 @@ export default function EquipamentosLista() {
   const [equip, setEquip] = useState<Equipamento[]>([])
   const [busca, setBusca] = useState('')
   const [fTipo, setFTipo] = useState('')
+  const [fStatus, setFStatus] = useState('')
+  const [fModel, setFModel] = useState('')
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
@@ -24,15 +33,41 @@ export default function EquipamentosLista() {
       .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar equipamentos'))
   }, [id])
 
-  // Visão de um cliente (lista de equipamentos) — com busca + filtro (item 2).
-  const tipos = useMemo(() => [...new Set(equip.map((e) => e.type).filter(Boolean))].sort(), [equip])
+  // Visão de um cliente (lista) — busca + filtros por várias colunas (#EQP-FILTROS+).
+  const opcoes = (sel: (e: Equipamento) => string) =>
+    [...new Set(equip.map(sel).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  const tipos = useMemo(() => opcoes((e) => e.type), [equip])
+  const models = useMemo(() => opcoes((e) => e.model), [equip])
+  const statuses = useMemo(() => opcoes(rotuloStatus), [equip])
   const filtrados = useMemo(() => {
     const t = busca.trim().toLowerCase()
     return equip.filter((e) =>
       (!fTipo || e.type === fTipo) &&
+      (!fModel || e.model === fModel) &&
+      (!fStatus || rotuloStatus(e) === fStatus) &&
       (!t || [e.tag, e.add, e.painel, e.loop, e.model].some((v) => (v || '').toLowerCase().includes(t))),
     )
-  }, [equip, busca, fTipo])
+  }, [equip, busca, fTipo, fModel, fStatus])
+
+  // Colunas da tabela ordenável (#TAB-ORDEM).
+  const colunas: Coluna<Equipamento>[] = [
+    { chave: 'tag', titulo: 'Tag', className: 'font-mono text-xs font-medium', render: (e) => e.tag || '—' },
+    { chave: 'painel', titulo: 'Painel', className: 'font-mono text-xs' },
+    { chave: 'loop', titulo: 'Loop', className: 'font-mono text-xs' },
+    { chave: 'add', titulo: 'Add', className: 'font-mono text-xs' },
+    { chave: 'type', titulo: 'Type' },
+    { chave: 'model', titulo: 'Model' },
+    {
+      chave: 'status', titulo: 'Status', valor: rotuloStatus,
+      render: (e) => (
+        <span className="inline-flex items-center gap-1.5 text-xs">
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: corStatusEquip(e.status, e.falha_id != null) }} />
+          {rotuloStatus(e)}
+        </span>
+      ),
+    },
+    { chave: 'ultima_manutencao', titulo: 'Últ. manut.', className: 'text-xs text-muted-foreground', render: (e) => e.ultima_manutencao ?? '—' },
+  ]
 
   if (id) {
     const cli = clientes.find((c) => c.id === Number(id))
@@ -53,31 +88,22 @@ export default function EquipamentosLista() {
                 <option value="">Todos os tipos</option>
                 {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fModel} onChange={(e) => setFModel(e.target.value)}>
+                <option value="">Todos os modelos</option>
+                {models.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+                <option value="">Todos os status</option>
+                {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              {(busca || fTipo || fModel || fStatus) && (
+                <button className="text-xs text-primary hover:underline" onClick={() => { setBusca(''); setFTipo(''); setFModel(''); setFStatus('') }}>limpar</button>
+              )}
             </div>
-            {filtrados.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{equip.length === 0 ? 'Nenhum equipamento cadastrado para este cliente.' : 'Nenhum equipamento corresponde ao filtro.'}</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="py-1 pr-2">Tag</th><th className="py-1 pr-2">Painel</th><th className="py-1 pr-2">Loop</th><th className="py-1 pr-2">Add</th><th className="py-1 pr-2">Type</th><th className="py-1 pr-2">Model</th><th className="py-1 pr-2">Status</th>
-                  </tr></thead>
-                  <tbody>
-                    {filtrados.map((e) => (
-                      <tr key={e.id} className="border-b">
-                        <td className="py-1 pr-2 font-mono text-xs font-medium">{e.tag || '—'}</td>
-                        <td className="py-1 pr-2 font-mono text-xs">{e.painel}</td>
-                        <td className="py-1 pr-2 font-mono text-xs">{e.loop}</td>
-                        <td className="py-1 pr-2 font-mono text-xs">{e.add}</td>
-                        <td className="py-1 pr-2">{e.type}</td>
-                        <td className="py-1 pr-2">{e.model}</td>
-                        <td className="py-1 pr-2 text-xs text-muted-foreground">{e.status || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <TabelaOrdenavel
+              colunas={colunas} linhas={filtrados} chaveLinha={(e) => e.id}
+              vazio={<p className="py-2 text-sm text-muted-foreground">{equip.length === 0 ? 'Nenhum equipamento cadastrado para este cliente.' : 'Nenhum equipamento corresponde ao filtro.'}</p>}
+            />
           </CardContent>
         </Card>
       </div>
