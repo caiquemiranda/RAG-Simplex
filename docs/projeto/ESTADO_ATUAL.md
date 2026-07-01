@@ -53,8 +53,13 @@
 
 Tudo mergeado na `main` (Lote 5 PR #8 · #MAP · #OS/D-025 · #R2). Frente aberta a escolher:
 
-- **Campos-doc da O.S.** editáveis também no editor inline / página da atividade (#ATV-1) — hoje
-  são preenchidos só na criação (pendência não-bloqueante da unificação #OS).
+- **➡️ Lote 6** (novo, 7 itens — ver [`BACKLOG.md`](BACKLOG.md) §J): O.S. como CRUD completo pelo
+  ADM (`#OS-PAGINA`, extrai `FormOS`) + histórico com filtros (`#OS-HIST-FILTRO`); lista de
+  equipamentos tipo planilha (`#TAB-ORDEM` ordenar por coluna, `#EQP-FILTROS+`), **página por
+  dispositivo** (`#EQP-PAGINA`: dados + O.S. + documentos), status padrão "Operando"
+  (`#EQP-STATUS`) e **listas de equipamentos** (`#EQP-LISTAS`, base do doc de preventiva).
+  **2 decisões a confirmar antes de codar** (estados do status; origem dos "documentos associados").
+- **Campos-doc da O.S.** editáveis fora da criação — **absorvido pelo `#OS-PAGINA`** do Lote 6.
 - **Lacunas restantes (stubs):** `/equipamentos/sobre`.
 - **Adiado pelo usuário:** equipamentos fase B (colunas última manutenção/teste) e fase C
   (histórico do painel — hoje suprido pela O.S.).
