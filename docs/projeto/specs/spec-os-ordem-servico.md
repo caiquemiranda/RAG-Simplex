@@ -1,6 +1,6 @@
 # Spec — #OS: Ordem de Serviço (unifica atividade do cronograma)
 
-**Status:** ✅ Backend (101 testes) + Frontend (unificação D-025)
+**Status:** ✅ Backend (102 testes) + Frontend (unificação D-025)
 **Data:** 2026-06-30 · **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-025](../DECISOES.md)
 (substitui [D-024](../DECISOES.md))
 
@@ -51,8 +51,15 @@ notificação. Liga-se a um **equipamento** → alimenta o **histórico** do dis
   tipos `OrdemServico`/`OrdemEntrada`. Novos helpers em `lib/format.ts` (`TIPOS_OS`,
   `TIPO_OS_LABEL/COR`, `CAMPOS_DOC_OS`).
 
-## Testes
-- `tests/test_cronograma.py::test_os_unificada_falha_equipamento_manutencao` — catálogo de falha
-  (incl. 409 duplicado), criar O.S. corretiva concluída com equipamento/falha/campos-doc →
-  resumo + `ultima_manutencao`; histórico por equipamento; tipo inválido → 400; default = fixos.
-- `tests/test_ordens.py` **removido** (entidade extinta). Suíte: **101 passed**.
+## Testes (`tests/test_cronograma.py`)
+- `test_os_unificada_falha_equipamento_manutencao` — catálogo de falha (incl. 409 duplicado),
+  criar O.S. corretiva concluída com equipamento/falha/campos-doc → resumo + `ultima_manutencao`;
+  histórico por equipamento; tipo inválido no POST → 400; default = fixos.
+- `test_os_editar_deletar_falha_e_rbac` — **editar** a O.S. via PATCH (muda `tipo`, vincula
+  equipamento/falha, preenche campo-doc; concluir grava `ultima_manutencao`; tipo inválido → 400);
+  **DELETE** de falha; **RBAC** do catálogo (técnico → 403) e do histórico (técnico só vê se
+  atende o cliente do equipamento).
+- `tests/test_ordens.py` **removido** (entidade extinta). Suíte: **102 passed**.
+
+## Fluxo
+Diagrama de sequência de criar/editar O.S. e do histórico em [`../../FLUXOS.md`](../../FLUXOS.md) §8.

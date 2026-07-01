@@ -4,6 +4,18 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #OS: hardening de docs + testes da unificação (D-025)
+
+**Branch:** `feat/buscar-equipamento`. Fecha as pendências D1–D4 (docs) e T1–T4 (testes).
+
+- **Teste novo** `test_os_editar_deletar_falha_e_rbac`: editar O.S. via PATCH (tipo/equipamento/
+  falha/campo-doc; concluir grava `ultima_manutencao`; tipo inválido → 400); DELETE de falha;
+  RBAC do catálogo (técnico 403) e do histórico do equipamento (403 sem o cliente). **102 passed**.
+- **Docs:** `FLUXOS.md` §8 novo (sequência criar/editar O.S. + histórico/RBAC; §Atividade→§10);
+  `ARQUITETURA.md` lista de páginas do frontend + `lib/format.ts` atualizadas; ponteiros #OS/D-025
+  em `spec-etapa3-cronograma.md` e `spec-atv1-pagina-atividade.md` (com a pendência dos campos-doc);
+  `TESTES.md`/`spec-os` para 102 testes.
+
 ## 2026-06-30 — #OS: frontend da O.S. unificada (Fase 2, D-025)
 
 **Branch:** `feat/buscar-equipamento`. Consome o backend da unificação.

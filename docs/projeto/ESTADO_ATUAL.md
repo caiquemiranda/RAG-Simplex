@@ -28,7 +28,7 @@
 - **#MAP-5** (melhorias do editor) ✅ — scroll só no mapa; **posicionar em 2 passos** (caixa +
   Salvar); **autocomplete** por tag (+ alerta sem registro); **Ver todos**; **cadastro avulso**
   de equipamento + **tag composta** (painel+loop+add+type) + colunas Tag/Coordenadas/Últ. manut.
-- **Backend: 101 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS unificada D-025).
+- **Backend: 102 testes** passando. Branch `feat/buscar-equipamento` (#MAP + #OS unificada D-025).
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -52,7 +52,7 @@
 
 ## ⏭️ PRÓXIMO PASSO — abrir PR da `feat/buscar-equipamento` → `main`
 
-A unificação **O.S. = atividade** (#OS, D-025) está **completa** (backend 101 testes + frontend +
+A unificação **O.S. = atividade** (#OS, D-025) está **completa** (backend 102 testes + frontend +
 docs). Abrir o PR pela UI do GitHub e mergear. Depois: sincronizar `main`.
 
 **Pendências menores para revisitar** (não bloqueiam): editar os **campos do documento** de
