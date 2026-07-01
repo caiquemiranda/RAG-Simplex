@@ -4,6 +4,24 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #OS: frontend da O.S. unificada (Fase 2, D-025)
+
+**Branch:** `feat/buscar-equipamento`. Consome o backend da unificação.
+
+- **`pages/Atividades.tsx`** → título **"Ordens de Serviço"**; filtro por **tipo** + **gráfico por
+  tipo** (ao lado do por status); badges de tipo/falha/equipamento na lista.
+- **`pages/Cronograma.tsx`** — form "Adicionar O.S." com `tipo` (preventiva/corretiva/avulsa),
+  seletor de **equipamento** (do cliente) e **falha** (catálogo), **campos do documento** em
+  `<details>` quando corretiva; **técnicos vazio = fixos do cliente**. Editor inline ganhou
+  seletores de tipo/falha.
+- **`pages/Admin.tsx`** — nova seção **"Catálogo de falhas"** (CRUD de `Falha`).
+- **`pages/Equipamentos.tsx`** — histórico repontado para `GET /cronograma/equipamento/{id}`
+  (`Visita[]`), cada item linka à O.S.
+- **`lib/api.ts`** — `Visita`/`NovaVisita` ganharam tipo/equipamento/falha/12 campos-doc; tipos
+  `Falha`/`FalhaEntrada`/`CamposDocOS`; `api.admin.falhas*`. Removidos `OrdemServico`/`OrdemEntrada`
+  e `api.admin.ordens*`. **`lib/format.ts`** — `TIPOS_OS`, `TIPO_OS_LABEL/COR`, `CAMPOS_DOC_OS`.
+- **Removidos:** `pages/Ordens.tsx`, rota `/ordens`, link + ícone na sidebar. `tsc -b` limpo.
+
 ## 2026-06-30 — #OS: O.S. unifica a atividade do cronograma (backend, D-025)
 
 **Branch:** `feat/buscar-equipamento`. **Decisão [D-025](DECISOES.md)** (reverte D-024).

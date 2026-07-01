@@ -13,6 +13,34 @@ export const STATUS_VISITA: Record<string, string> = {
   cancelada: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200',
 }
 
+/** Tipos de Ordem de Serviço (#OS, D-025) e rótulos/cores de exibição. */
+export const TIPOS_OS = ['preventiva', 'corretiva', 'avulsa'] as const
+export const TIPO_OS_LABEL: Record<string, string> = {
+  preventiva: 'Manutenção preventiva',
+  corretiva: 'Manutenção corretiva',
+  avulsa: 'Manutenção avulsa',
+}
+export const TIPO_OS_COR: Record<string, string> = {
+  preventiva: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200',
+  corretiva: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200',
+  avulsa: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200',
+}
+/** Campos do documento de corretiva: chave → rótulo (ordem do documento img1). */
+export const CAMPOS_DOC_OS: [string, string][] = [
+  ['especialidade', 'Especialidade'],
+  ['requisitante', 'Requisitante'],
+  ['data_solicitacao', 'Data da solicitação'],
+  ['centro_custo', 'Centro de custo'],
+  ['numero_os', 'Nº da O.S.'],
+  ['reserva_material', 'Reserva de material'],
+  ['material_utilizado', 'Material utilizado'],
+  ['endereco', 'Endereço'],
+  ['setor', 'Setor'],
+  ['prioridade', 'Prioridade'],
+  ['data_execucao', 'Data de execução'],
+  ['acao_aplicada', 'Ação aplicada'],
+]
+
 /** Classifica a validade de um documento para o badge (válido / vence em Nd / vencido). */
 export function statusDoc(validade: string | null): { label: string; cls: string } {
   if (!validade) return { label: 'sem validade', cls: 'bg-muted text-muted-foreground' }

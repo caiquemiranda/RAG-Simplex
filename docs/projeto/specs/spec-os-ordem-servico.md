@@ -1,6 +1,6 @@
 # Spec — #OS: Ordem de Serviço (unifica atividade do cronograma)
 
-**Status:** ✅ Backend (unificação D-025) · 101 testes · Frontend pendente (Fase 2)
+**Status:** ✅ Backend (101 testes) + Frontend (unificação D-025)
 **Data:** 2026-06-30 · **Branch:** `feat/buscar-equipamento` · **Decisão:** [D-025](../DECISOES.md)
 (substitui [D-024](../DECISOES.md))
 
@@ -38,14 +38,18 @@ notificação. Liga-se a um **equipamento** → alimenta o **histórico** do dis
 - `GET /cronograma/equipamento/{id}` — **histórico** de O.S. do equipamento (RBAC pelo cliente, #MAP-4).
 - `VisitaResumo` expõe `tipo`, `equipamento_id`/`equipamento_tag`, `falha_id`/`falha_nome` e os 12 campos.
 
-## Frontend (pendente — Fase 2)
-- Renomear **Atividades → "Ordem de Serviço"** (lista, gráfico e filtros já existem); mover para
-  o grupo **Cronograma** na sidebar.
-- Form de O.S.: `tipo` (preventiva/corretiva/avulsa), seleção de **equipamento** e **falha**,
-  campos do documento (só corretiva), técnicos (default = fixos), anexos, comentários.
-- **Remover** a página antiga `/ordens`, o link da sidebar e os métodos mortos `api.admin.ordens*`;
-  **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
-- **Admin de Falhas** (CRUD).
+## Frontend (✅ Fase 2)
+- **Atividades → "Ordens de Serviço"** (`pages/Atividades.tsx`): título, sidebar Cronograma,
+  filtro por **tipo**, **gráfico por tipo** (além do por status), badges tipo/falha/equipamento.
+- **Form no calendário** (`pages/Cronograma.tsx`): `tipo` (preventiva/corretiva/avulsa), seletor de
+  **equipamento** (do cliente) e **falha** (catálogo), **campos do documento** em `<details>` (só
+  corretiva), técnicos com **vazio = fixos do cliente**. Editor inline ganhou tipo/falha.
+- **Admin → "Catálogo de falhas"** (`pages/Admin.tsx`): CRUD de `Falha` (nome + termo_en).
+- **Histórico do equipamento** (`pages/Equipamentos.tsx`) repontado para
+  `api.ordensEquipamento` → `GET /cronograma/equipamento/{id}` (agora `Visita[]`), com link à O.S.
+- **Removidos:** `pages/Ordens.tsx`, rota `/ordens`, link da sidebar, `api.admin.ordens*` e os
+  tipos `OrdemServico`/`OrdemEntrada`. Novos helpers em `lib/format.ts` (`TIPOS_OS`,
+  `TIPO_OS_LABEL/COR`, `CAMPOS_DOC_OS`).
 
 ## Testes
 - `tests/test_cronograma.py::test_os_unificada_falha_equipamento_manutencao` — catálogo de falha

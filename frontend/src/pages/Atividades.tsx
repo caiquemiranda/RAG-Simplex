@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom'
 import { api, type Visita } from '../lib/api'
 import { Avatar } from '../components/Avatar'
 import { MultiFiltro } from '../components/MultiFiltro'
-import { STATUS_VISITA, isoData } from '../lib/format'
+import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
 
 const STATUS_ALL = ['agendada', 'pendente', 'concluida', 'cancelada']
 const BAR: Record<string, string> = {
   agendada: 'bg-blue-500', pendente: 'bg-amber-500', concluida: 'bg-emerald-500', cancelada: 'bg-rose-500',
+}
+const BAR_TIPO: Record<string, string> = {
+  preventiva: 'bg-sky-500', corretiva: 'bg-orange-500', avulsa: 'bg-violet-500',
 }
 
 /** Prazo da atividade em relação a hoje: faltam N dias / atrasada há N / hoje. */
@@ -27,6 +30,7 @@ export default function Atividades() {
   const [itens, setItens] = useState<Visita[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [statusSel, setStatusSel] = useState<Set<string>>(new Set())
+  const [tipoSel, setTipoSel] = useState<Set<string>>(new Set())
   const [clienteSel, setClienteSel] = useState<Set<number>>(new Set())
   const [tecnicoSel, setTecnicoSel] = useState<Set<number>>(new Set())
 
@@ -52,43 +56,65 @@ export default function Atividades() {
     return itens
       .filter((v) =>
         (statusSel.size === 0 || statusSel.has(v.status)) &&
+        (tipoSel.size === 0 || tipoSel.has(v.tipo)) &&
         (clienteSel.size === 0 || (v.cliente_id != null && clienteSel.has(v.cliente_id))) &&
         (tecnicoSel.size === 0 || v.tecnicos.some((t) => tecnicoSel.has(t.id))),
       )
       .sort((a, b) => peso(a.status) - peso(b.status) || a.data.localeCompare(b.data))
-  }, [itens, statusSel, clienteSel, tecnicoSel])
+  }, [itens, statusSel, tipoSel, clienteSel, tecnicoSel])
 
   // Gráfico: contagem por status (sobre a lista filtrada).
   const contagem = STATUS_ALL.map((s) => ({ s, n: filtradas.filter((v) => v.status === s).length }))
   const maxN = Math.max(1, ...contagem.map((c) => c.n))
+  // Gráfico: contagem por tipo de O.S. (#OS item 9).
+  const contagemTipo = TIPOS_OS.map((t) => ({ t, n: filtradas.filter((v) => v.tipo === t).length }))
+  const maxNT = Math.max(1, ...contagemTipo.map((c) => c.n))
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-4 p-4">
-        <h1 className="text-lg font-semibold">Atividades</h1>
+        <h1 className="text-lg font-semibold">Ordens de Serviço</h1>
         {erro && <p className="text-sm text-destructive">{erro}</p>}
 
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-2">
           <MultiFiltro label="Status" todosLabel="Todos os status" sel={statusSel} setSel={setStatusSel}
                        opcoes={STATUS_ALL.map((s) => ({ id: s, nome: s }))} />
+          <MultiFiltro label="Tipo" todosLabel="Todos os tipos" sel={tipoSel} setSel={setTipoSel}
+                       opcoes={TIPOS_OS.map((t) => ({ id: t, nome: TIPO_OS_LABEL[t] }))} />
           <MultiFiltro label="Clientes" todosLabel="Todos os clientes" sel={clienteSel} setSel={setClienteSel} opcoes={clienteOpts} />
           <MultiFiltro label="Técnicos" todosLabel="Todos os técnicos" sel={tecnicoSel} setSel={setTecnicoSel} opcoes={tecnicoOpts} />
         </div>
 
-        {/* Gráfico por status */}
-        <div className="rounded-xl border bg-card p-4">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Por status ({filtradas.length})</div>
-          <div className="space-y-1.5">
-            {contagem.map(({ s, n }) => (
-              <div key={s} className="flex items-center gap-2">
-                <span className="w-20 shrink-0 text-xs">{s}</span>
-                <div className="h-3 flex-1 overflow-hidden rounded bg-muted">
-                  <div className={`h-full ${BAR[s]}`} style={{ width: `${(n / maxN) * 100}%` }} />
+        {/* Gráficos: por status + por tipo (#OS item 9) */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border bg-card p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Por status ({filtradas.length})</div>
+            <div className="space-y-1.5">
+              {contagem.map(({ s, n }) => (
+                <div key={s} className="flex items-center gap-2">
+                  <span className="w-20 shrink-0 text-xs">{s}</span>
+                  <div className="h-3 flex-1 overflow-hidden rounded bg-muted">
+                    <div className={`h-full ${BAR[s]}`} style={{ width: `${(n / maxN) * 100}%` }} />
+                  </div>
+                  <span className="w-6 shrink-0 text-right text-xs tabular-nums">{n}</span>
                 </div>
-                <span className="w-6 shrink-0 text-right text-xs tabular-nums">{n}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Por tipo</div>
+            <div className="space-y-1.5">
+              {contagemTipo.map(({ t, n }) => (
+                <div key={t} className="flex items-center gap-2">
+                  <span className="w-20 shrink-0 truncate text-xs" title={TIPO_OS_LABEL[t]}>{t}</span>
+                  <div className="h-3 flex-1 overflow-hidden rounded bg-muted">
+                    <div className={`h-full ${BAR_TIPO[t]}`} style={{ width: `${(n / maxNT) * 100}%` }} />
+                  </div>
+                  <span className="w-6 shrink-0 text-right text-xs tabular-nums">{n}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -103,10 +129,11 @@ export default function Atividades() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-medium">{v.titulo}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${TIPO_OS_COR[v.tipo] ?? 'bg-muted'}`}>{v.tipo}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    📅 {v.data}{v.cliente_nome ? ` · 📍 ${v.cliente_nome}` : ''}
+                    📅 {v.data}{v.cliente_nome ? ` · 📍 ${v.cliente_nome}` : ''}{v.equipamento_tag ? ` · 🔧 ${v.equipamento_tag}` : ''}{v.falha_nome ? ` · ⚠️ ${v.falha_nome}` : ''}
                   </div>
                 </div>
                 <div className="flex -space-x-2">

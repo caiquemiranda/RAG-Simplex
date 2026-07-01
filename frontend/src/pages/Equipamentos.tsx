@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type ClienteVisivel, type Equipamento, type OrdemServico, type Planta } from '../lib/api'
+import { Link } from 'react-router-dom'
+import { api, type ClienteVisivel, type Equipamento, type Visita, type Planta } from '../lib/api'
+import { TIPO_OS_LABEL } from '../lib/format'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -23,7 +25,7 @@ export default function Equipamentos() {
   const [selId, setSelId] = useState<number | null>(null)
   const [foco, setFoco] = useState<{ id: number; nonce: number } | null>(null)
   const focar = (id: number) => setFoco((f) => ({ id, nonce: (f?.nonce ?? 0) + 1 }))
-  const [historico, setHistorico] = useState<OrdemServico[]>([])
+  const [historico, setHistorico] = useState<Visita[]>([])
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => { api.clientesVisiveis().then(setClientes).catch(() => {}) }, [])
@@ -156,12 +158,14 @@ export default function Equipamentos() {
               ) : (
                 <div className="space-y-2">
                   {historico.map((o) => (
-                    <div key={o.id} className="rounded-md border-l-2 border-primary bg-muted/30 p-2">
-                      <div className="text-xs font-medium text-primary">{o.data} · {o.tipo} · {o.status}</div>
-                      <div className="text-sm">{o.descricao || '—'}</div>
-                      {o.solucao && <div className="text-xs text-muted-foreground">Solução: {o.solucao}</div>}
-                      {o.tecnico_nome && <div className="text-xs text-muted-foreground">Técnico: {o.tecnico_nome}</div>}
-                    </div>
+                    <Link key={o.id} to={`/cronograma/atividade/${o.id}`}
+                          className="block rounded-md border-l-2 border-primary bg-muted/30 p-2 hover:bg-accent/40">
+                      <div className="text-xs font-medium text-primary">{o.data} · {TIPO_OS_LABEL[o.tipo] ?? o.tipo} · {o.status}</div>
+                      <div className="text-sm">{o.titulo || '—'}</div>
+                      {o.falha_nome && <div className="text-xs text-muted-foreground">Falha: {o.falha_nome}</div>}
+                      {o.acao_aplicada && <div className="text-xs text-muted-foreground">Ação: {o.acao_aplicada}</div>}
+                      {o.tecnicos.length > 0 && <div className="text-xs text-muted-foreground">Técnico(s): {o.tecnicos.map((t) => t.nome).join(', ')}</div>}
+                    </Link>
                   ))}
                 </div>
               )}

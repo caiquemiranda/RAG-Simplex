@@ -22,7 +22,9 @@
   corretiva/avulsa), `equipamento_id`, `falha_id` + **12 campos do documento de corretiva**;
   catálogo `Falha` (CRUD `/admin/falhas`); sem técnicos → **fixos do cliente**; **concluir grava
   `ultima_manutencao`**; histórico `GET /cronograma/equipamento/{id}`; notificação "Nova O.S.".
-  Migração `34b255a20aa8`. **Frontend pendente (Fase 2)** — ver [`spec-os`](specs/spec-os-ordem-servico.md).
+  Migração `34b255a20aa8`. **Frontend ✅**: Atividades→"Ordens de Serviço" (filtro/gráfico por
+  tipo), form no calendário (tipo/equipamento/falha/campos-doc, técnicos default fixos), admin
+  "Catálogo de falhas", histórico repontado. Ver [`spec-os`](specs/spec-os-ordem-servico.md).
 - **#MAP-5** (melhorias do editor) ✅ — scroll só no mapa; **posicionar em 2 passos** (caixa +
   Salvar); **autocomplete** por tag (+ alerta sem registro); **Ver todos**; **cadastro avulso**
   de equipamento + **tag composta** (painel+loop+add+type) + colunas Tag/Coordenadas/Últ. manut.
@@ -48,16 +50,14 @@
     comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Fase 2 frontend da O.S. unificada (#OS, D-025)
+## ⏭️ PRÓXIMO PASSO — abrir PR da `feat/buscar-equipamento` → `main`
 
-Backend pronto (101 testes). Falta o frontend:
-- Renomear **Atividades → "Ordem de Serviço"** (lista/gráfico/filtros já existem) e mover ao
-  grupo **Cronograma** na sidebar.
-- Form de O.S.: `tipo` (preventiva/corretiva/avulsa), **equipamento** e **falha** (selects),
-  campos do documento (só corretiva), técnicos (default = fixos), anexos, comentários.
-- **Remover** a página `/ordens`, o link da sidebar e os métodos mortos `api.admin.ordens*`;
-  **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
-- **Admin de Falhas** (CRUD).
+A unificação **O.S. = atividade** (#OS, D-025) está **completa** (backend 101 testes + frontend +
+docs). Abrir o PR pela UI do GitHub e mergear. Depois: sincronizar `main`.
+
+**Pendências menores para revisitar** (não bloqueiam): editar os **campos do documento** de
+corretiva também no editor inline / na página da atividade (#ATV-1) — hoje são preenchidos só na
+criação; anexos da O.S. já existem via #ATV-1.
 
 ## Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
 

@@ -91,16 +91,24 @@ export type Equipamento = {
 export type ImportEquipResultado = { importados: number; total: number }
 // Planta (projeto) do cliente — #MAP.
 export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }
-// Ordem de Serviço (#OS).
-export type OrdemServico = {
-  id: number; cliente_id: number; cliente_nome: string | null
-  equipamento_id: number | null; equipamento_tag: string | null
-  usuario_id: number | null; tecnico_nome: string | null
-  data: string; tipo: string; status: string; descricao: string; solucao: string | null
-}
-export type OrdemEntrada = {
-  cliente_id?: number; equipamento_id?: number | null; usuario_id?: number | null
-  data?: string; tipo?: string; status?: string; descricao?: string; solucao?: string | null
+// Catálogo de falhas do painel (#OS, D-025).
+export type Falha = { id: number; nome: string; termo_en: string | null }
+export type FalhaEntrada = { nome: string; termo_en?: string | null }
+
+// Campos do documento de manutenção corretiva (#OS, D-025) — todos opcionais.
+export type CamposDocOS = {
+  especialidade?: string | null
+  requisitante?: string | null
+  data_solicitacao?: string | null
+  centro_custo?: string | null
+  numero_os?: string | null
+  reserva_material?: string | null
+  material_utilizado?: string | null
+  endereco?: string | null
+  setor?: string | null
+  prioridade?: string | null
+  data_execucao?: string | null
+  acao_aplicada?: string | null
 }
 export type ClienteDetalhe = AdminCliente & { equipamentos: Equipamento[] }
 
@@ -110,7 +118,8 @@ export type UnidadeEntrada = { nome?: string; cidade?: string | null; ativo?: bo
 export type UnidadeVisivel = { id: number; nome: string; cidade: string | null }
 
 export type TecnicoMini = { id: number; nome: string; foto: string | null }
-export type Visita = {
+// Visita = Ordem de Serviço (#OS, D-025).
+export type Visita = CamposDocOS & {
   id: number
   usuario_id: number
   tecnico_nome: string
@@ -127,18 +136,28 @@ export type Visita = {
   status: string
   observacoes: string | null
   fixo: boolean
+  // O.S. (D-025)
+  tipo: string
+  equipamento_id: number | null
+  equipamento_tag: string | null
+  falha_id: number | null
+  falha_nome: string | null
 }
 // Página da atividade (#ATV-1).
 export type ComentarioVisita = { id: number; autor_id: number | null; autor_nome: string | null; texto: string; criado_em: string }
 export type AnexoVisita = { id: number; url: string; nome: string; autor_id: number | null; criado_em: string }
 export type VisitaDetalhe = Visita & { comentarios: ComentarioVisita[]; anexos: AnexoVisita[] }
-export type NovaVisita = {
-  usuario_ids: number[]
+export type NovaVisita = CamposDocOS & {
+  usuario_ids: number[]        // vazio → usa os técnicos fixos do cliente (#ALOC)
   cliente_id?: number | null
   data: string
   titulo: string
   status?: string
   observacoes?: string | null
+  // O.S. (D-025)
+  tipo?: string
+  equipamento_id?: number | null
+  falha_id?: number | null
 }
 export type Feriado = { id: number; data: string; descricao: string }
 export type DocEquip = {
@@ -377,7 +396,7 @@ export const api = {
   equipamentosCliente: (clienteId: number, busca?: string) =>
     request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
-  ordensEquipamento: (equipamentoId: number) => request<OrdemServico[]>(`/equipamentos/${equipamentoId}/ordens`),
+  ordensEquipamento: (equipamentoId: number) => request<Visita[]>(`/cronograma/equipamento/${equipamentoId}`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -456,20 +475,11 @@ export const api = {
       uploadMultipart<Planta[]>(`/admin/clientes/${clienteId}/plantas`, file),
     removerPlanta: (plantaId: number) =>
       request<void>(`/admin/plantas/${plantaId}`, { method: 'DELETE' }),
-    // Ordens de serviço (#OS)
-    ordens: (params?: { cliente_id?: number; equipamento_id?: number; status?: string }) => {
-      const p = new URLSearchParams()
-      if (params?.cliente_id) p.append('cliente_id', String(params.cliente_id))
-      if (params?.equipamento_id) p.append('equipamento_id', String(params.equipamento_id))
-      if (params?.status) p.append('status', params.status)
-      const s = p.toString()
-      return request<OrdemServico[]>(`/admin/ordens${s ? `?${s}` : ''}`)
-    },
-    criarOrdem: (dados: OrdemEntrada & { cliente_id: number; data: string }) =>
-      request<OrdemServico>('/admin/ordens', { method: 'POST', body: JSON.stringify(dados) }),
-    atualizarOrdem: (id: number, dados: OrdemEntrada) =>
-      request<OrdemServico>(`/admin/ordens/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
-    removerOrdem: (id: number) => request<void>(`/admin/ordens/${id}`, { method: 'DELETE' }),
+    // Catálogo de falhas (#OS, D-025)
+    falhas: () => request<Falha[]>('/admin/falhas'),
+    criarFalha: (dados: FalhaEntrada) =>
+      request<Falha>('/admin/falhas', { method: 'POST', body: JSON.stringify(dados) }),
+    removerFalha: (id: number) => request<void>(`/admin/falhas/${id}`, { method: 'DELETE' }),
     banco: () => request<BancoStatus>('/admin/banco'),
     bancoBackup: () => request<BancoBackup>('/admin/banco/backup', { method: 'POST' }),
     unidades: () => request<AdminUnidade[]>('/admin/unidades'),

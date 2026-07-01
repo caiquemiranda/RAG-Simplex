@@ -50,10 +50,11 @@ A **O.S. = atividade do cronograma** (entidade `Visita`); `OrdemServico` foi rem
       sem técnicos → **fixos do cliente**; **concluir grava `ultima_manutencao`**; histórico
       `/cronograma/equipamento/{id}`; notificação "Nova O.S.". Migração `34b255a20aa8`. Teste
       `test_os_unificada_falha_equipamento_manutencao`. **`OrdemServico`/`app/ordens.py` removidos.**
-- [ ] **Frontend (Fase 2):** renomear **Atividades → "Ordem de Serviço"** (mover ao grupo
-      Cronograma); form com `tipo`/equipamento/falha/campos-doc/técnicos(default fixos)/anexos;
-      **admin de Falhas** (CRUD); **remover** `pages/Ordens.tsx` + link + `api.admin.ordens*`;
-      **repontar** `api.ordensEquipamento` → `/cronograma/equipamento/{id}`.
+- [x] **Frontend (Fase 2):** **Atividades → "Ordens de Serviço"** (grupo Cronograma; filtro +
+      gráfico por tipo); form no calendário com `tipo`/equipamento/falha/campos-doc + técnicos
+      default fixos (editor inline com tipo/falha); **admin "Catálogo de falhas"** (CRUD);
+      **removidos** `pages/Ordens.tsx` + link + `api.admin.ordens*`; histórico do equipamento
+      repontado para `/cronograma/equipamento/{id}`.
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 
