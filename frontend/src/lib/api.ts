@@ -85,9 +85,12 @@ export type ClienteVisivel = { id: number; nome: string; unidade: string | null;
 // Equipamento do cliente (#EQP-1) — importado por CSV.
 export type Equipamento = {
   id: number; tag: string; painel: string; loop: string; add: string; type: string; model: string
-  status: string; ultima_manutencao: string | null; ultimo_teste: string | null
+  status: string; falha_id: number | null; falha_nome: string | null
+  ultima_manutencao: string | null; ultimo_teste: string | null
   planta_id: number | null; pos_x: number | null; pos_y: number | null
 }
+// Estados possíveis do equipamento (#EQP-STATUS, D-026). "Em falha" usa falha_id.
+export const STATUS_EQUIP = ['Operando', 'Desabilitado', 'Desativado', 'Em falha'] as const
 export type ImportEquipResultado = { importados: number; total: number }
 // Planta (projeto) do cliente — #MAP.
 export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }

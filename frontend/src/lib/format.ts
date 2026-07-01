@@ -41,6 +41,15 @@ export const CAMPOS_DOC_OS: [string, string][] = [
   ['acao_aplicada', 'Ação aplicada'],
 ]
 
+/** Cor do marcador/badge por estado do equipamento (#EQP-STATUS, D-026). */
+export function corStatusEquip(status: string, emFalha = false): string {
+  const t = (status || '').toLowerCase()
+  if (emFalha || t.includes('falha') || t.includes('alerta') || t.includes('manuten')) return '#f59e0b'
+  if (t.includes('desativ') || t.includes('desabilit')) return '#94a3b8'  // cinza
+  if (t.includes('opera')) return '#10b981'
+  return '#ef4444'
+}
+
 /** Classifica a validade de um documento para o badge (válido / vence em Nd / vencido). */
 export function statusDoc(validade: string | null): { label: string; cls: string } {
   if (!validade) return { label: 'sem validade', cls: 'bg-muted text-muted-foreground' }

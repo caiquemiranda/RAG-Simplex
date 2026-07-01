@@ -25,6 +25,7 @@ erDiagram
   PLANTA ||--o{ EQUIPAMENTO : "0..1 (planta_id, posição #MAP)"
   EQUIPAMENTO ||--o{ VISITA : "0..1 (alvo/histórico #MAP-4)"
   FALHA ||--o{ VISITA : "0..1 (catálogo #OS)"
+  FALHA ||--o{ EQUIPAMENTO : "0..1 (falha atual #EQP-STATUS)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -104,7 +105,8 @@ erDiagram
     string add "endereço no loop"
     string type
     string model
-    string status "Em operação|Alerta|… (#MAP)"
+    string status "Operando|Desabilitado|Desativado (#EQP-STATUS, D-026)"
+    int falha_id FK "SET NULL — falha atual quando 'em falha' (D-026)"
     date ultima_manutencao
     date ultimo_teste
     int planta_id FK "posição (#MAP)"

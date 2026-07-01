@@ -220,7 +220,9 @@ class Equipamento(Base):
     add: Mapped[str] = mapped_column(String(40), default="")     # endereço do dispositivo
     type: Mapped[str] = mapped_column(String(80), default="")
     model: Mapped[str] = mapped_column(String(80), default="")
-    status: Mapped[str] = mapped_column(String(40), default="")  # ex.: Em operação | Alerta | Em manutenção
+    status: Mapped[str] = mapped_column(String(40), default="Operando")  # Operando | Desabilitado | Desativado
+    # Falha atual do dispositivo quando "em falha" (D-026) — distinta da falha de uma O.S.
+    falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
     ultima_manutencao: Mapped[date | None] = mapped_column(Date, default=None)
     ultimo_teste: Mapped[date | None] = mapped_column(Date, default=None)
     # Posição na planta (#MAP) — coordenadas-map.
@@ -233,6 +235,7 @@ class Equipamento(Base):
 
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
     planta: Mapped[Planta | None] = relationship()
+    falha: Mapped["Falha | None"] = relationship()
 
 
 class Falha(Base):

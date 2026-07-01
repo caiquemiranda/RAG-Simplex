@@ -4,6 +4,21 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #EQP-STATUS: estado do equipamento + falha atual (Lote 6, D-026)
+
+**Branch:** `feat/lote6-equipamentos`. Primeiro item do Lote 6 (fundação).
+
+- **Modelo:** `Equipamento` ganhou **`falha_id`** (FK → `Falha`, SET NULL) = falha atual quando
+  "em falha"; `status` default **"Operando"**. Migração `8bf05fde56d0` (add coluna + backfill do
+  status vazio para "Operando").
+- **Backend:** schemas `EquipamentoResumo`/`EquipamentoIn`/`EquipamentoAtualizar` + `EquipamentoPublico`
+  expõem `falha_id`/`falha_nome`; criar avulso e import CSV aplicam o default "Operando"; PATCH
+  valida `falha_id` (404 se inexistente, SET NULL ao limpar).
+- **Frontend:** `STATUS_EQUIP` + `corStatusEquip` (fonte única de cor por estado) em `lib`;
+  ClienteAdmin ganhou **coluna Status** editável (select Operando/Desabilitado/Desativado/Em falha
+  + seletor de falha quando "Em falha"); marcadores do mapa e detalhe do Buscar equipamento
+  refletem a falha. **103 passed**, `tsc -b` limpo.
+
 ## 2026-06-30 — #OS: hardening de docs + testes da unificação (D-025)
 
 **Branch:** `feat/buscar-equipamento`. Fecha as pendências D1–D4 (docs) e T1–T4 (testes).

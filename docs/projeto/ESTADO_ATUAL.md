@@ -13,7 +13,9 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `main` — **#MAP + #OS (D-025)** e **#R2** mergeados. **Backend: 102 testes** passando.
+- **Branch:** `feat/lote6-equipamentos` (do `main` com #MAP+#OS+#R2). **Backend: 103 testes**.
+  **Lote 6 em andamento:** ✅ **#EQP-STATUS** (equipamento com `falha_id`/estado, status padrão
+  "Operando", editor de status no ClienteAdmin — migração `8bf05fde56d0`, D-026). Próximo: `#TAB-ORDEM`.
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`

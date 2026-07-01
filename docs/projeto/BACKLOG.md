@@ -62,12 +62,12 @@ Sete solicitações do usuário. Giram em torno de dois eixos: **(a)** tornar a 
 numa ferramenta tipo planilha (ordenar/filtrar por coluna, página por dispositivo, listas
 salvas que alimentam documentos de manutenção preventiva).
 
-- [ ] **#EQP-STATUS — status padrão "Operando" + estados** (item 2). Todo equipamento nasce com
-      `status = "Operando"`. Estados: **Operando** (padrão), **Desabilitado**, **Desativado**, ou
-      **em falha**. **Decidido (D-026):** "em falha" guarda **`falha_id`** (FK ao catálogo `Falha`,
-      SET NULL) no `Equipamento` — a falha atual do dispositivo; a UI mostra o **nome da falha**
-      como status. Aplicar default no cadastro avulso e no import CSV; cor do marcador no mapa por
-      estado. *Backend:* coluna `falha_id` em `Equipamento` + migração + seletor no editor. dep: nenhuma (fundação).
+- [x] **#EQP-STATUS — status padrão "Operando" + estados** (item 2, D-026). `Equipamento` ganhou
+      **`falha_id`** (FK → `Falha`, SET NULL) = falha atual quando "em falha"; `status` padrão
+      **"Operando"** (também Desabilitado/Desativado), aplicado no cadastro avulso e no **import CSV**
+      (backfill dos vazios). Migração `8bf05fde56d0`. Resumo (admin e público) expõe `falha_id`/
+      `falha_nome`; editor no ClienteAdmin tem **seletor de status + falha**; cor do marcador no mapa
+      por estado (`corStatusEquip`). Teste `test_equipamento_status_e_falha`.
 
 - [ ] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Clicar no cabeçalho da coluna
       ordena **crescente/decrescente** (3º clique limpa). Componente de **tabela reutilizável**
