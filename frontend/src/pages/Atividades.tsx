@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type Falha, type NovaVisita, type Visita } from '../lib/api'
+import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
+import { Button } from '../components/ui/button'
 import { MultiFiltro } from '../components/MultiFiltro'
+import { FormOS } from '../components/FormOS'
 import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
 
 const STATUS_ALL = ['agendada', 'pendente', 'concluida', 'cancelada']
@@ -27,17 +30,37 @@ function prazo(data: string, status: string): { label: string; cls: string } {
 
 /** Tela "Atividades": filtros (status/cliente/técnico) + gráfico por status + lista com prazo. */
 export default function Atividades() {
+  const { usuario } = useAuth()
+  const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
   const [itens, setItens] = useState<Visita[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [statusSel, setStatusSel] = useState<Set<string>>(new Set())
   const [tipoSel, setTipoSel] = useState<Set<string>>(new Set())
   const [clienteSel, setClienteSel] = useState<Set<number>>(new Set())
   const [tecnicoSel, setTecnicoSel] = useState<Set<number>>(new Set())
+  // Formulário de O.S. (#OS-PAGINA): criar (novo) ou editar (uma Visita).
+  const [clientes, setClientes] = useState<AdminCliente[]>([])
+  const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
+  const [falhas, setFalhas] = useState<Falha[]>([])
+  const [form, setForm] = useState<{ modo: 'novo' } | { modo: 'editar'; visita: Visita } | null>(null)
 
-  useEffect(() => {
+  function recarregar() {
     api.cronograma.atividades().then(setItens)
-      .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar atividades'))
-  }, [])
+      .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar as O.S.'))
+  }
+  useEffect(() => { recarregar() }, [])
+  useEffect(() => {
+    if (!podeGerir) return
+    Promise.all([api.admin.clientes(), api.admin.usuarios(), api.admin.falhas()])
+      .then(([c, u, f]) => { setClientes(c); setTecnicos(u); setFalhas(f) })
+      .catch(() => {})
+  }, [podeGerir])
+
+  async function salvar(dados: NovaVisita) {
+    if (form?.modo === 'editar') await api.cronograma.atualizar(form.visita.id, dados)
+    else await api.cronograma.criar(dados)
+    recarregar()
+  }
 
   // Opções de cliente/técnico derivadas das próprias atividades (sem exigir permissões extra).
   const clienteOpts = useMemo(() => {
@@ -73,7 +96,10 @@ export default function Atividades() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-4 p-4">
-        <h1 className="text-lg font-semibold">Ordens de Serviço</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold">Ordens de Serviço</h1>
+          {podeGerir && <Button size="sm" onClick={() => setForm({ modo: 'novo' })}>+ Nova O.S.</Button>}
+        </div>
         {erro && <p className="text-sm text-destructive">{erro}</p>}
 
         {/* Filtros */}
@@ -142,11 +168,24 @@ export default function Atividades() {
                   ))}
                 </div>
                 <span className={`whitespace-nowrap text-xs ${p.cls}`}>{p.label}</span>
+                {podeGerir && (
+                  <button className="shrink-0 rounded border px-2 py-0.5 text-xs text-primary hover:bg-accent"
+                          title="Editar O.S." onClick={(e) => { e.preventDefault(); setForm({ modo: 'editar', visita: v }) }}>editar</button>
+                )}
               </Link>
             )
           })}
         </div>
       </div>
+
+      {/* Form de O.S. (#OS-PAGINA) — criar/editar com todos os campos */}
+      {form && podeGerir && (
+        <FormOS
+          clientes={clientes} tecnicos={tecnicos} falhas={falhas}
+          inicial={form.modo === 'editar' ? form.visita : undefined}
+          aoSalvar={salvar} aoFechar={() => setForm(null)}
+        />
+      )}
     </div>
   )
 }

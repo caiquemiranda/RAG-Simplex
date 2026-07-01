@@ -10,10 +10,10 @@ infra de arquivos (#FILES).
 
 > **Atualização #OS / D-025:** a `Visita`/atividade **é a Ordem de Serviço**. Esta página é,
 > portanto, a página da O.S. (a galeria de imagens satisfaz o "anexar imagem à O.S.").
-> **Pendência conhecida:** os **12 campos do documento de corretiva** (`especialidade`,
-> `requisitante`, …, `acao_aplicada`) hoje são preenchidos **apenas na criação** (form do
-> calendário) e **ainda não são editáveis** aqui nem no editor inline — próximo incremento.
-> Ver [`spec-os-ordem-servico.md`](spec-os-ordem-servico.md).
+> **Edição completa (#OS-PAGINA):** criar/editar a O.S. com **todos os campos** — inclusive os
+> 12 campos do documento de corretiva — é feito pelo componente **`FormOS`** (modal), acionado na
+> página **Ordens de Serviço** ("+ Nova O.S." / "editar") e no calendário. Ver
+> [`spec-os-ordem-servico.md`](spec-os-ordem-servico.md).
 
 ## Decisões (confirmadas com o usuário, 2026-06-25)
 - **Quem comenta/anexa/fecha/vê:** **técnico atribuído** (em `visita_tecnico`) **ou admin**

@@ -14,9 +14,10 @@
 ## 📍 Você está aqui
 
 - **Branch:** `feat/lote6-equipamentos` (do `main` com #MAP+#OS+#R2). **Backend: 103 testes**.
-  **Lote 6 em andamento:** ✅ **#EQP-STATUS** (equipamento com `falha_id`/estado, migração
-  `8bf05fde56d0`, D-026) · ✅ **#TAB-ORDEM** (`TabelaOrdenavel` reutilizável) · ✅ **#EQP-FILTROS+**
-  (lista do cliente com filtros tipo/model/status + ordenar por coluna). Próximo: `#OS-PAGINA`.
+  **Lote 6 em andamento:** ✅ **#EQP-STATUS** (migração `8bf05fde56d0`, D-026) · ✅ **#TAB-ORDEM**
+  (`TabelaOrdenavel`) · ✅ **#EQP-FILTROS+** (lista com filtros + ordenar) · ✅ **#OS-PAGINA**
+  (`FormOS` modal com todos os campos; "+ Nova O.S."/editar na página e no calendário — sem
+  duplicação). Próximo: `#EQP-PAGINA` (página por dispositivo).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`

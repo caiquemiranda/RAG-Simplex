@@ -93,14 +93,13 @@ salvas que alimentam documentos de manutenção preventiva).
       **filtro por falha** (e por tipo/status). *Frontend* sobre a lista já retornada; se necessário,
       querystring no `/cronograma/equipamento/{id}`. dep: #EQP-PAGINA (onde vive), #OS-PAGINA (link p/ editar).
 
-- [ ] **#OS-PAGINA — criar/editar O.S. na página "Ordens de Serviço"** (item 3). Hoje só dá para
-      **criar no calendário**; a página de Ordens de Serviço **não** cria nem edita e **não mostra
-      todos os campos**. Objetivo: botão **"Nova O.S."** + **editar** (ADM) com **todos os campos**
-      exibidos e editáveis — `tipo`, cliente, **equipamento**, **falha**, **técnicos** (default
-      fixos), data, status, observações e os **12 campos do documento** (corretiva). **Extrair um
-      componente `FormOS` reutilizável** (hoje o form vive embutido em `Cronograma.tsx`) para não
-      duplicar. Resolve também a pendência já registrada de editar campos-doc no #ATV-1.
-      *Backend já suporta (PATCH/POST em `/cronograma`).* dep: refatorar o form do calendário em `FormOS`.
+- [x] **#OS-PAGINA — criar/editar O.S. na página "Ordens de Serviço"** (item 3). Componente
+      **`components/FormOS.tsx`** (modal reutilizável) com **todos os campos**: `tipo`, cliente,
+      **equipamento** (do cliente), **falha**, **técnicos** (vazio = fixos), data, status,
+      observações e os **12 campos do documento** (corretiva; abertos por padrão na edição).
+      Página **Ordens de Serviço** ganhou **"+ Nova O.S."** e **editar** por linha (ADM). O
+      calendário passou a **reusar o FormOS** ("+ Nova O.S. neste dia", com `dataFixa`) — removida
+      a duplicação do form embutido. Resolve a pendência de editar campos-doc fora da criação.
 
 - [ ] **#EQP-LISTAS — listas de equipamentos (base do doc de preventiva)** (item 6). Criar **listas
       nomeadas** de equipamentos: botão **"Criar lista"** abre uma janela para **marcar** os

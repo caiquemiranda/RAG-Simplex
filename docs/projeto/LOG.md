@@ -4,6 +4,20 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #OS-PAGINA: criar/editar O.S. com todos os campos (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only (backend já suportava).
+
+- **`components/FormOS.tsx`** (novo, modal reutilizável): todos os campos da O.S. — `tipo`,
+  cliente, equipamento (do cliente), falha, técnicos (vazio = fixos), data, status, observações
+  e os 12 campos do documento (corretiva; `<details>` aberto na edição). Prop `dataFixa` esconde
+  o campo de data (uso no calendário).
+- **`pages/Atividades.tsx`** (Ordens de Serviço): botão **"+ Nova O.S."** + **editar** por linha
+  (ADM) abrindo o `FormOS`; recarrega a lista ao salvar.
+- **`pages/Cronograma.tsx`**: o form embutido de "Adicionar" foi **substituído** por
+  "+ Nova O.S. neste dia" que abre o mesmo `FormOS` (`dataFixa`) — **removida a duplicação**
+  (estado `nova`/`equipCliente`, função `adicionar`, campos-doc embutidos). `tsc -b` limpo; 103 testes.
+
 ## 2026-06-30 — #TAB-ORDEM + #EQP-FILTROS+: lista de equipamentos tipo planilha (Lote 6)
 
 **Branch:** `feat/lote6-equipamentos`. Frontend-only.
