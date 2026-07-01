@@ -202,3 +202,15 @@ catálogo `Falha` (cadastrável; ex.: No Answer, Dirty, Head Missing), 1 por O.S
 sem técnicos informados → usa os **fixos do cliente** (#ALOC); **concluir** com data grava
 `equipamento.ultima_manutencao`; notificação ao criar linka à O.S. (#NOTIF-LINK). Histórico
 por equipamento: `GET /cronograma/equipamento/{id}`. Spec `specs/spec-os-ordem-servico.md`.
+
+### D-026 ✅ Estado do equipamento por `falha_id`; documentos do equipamento via biblioteca (Lote 6)
+**2026-06-30.** Duas decisões para o Lote 6 ([BACKLOG §J](BACKLOG.md)):
+- **#EQP-STATUS:** o equipamento tem `status` textual (padrão **"Operando"**; também
+  **Desabilitado**/**Desativado**) e, quando **em falha**, um **`falha_id`** (FK → `Falha`,
+  `ondelete=SET NULL`) apontando a **falha atual** do dispositivo. A UI exibe o nome da falha
+  como estado e colore o marcador do mapa. Distinto do `Visita.falha_id` (falha de uma O.S.):
+  aqui é a condição *corrente* do equipamento.
+- **#EQP-PAGINA (documentos):** **não** haverá upload de documento por equipamento. Manuais e
+  datasheets são cadastrados na **biblioteca → Marcas** (#DOC-MARCAS) e a **página do
+  equipamento** apenas **linka** para o documento da biblioteca. Falta definir na implementação
+  o critério de associação (por `model`/marca automático vs. seleção manual de um `documento_id`).
