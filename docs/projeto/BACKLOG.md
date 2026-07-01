@@ -63,12 +63,11 @@ numa ferramenta tipo planilha (ordenar/filtrar por coluna, página por dispositi
 salvas que alimentam documentos de manutenção preventiva).
 
 - [ ] **#EQP-STATUS — status padrão "Operando" + estados** (item 2). Todo equipamento nasce com
-      `status = "Operando"`. Estados possíveis: **Operando** (padrão), **Desabilitado**,
-      **Desativado**, ou o **nome de uma falha** do catálogo (equipamento em falha). Aplicar o
-      default no cadastro avulso e no import CSV; refletir a cor do marcador no mapa por estado.
-      *Backend pequeno (default) + seletor no editor.* **Decisão a confirmar:** o "em falha" guarda
-      o `falha_id` (link ao catálogo) ou só um texto de status? Sugestão: `falha_id` opcional +
-      status derivado. dep: nenhuma (fundação).
+      `status = "Operando"`. Estados: **Operando** (padrão), **Desabilitado**, **Desativado**, ou
+      **em falha**. **Decidido (D-026):** "em falha" guarda **`falha_id`** (FK ao catálogo `Falha`,
+      SET NULL) no `Equipamento` — a falha atual do dispositivo; a UI mostra o **nome da falha**
+      como status. Aplicar default no cadastro avulso e no import CSV; cor do marcador no mapa por
+      estado. *Backend:* coluna `falha_id` em `Equipamento` + migração + seletor no editor. dep: nenhuma (fundação).
 
 - [ ] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Clicar no cabeçalho da coluna
       ordena **crescente/decrescente** (3º clique limpa). Componente de **tabela reutilizável**
@@ -83,10 +82,12 @@ salvas que alimentam documentos de manutenção preventiva).
 - [ ] **#EQP-PAGINA — página por dispositivo** (item 4). Na lista de equipamentos do cliente, cada
       dispositivo abre uma **página própria** (`/equipamentos/:clienteId/:eqpId`) com: **todos os
       dados** do equipamento, **O.S. associadas** (reusa `/cronograma/equipamento/{id}`) e
-      **documentos associados**. **Decisão a confirmar:** "documentos associados" = documentos
-      **do próprio equipamento** (nova relação `documento ↔ equipamento`) ou os documentos do
-      **cliente** (#DOC3) filtrados? Se for do equipamento, precisa de backend novo (entidade/relação
-      + upload). dep: #EQP-STATUS (exibe estado), #OS-HIST-FILTRO (seção de O.S.).
+      **documentos associados**. **Decidido (D-026):** os documentos associados são **manuais/
+      datasheets** que o usuário sobe na **biblioteca → Marcas** (#DOC-MARCAS já existe); a página
+      do equipamento só exibe um **link** para o(s) documento(s) da biblioteca — **sem** relação de
+      upload nova por equipamento. **A resolver na implementação:** como casar o equipamento ao
+      documento da marca (por `model`/marca? seleção manual de um `documento_id`?). dep: #EQP-STATUS
+      (exibe estado), #OS-HIST-FILTRO (seção de O.S.).
 
 - [ ] **#OS-HIST-FILTRO — histórico de O.S. com filtros** (item 1). No histórico de O.S. (página do
       dispositivo e/ou Buscar equipamento), adicionar **busca** (por título/técnico/data) e
@@ -115,8 +116,8 @@ salvas que alimentam documentos de manutenção preventiva).
 **Plano sugerido (sem retrabalho):** `#EQP-STATUS` → `#TAB-ORDEM` → `#EQP-FILTROS+` →
 `#OS-PAGINA` (extrai `FormOS`) → `#EQP-PAGINA` → `#OS-HIST-FILTRO` → `#EQP-LISTAS` →
 (*futuro*) gerador de documento de Manutenção Preventiva.
-**Decisões a confirmar antes de codar:** estados do #EQP-STATUS (falha por `falha_id`?) e a
-origem dos "documentos associados" do #EQP-PAGINA (relação nova por equipamento vs. docs do cliente).
+**Decisões confirmadas:** ver [D-026](DECISOES.md) — `Equipamento.falha_id` para o estado "em
+falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upload por equipamento.
 
 ### G. Lote 4 — novas solicitações (2026-06-25)
 

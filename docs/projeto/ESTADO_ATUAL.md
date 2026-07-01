@@ -58,7 +58,8 @@ Tudo mergeado na `main` (Lote 5 PR #8 · #MAP · #OS/D-025 · #R2). Frente abert
   equipamentos tipo planilha (`#TAB-ORDEM` ordenar por coluna, `#EQP-FILTROS+`), **página por
   dispositivo** (`#EQP-PAGINA`: dados + O.S. + documentos), status padrão "Operando"
   (`#EQP-STATUS`) e **listas de equipamentos** (`#EQP-LISTAS`, base do doc de preventiva).
-  **2 decisões a confirmar antes de codar** (estados do status; origem dos "documentos associados").
+  **Decisões confirmadas ([D-026](DECISOES.md)):** estado "em falha" via `Equipamento.falha_id`;
+  documentos do equipamento = link para a biblioteca (Marcas). Pronto para começar por `#EQP-STATUS`.
 - **Campos-doc da O.S.** editáveis fora da criação — **absorvido pelo `#OS-PAGINA`** do Lote 6.
 - **Lacunas restantes (stubs):** `/equipamentos/sobre`.
 - **Adiado pelo usuário:** equipamentos fase B (colunas última manutenção/teste) e fase C
