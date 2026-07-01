@@ -56,6 +56,8 @@ class Settings(BaseSettings):
 
     # --- Arquivos enviados (logos, documentos de equipamentos…) na raiz do projeto ---
     arquivos_dir: Path = BASE_DIR / "arquivos"
+    # Resolução (DPI) ao converter PDF de planta → PNG (#MAP). Maior = mais nítido e pesado.
+    planta_dpi: int = 150
 
     # --- Banco relacional (usuários, papéis, config, auditoria) ---
     database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'processed' / 'ragsimplex.db').as_posix()}"

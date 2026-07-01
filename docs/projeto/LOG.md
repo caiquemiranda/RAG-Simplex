@@ -4,6 +4,171 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #OS: hardening de docs + testes da unificação (D-025)
+
+**Branch:** `feat/buscar-equipamento`. Fecha as pendências D1–D4 (docs) e T1–T4 (testes).
+
+- **Teste novo** `test_os_editar_deletar_falha_e_rbac`: editar O.S. via PATCH (tipo/equipamento/
+  falha/campo-doc; concluir grava `ultima_manutencao`; tipo inválido → 400); DELETE de falha;
+  RBAC do catálogo (técnico 403) e do histórico do equipamento (403 sem o cliente). **102 passed**.
+- **Docs:** `FLUXOS.md` §8 novo (sequência criar/editar O.S. + histórico/RBAC; §Atividade→§10);
+  `ARQUITETURA.md` lista de páginas do frontend + `lib/format.ts` atualizadas; ponteiros #OS/D-025
+  em `spec-etapa3-cronograma.md` e `spec-atv1-pagina-atividade.md` (com a pendência dos campos-doc);
+  `TESTES.md`/`spec-os` para 102 testes.
+
+## 2026-06-30 — #OS: frontend da O.S. unificada (Fase 2, D-025)
+
+**Branch:** `feat/buscar-equipamento`. Consome o backend da unificação.
+
+- **`pages/Atividades.tsx`** → título **"Ordens de Serviço"**; filtro por **tipo** + **gráfico por
+  tipo** (ao lado do por status); badges de tipo/falha/equipamento na lista.
+- **`pages/Cronograma.tsx`** — form "Adicionar O.S." com `tipo` (preventiva/corretiva/avulsa),
+  seletor de **equipamento** (do cliente) e **falha** (catálogo), **campos do documento** em
+  `<details>` quando corretiva; **técnicos vazio = fixos do cliente**. Editor inline ganhou
+  seletores de tipo/falha.
+- **`pages/Admin.tsx`** — nova seção **"Catálogo de falhas"** (CRUD de `Falha`).
+- **`pages/Equipamentos.tsx`** — histórico repontado para `GET /cronograma/equipamento/{id}`
+  (`Visita[]`), cada item linka à O.S.
+- **`lib/api.ts`** — `Visita`/`NovaVisita` ganharam tipo/equipamento/falha/12 campos-doc; tipos
+  `Falha`/`FalhaEntrada`/`CamposDocOS`; `api.admin.falhas*`. Removidos `OrdemServico`/`OrdemEntrada`
+  e `api.admin.ordens*`. **`lib/format.ts`** — `TIPOS_OS`, `TIPO_OS_LABEL/COR`, `CAMPOS_DOC_OS`.
+- **Removidos:** `pages/Ordens.tsx`, rota `/ordens`, link + ícone na sidebar. `tsc -b` limpo.
+
+## 2026-06-30 — #OS: O.S. unifica a atividade do cronograma (backend, D-025)
+
+**Branch:** `feat/buscar-equipamento`. **Decisão [D-025](DECISOES.md)** (reverte D-024).
+
+- **Unificação:** a entidade `OrdemServico` (D-024) foi **removida** (`app/ordens.py`,
+  `tests/test_ordens.py`, router no `main.py`). A **`Visita` vira a Ordem de Serviço** —
+  reaproveita cronograma, vários técnicos, comentários, anexos, #ALOC e notificação.
+- **Modelo:** `Visita` ganhou `tipo` (manutenção **preventiva/corretiva/avulsa**),
+  `equipamento_id`/`falha_id` (FK SET NULL) e os **12 campos do documento de corretiva**
+  (especialidade…ação_aplicada). Nova entidade **`Falha`** (catálogo: nome único + termo_en).
+- **Migração `34b255a20aa8`:** cria `falha`, **dropa** `ordem_servico`, adiciona 15 colunas à
+  `visita` (batch; `tipo` com `server_default='corretiva'`). FK-noise do autogenerate removido.
+- **Backend:** `app/cronograma.py` — `_aplicar_os` (valida tipo, aplica equipamento/falha/
+  campos-doc, manutenção ao concluir), `criar` usa **fixos do cliente** quando sem técnicos,
+  notificação "Nova O.S.", `GET /cronograma/equipamento/{id}` (histórico #MAP-4). `app/admin.py`
+  — CRUD `/admin/falhas` (409 se duplicado). `VisitaResumo` expõe tipo/equipamento/falha/campos.
+- **Testes:** `test_os_unificada_falha_equipamento_manutencao` (catálogo, criar O.S. corretiva
+  concluída, histórico, tipo inválido 400, default fixos). Suíte: **101 passed**.
+- **Pendente:** frontend (Fase 2) — renomear Atividades→O.S., form com tipo/equipamento/falha/
+  campos-doc, admin de Falhas, remover página `/ordens`, repontar `api.ordensEquipamento`.
+
+## 2026-06-26 — #MAP-5: melhorias do cadastro/editor de equipamentos
+
+**Branch:** `feat/buscar-equipamento`.
+
+- **Item 1 (scroll):** `VisualizadorPlanta` — zoom da roda via **listener `wheel` nativo
+  `{passive:false}`** (preventDefault funciona; a página não rola sobre o mapa).
+- **Item 2 (caixa + salvar):** no editor, clicar na planta cria um **marcador pendente** e abre
+  uma **caixa** com os campos (painel/loop/add/type/model) + coordenadas → **Salvar** grava
+  (`PATCH` com planta_id/pos + campos). Antes salvava direto no clique.
+- **Item 3 (autocomplete):** seletor do editor virou **busca por tag** (dropdown) com alerta
+  **"sem registro"** quando não há correspondência (Enter/blur).
+- **Item 4 (ver todos):** botão lista os equipamentos **posicionados** na planta (focar ao clicar).
+- **Item 5 (cadastro):** **`POST /admin/clientes/{id}/equipamentos`** (criar avulso) +
+  **tag composta** (painel+loop+add+type) quando vazia (também no CSV). Tabela de equipamentos
+  ganhou **Tag** (1ª col), **Coordenadas** e **Última manutenção** + form de cadastro manual.
+- **Teste** `test_equipamento_criar_avulso_e_tag_composta`. **102 passed**; `tsc` OK.
+
+**Arquivos:** `app/admin.py`, `tests/test_admin.py`,
+`frontend/src/{components/VisualizadorPlanta.tsx,pages/ClienteAdmin.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
+## 2026-06-26 — #OS-2 + #MAP-4: página de O.S. + histórico no detalhe do equipamento (frontend)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (backend em 101 testes).
+
+- **#OS-2:** `pages/Ordens.tsx` (`/ordens`, admin) — filtros (cliente/status), form **Nova O.S.**
+  (cliente/equipamento/técnico/data/tipo/status/descrição/solução), lista com **status editável**
+  e excluir. Entrada **"Ordens de Serviço"** na sidebar (admin). `api.admin.{ordens,criarOrdem,
+  atualizarOrdem,removerOrdem}`.
+- **#MAP-4:** na página **Buscar equipamento**, o card de detalhes ganhou **Histórico de
+  manutenção** (lista as O.S. do equipamento via `api.ordensEquipamento`). Fecha o épico #MAP.
+- `api.ts`: tipos `OrdemServico`/`OrdemEntrada`. `tsc` OK.
+
+**Arquivos:** `frontend/src/{pages/Ordens.tsx,pages/Equipamentos.tsx,components/Sidebar.tsx,App.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
+## 2026-06-26 — #OS-1: backend da Ordem de Serviço (manutenção) + histórico do equipamento
+
+**Branch:** `feat/buscar-equipamento`. Decisão **D-024**. Spec
+[`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
+
+- **Modelo:** `OrdemServico` (entidade **separada** da `Visita`): cliente/equipamento/técnico/
+  data/tipo(corretiva|preventiva|planejada)/status(aberta|em_andamento|concluida|cancelada)/
+  descrição/solução. Migração `58e01d15fabc`.
+- **`app/ordens.py`:** CRUD `/admin/ordens` (filtros cliente/equipamento/status; valida tipo/
+  status) + `GET /equipamentos/{id}/ordens` (**histórico** visível, RBAC pelo cliente). **Concluir
+  com data → grava `equipamento.ultima_manutencao`** (`_aplicar_manutencao`).
+- **Testes** `test_ordens` (2). **101 passed**. Falta o frontend (#OS-2) e o histórico no detalhe
+  do equipamento (#MAP-4 — backend já pronto).
+
+**Arquivos:** `app/{modelos,ordens,main}.py`, `alembic/versions/58e01d15fabc_*.py`,
+`tests/test_ordens.py`, `docs/**`.
+
+---
+
+## 2026-06-26 — #MAP-3: editor de mapa na página do cliente (plantas + posicionar)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (reusa endpoints do #MAP-1).
+
+- `ClienteAdmin.tsx` ganhou: card **Plantas** (subir **PDF** → N plantas via
+  `uploadPlanta`; remover) e card **Posicionar no mapa** (seletor de planta + de equipamento;
+  `VisualizadorPlanta` com `onClicarPlanta` grava `pos_x/pos_y/planta_id` via
+  `atualizarEquipamento`; marcador clicável seleciona p/ mover; "tirar do mapa").
+- `api.ts`: `api.admin.{plantas,uploadPlanta,removerPlanta,atualizarEquipamento}`.
+- **Feature #MAP completa de ponta a ponta** (cadastra planta → posiciona → busca/localiza).
+  Falta só #MAP-4 (página de detalhes do equipamento com histórico, via futura O.S.). `tsc` OK.
+
+**Arquivos:** `frontend/src/{pages/ClienteAdmin.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
+## 2026-06-26 — #MAP-2: visualizador custom + Buscar equipamento (frontend)
+
+**Branch:** `feat/buscar-equipamento`. Frontend-only (backend segue em 99 testes).
+
+- **`components/VisualizadorPlanta.tsx`** (zero dependência): imagem com **zoom** (scroll, zoom
+  no cursor) e **pan** (arraste), **marcadores** posicionados por coordenadas (contra-escalados
+  p/ tamanho constante), **popup** do marcador ativo (coords de tela), **foco** (zoom+centro)
+  num marcador, e `onClicarPlanta(x,y)` para o editor (#MAP-3). Controles +/−/ajustar.
+- **`pages/Equipamentos.tsx`** (substitui o placeholder): cliente → busca por **tag** (dropdown
+  de resultados) → abre a planta certa → **localiza** o equipamento (marcador + popup com
+  tipo/status/última manutenção) → card de **detalhes** completo + "Localizar no mapa".
+  Cor do marcador por status (verde/âmbar/vermelho). Seletor de planta (multipágina).
+- `api.ts`: tipo `Equipamento` estendido + `Planta`; `equipamentosCliente(cid, busca?)` +
+  `plantasCliente(cid)`. `tsc` OK.
+
+**Arquivos:** `frontend/src/{components/VisualizadorPlanta.tsx,pages/Equipamentos.tsx,lib/api.ts}`, `docs/**`.
+
+---
+
+## 2026-06-26 — #MAP-1: backend do "Buscar equipamento" (plantas + posição + manutenção)
+
+**Branch:** `feat/buscar-equipamento` (do `main`). Decisão **D-023**. Spec
+[`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+
+- Olhei o projeto legado (`automation-reports-maintenance/SAAS/sistema-manutencao-3`): React
+  CRA + Leaflet (imagem-base + X/Y em `Dispositivos.js`). Decidido (D-023): trazer nativo,
+  **visualizador custom** (sem npm), **PDF→PNG no servidor** (PyMuPDF), **`tag`** como chave,
+  recadastro de coordenadas.
+- **Modelo:** `Planta` (cliente_id/nome/imagem_url/largura/altura/ordem); `Equipamento` +
+  `tag/status/ultima_manutencao/ultimo_teste/planta_id/pos_x/pos_y`. Migração `ec6397a8beb8`.
+- **Backend:** `app/plantas.py` (conversor `pdf_para_pngs` + CRUD de plantas, upload PDF→N PNGs
+  via `arquivos.salvar_bytes`); `admin.py` (CSV ganhou tag/status/datas; `PATCH /admin/
+  equipamentos/{id}` p/ posição); `main.py` (`?busca=` por tag + `GET /clientes/{id}/plantas`).
+  `pymupdf==1.24.10` no requirements; `config.planta_dpi=150`.
+- **Fecha a "fase B"** do #EQP-1 (última manutenção/teste). **99 passed**; testes `test_plantas` (2).
+
+**Arquivos:** `app/{modelos,plantas,admin,main,config,arquivos}.py`,
+`alembic/versions/ec6397a8beb8_*.py`, `requirements.txt`, `tests/test_plantas.py`, `docs/**`.
+
+---
+
 ## 2026-06-25 — #R2: página de relatório do cliente (fecha o placeholder)
 
 **Branch:** `feat/relatorio-cliente` (do `main` após o merge do Lote 5, PR #8).
@@ -18,8 +183,6 @@ reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 - **97 passed** (sem novo teste de backend); `tsc` OK.
 
 **Arquivos:** `frontend/src/pages/RelatorioCliente.tsx`, `docs/**`.
-
----
 
 ## 2026-06-25 — Lote 5 (9): modal do dia — scroll único, cards-resumo, editar (admin)
 

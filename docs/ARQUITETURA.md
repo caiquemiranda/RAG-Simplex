@@ -51,11 +51,12 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `auth.py` | Hash de senha (bcrypt), JWT (access/refresh), dependência `requer(permissao)`. |
 | `seed.py` | Semeia permissões e papéis padrão (idempotente). |
 | `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
-| `cronograma.py` | Router `/cronograma`: visitas (RBAC por papel) + feriados (**dia de feriado fica sem atividades/#ALOC + notifica**, #FER-1) + **filtro por unidade** (D-021). |
+| `cronograma.py` | Router `/cronograma`: **O.S./visitas** (RBAC por papel) — `tipo`/equipamento/falha/campos-doc (#OS, D-025), técnicos default = fixos, concluir grava `ultima_manutencao`, histórico por equipamento + feriados (**dia de feriado fica sem atividades/#ALOC + notifica**, #FER-1) + **filtro por unidade** (D-021). |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
 | `banco.py` | Router `/admin/banco`: **status** do banco (tamanho, migração Alembic, contagem por tabela, blocos Chroma) + **backup** do SQLite. |
+| `plantas.py` | Router `/admin/.../plantas`: **upload de PDF → PNG** (PyMuPDF, 1 página = 1 planta) + CRUD das plantas do cliente (#MAP). |
 | `cripto.py` | Cifragem das chaves de provedor (nunca em claro) + mascaramento. |
 | `db.py` | Engine/Session; **`aplicar_migracoes`** (Alembic `upgrade head`, banco real, D-022); `criar_tabelas` (create_all + micro-migração — testes/fallback); `python -m app.db --init`. |
 | `main.py` | App FastAPI: monta routers, CORS, endpoints de RAG + `/me/documentos`. |
@@ -83,10 +84,15 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST | `/admin/clientes/{id}/equipamentos[/importar]` · DELETE `/admin/equipamentos/{id}` | `gerir_usuarios` | **Equipamentos** do cliente (#EQP-1): listar + **import CSV** (`painel,loop,add,type,model`; `substituir`). |
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
-| GET | `/clientes/{id}/equipamentos` | autenticado | **Equipamentos do cliente** (#EQP-2): admin todos; técnico só dos seus clientes (403). |
+| GET | `/clientes/{id}/equipamentos?busca=` | autenticado | **Equipamentos do cliente** (#EQP-2/#MAP): admin todos; técnico só dos seus (403). `busca` filtra por **tag/add**. Traz status/posição. |
+| GET | `/clientes/{id}/plantas` | autenticado | **Plantas** (projetos) do cliente — visualizador #MAP (RBAC igual). |
+| GET/POST/DELETE | `/admin/clientes/{id}/plantas` · `/admin/plantas/{id}` | `gerir_usuarios` | Plantas: **upload PDF→PNG** (1 pág=1 planta), listar, remover (#MAP). |
+| PATCH | `/admin/equipamentos/{id}` | `gerir_usuarios` | Edita equipamento + **posição na planta** (`planta_id`/`pos_x`/`pos_y`) — editor de mapa. |
+| GET/POST/DELETE | `/admin/falhas[/{id}]` | `gerir_usuarios` | **Catálogo de falhas** (#OS): nome+termo_en (409 se duplicado). |
+| GET | `/cronograma/equipamento/{id}` | autenticado | **Histórico de O.S.** do equipamento (#MAP-4); RBAC pelo cliente. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
-| POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia visitas do cronograma. |
+| POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia **O.S./visitas** (#OS, D-025): `tipo` (preventiva/corretiva/avulsa), equipamento, falha, campos-doc; sem técnicos → fixos do cliente; concluir grava `ultima_manutencao`. |
 | GET | `/cronograma/atividades` | autenticado | **Lista de atividades** (sidebar Cronograma→Atividades): técnico as suas; admin todas. |
 | GET | `/cronograma/{id}` | atribuído ou admin | **Detalhe da atividade** (#ATV-1): comentários + anexos. |
 | POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
@@ -131,8 +137,9 @@ técnico/analista recebem também "🔧 resolução técnica".
 | `components/DocumentoPanel.tsx` | Split-screen: abre o guia no trecho citado. |
 | `components/AuditoriaView.tsx` | Tabela de auditoria (painel ADM). |
 | `components/Placeholder.tsx` | Páginas "em construção". |
-| `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). |
-| `pages/` | `Login`, `Consulta`, `Admin`, `Home`, `Relatorios`, `Equipamentos`, `Documentos`. |
+| `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). Tipos de domínio (ex.: `Visita` = O.S. com `tipo`/`equipamento`/`falha`/campos-doc; `Falha`). |
+| `lib/format.ts` | Helpers de UI: `isoData`, `STATUS_VISITA`, e para O.S. `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`CAMPOS_DOC_OS` (#OS, D-025). |
+| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos`, `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `Notificacoes`. |
 
 ### Funcionalidades da UI
 

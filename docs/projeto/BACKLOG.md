@@ -11,6 +11,51 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
 
 ## 1. Backlog (o que falta)
 
+### H. #MAP — Buscar equipamento / Mapa de dispositivos (épico, D-023)
+Integra o projeto legado `sistema-manutencao-3` (planta + busca de dispositivos), moderno.
+Spec [`specs/spec-map-mapa-dispositivos.md`](specs/spec-map-mapa-dispositivos.md).
+- [x] **#MAP-1 (backend):** entidade `Planta`; `Equipamento` + `tag/status/datas/posição`;
+      migração `ec6397a8beb8`; **conversor PDF→PNG** (PyMuPDF) + CRUD de plantas; PATCH de
+      posição; busca visível por `tag`; endpoints de plantas. Testes `test_plantas`.
+      *(fecha a "fase B" do #EQP-1: última manutenção/teste.)*
+- [x] **#MAP-2 (frontend): visualizador + Buscar equipamento** (`/equipamentos`): componente
+      custom `VisualizadorPlanta` (zoom/pan por scroll+arraste, marcadores por coordenadas,
+      popup, foco/zoom no marcador); página de busca: cliente → tag → abre a planta → marca o
+      ponto → popup (tipo/status/última manutenção) + **detalhes** do equipamento + "Localizar
+      no mapa". Reusa endpoints visíveis (#MAP-1). Substitui o placeholder de Equipamentos.
+- [x] **#MAP-3 (editor, admin):** na página do cliente — card **Plantas** (subir PDF → N
+      plantas, remover) + card **Posicionar no mapa** (escolhe planta + equipamento, clica na
+      planta p/ gravar `pos_x/pos_y/planta_id`; "tirar do mapa"). Reusa `VisualizadorPlanta`
+      com `onClicarPlanta`. dep: #MAP-1/#MAP-2.
+- [x] **#MAP-4:** **histórico de manutenção** (O.S.) no detalhe do equipamento (Buscar
+      equipamento) — seção lista as O.S. do equipamento (data/tipo/status/descrição/técnico).
+
+**Melhorias do cadastro/editor de equipamentos (#MAP-5):**
+- [x] **Scroll só no mapa**: `VisualizadorPlanta` usa listener `wheel` **nativo não-passivo**
+      (a página não rola quando o cursor está sobre o mapa).
+- [x] **Posicionar em 2 passos**: clicar na planta abre uma **caixa** com os dados (painel/
+      loop/add/type/model + coordenadas) e botão **Salvar** (antes salvava no clique).
+- [x] **Autocomplete por tag** no seletor do editor + alerta **"sem registro"** se a tag
+      digitada não existir.
+- [x] **"Ver todos"**: lista os equipamentos **posicionados** na planta (clique para focar).
+- [x] **Cadastro completo**: `POST /admin/clientes/{id}/equipamentos` (criar avulso);
+      **tag** composta de painel+loop+add+type quando vazia; tabela mostra **Tag** (1ª coluna),
+      **Coordenadas** e **Última manutenção**. Teste `test_equipamento_criar_avulso_e_tag_composta`.
+
+### I. #OS — Ordem de Serviço unifica a atividade do cronograma (D-025, reverte D-024)
+A **O.S. = atividade do cronograma** (entidade `Visita`); `OrdemServico` foi removida. Spec
+[`specs/spec-os-ordem-servico.md`](specs/spec-os-ordem-servico.md).
+- [x] **Backend (D-025):** `Visita` ganhou `tipo` (preventiva/corretiva/avulsa), `equipamento_id`,
+      `falha_id` + 12 campos do documento de corretiva; entidade `Falha` (catálogo `/admin/falhas`);
+      sem técnicos → **fixos do cliente**; **concluir grava `ultima_manutencao`**; histórico
+      `/cronograma/equipamento/{id}`; notificação "Nova O.S.". Migração `34b255a20aa8`. Teste
+      `test_os_unificada_falha_equipamento_manutencao`. **`OrdemServico`/`app/ordens.py` removidos.**
+- [x] **Frontend (Fase 2):** **Atividades → "Ordens de Serviço"** (grupo Cronograma; filtro +
+      gráfico por tipo); form no calendário com `tipo`/equipamento/falha/campos-doc + técnicos
+      default fixos (editor inline com tipo/falha); **admin "Catálogo de falhas"** (CRUD);
+      **removidos** `pages/Ordens.tsx` + link + `api.admin.ordens*`; histórico do equipamento
+      repontado para `/cronograma/equipamento/{id}`.
+
 ### G. Lote 4 — novas solicitações (2026-06-25)
 
 **Correções rápidas (independentes, baixo risco):**

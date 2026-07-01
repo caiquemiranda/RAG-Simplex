@@ -3,7 +3,7 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-25
+**Última atualização:** 2026-06-30
 
 > **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
 > tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
@@ -13,8 +13,21 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/relatorio-cliente` (Lote 5 mergeado em `main`, PR #8).
-  **Backend: 97 testes** passando.
+- **Branch:** `main` — **#MAP + #OS (D-025)** e **#R2** mergeados. **Backend: 102 testes** passando.
+- **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
+  visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
+- **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`
+  **vira a O.S.** (entidade `OrdemServico` removida). Ganhou `tipo` (manutenção preventiva/
+  corretiva/avulsa), `equipamento_id`, `falha_id` + **12 campos do documento de corretiva**;
+  catálogo `Falha` (CRUD `/admin/falhas`); sem técnicos → **fixos do cliente**; **concluir grava
+  `ultima_manutencao`**; histórico `GET /cronograma/equipamento/{id}`; notificação "Nova O.S.".
+  Migração `34b255a20aa8`. **Frontend ✅**: Atividades→"Ordens de Serviço" (filtro/gráfico por
+  tipo), form no calendário (tipo/equipamento/falha/campos-doc, técnicos default fixos), admin
+  "Catálogo de falhas", histórico repontado. Ver [`spec-os`](specs/spec-os-ordem-servico.md).
+- **#MAP-5** (melhorias do editor) ✅ — scroll só no mapa; **posicionar em 2 passos** (caixa +
+  Salvar); **autocomplete** por tag (+ alerta sem registro); **Ver todos**; **cadastro avulso**
+  de equipamento + **tag composta** (painel+loop+add+type) + colunas Tag/Coordenadas/Últ. manut.
+- **#R2** — página de relatório do cliente (`/relatorios/:id`) deixou de ser placeholder.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
   - **Plataforma:** auth JWT (**token 1 dia**, **e-mail case-insensitive**), RBAC, persistência,
@@ -38,11 +51,13 @@
 
 ## ⏭️ PRÓXIMO PASSO
 
-- ✅ **Lote 5 mergeado** (PR #8). ✅ **#R2** — página de relatório do cliente
-  (`/relatorios/:id`) deixou de ser placeholder (branch `feat/relatorio-cliente`, falta merge).
-- **Lacunas restantes (stubs):** `Equipamentos.tsx` (buscar) e `/equipamentos/sobre`.
+Tudo mergeado na `main` (Lote 5 PR #8 · #MAP · #OS/D-025 · #R2). Frente aberta a escolher:
+
+- **Campos-doc da O.S.** editáveis também no editor inline / página da atividade (#ATV-1) — hoje
+  são preenchidos só na criação (pendência não-bloqueante da unificação #OS).
+- **Lacunas restantes (stubs):** `/equipamentos/sobre`.
 - **Adiado pelo usuário:** equipamentos fase B (colunas última manutenção/teste) e fase C
-  (histórico do painel).
+  (histórico do painel — hoje suprido pela O.S.).
 - **Roadmap:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem, *requer
   API key*) · #1 (alinhamento ChatGPT).
 
@@ -64,12 +79,6 @@
   (#MOBILE: Consulta full-screen, modal do dia, calendário compacto).
 - ✅ **Modal do dia v2 (#CR-DIA2):** scroll único (não esconde mais topo/rodapé) · cards =
   **resumo** clicável (abre a atividade) · **admin** com botão **editar** (form inline).
-
-**Falta:** abrir PR da `feat/lote5-fixes` → `main` e mergear.
-
-**Depois do Lote 5:** equipamentos fase b/c (colunas últ. manutenção/teste; histórico do
-painel — *adiado pelo usuário*) · Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) ·
-Fase 10 (nuvem, *requer API key*) · #1 (alinhamento ChatGPT).
 
 ## 🔧 Para rodar na sua máquina
 

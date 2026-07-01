@@ -1,17 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type AdminCliente, type AdminUsuario, type ClienteVisivel, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type ClienteVisivel, type Equipamento, type Falha, type Feriado, type NovaVisita, type UnidadeVisivel, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar } from '../components/Avatar'
 import { MultiFiltro } from '../components/MultiFiltro'
-import { STATUS_VISITA, isoData as fmt } from '../lib/format'
+import { CAMPOS_DOC_OS, STATUS_VISITA, TIPO_OS_LABEL, TIPOS_OS, isoData as fmt } from '../lib/format'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STATUS_COR = STATUS_VISITA
 
 type TecMini = { id: number; nome: string; foto: string | null }
+// Estado do formulário "nova O.S." (#OS, D-025).
+type NovaOS = {
+  usuarioIds: Set<number>; cliente_id: number | ''; titulo: string
+  tipo: string; equipamento_id: number | ''; falha_id: number | ''
+  doc: Record<string, string>   // campos do documento de corretiva
+}
 type GrupoCliente = { key: string; nome: string; cor: string | null; logo: string | null; visitas: Visita[]; tecnicos: TecMini[] }
 
 /** Agrupa as visitas do dia por cliente; coleta os técnicos (dedup) — #CR6/#CR8. */
@@ -50,7 +56,9 @@ export default function Cronograma() {
   const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
   const [clientes, setClientes] = useState<AdminCliente[]>([])
   const [clientesVis, setClientesVis] = useState<ClienteVisivel[]>([])       // opções do filtro Clientes (todos os papéis)
-  const [nova, setNova] = useState<{ usuarioIds: Set<number>; cliente_id: number | ''; titulo: string }>({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
+  const [falhas, setFalhas] = useState<Falha[]>([])                          // catálogo de falhas (#OS)
+  const [equipCliente, setEquipCliente] = useState<Equipamento[]>([])        // equipamentos do cliente da nova O.S.
+  const [nova, setNova] = useState<NovaOS>({ usuarioIds: new Set(), cliente_id: '', titulo: '', tipo: 'corretiva', equipamento_id: '', falha_id: '', doc: {} })
 
   const de = fmt(new Date(ref.ano, ref.mes, 1))
   const ate = fmt(new Date(ref.ano, ref.mes + 1, 0))
@@ -101,10 +109,16 @@ export default function Cronograma() {
 
   useEffect(() => {
     if (!podeGerir) return
-    Promise.all([api.admin.usuarios(), api.admin.clientes()])
-      .then(([u, c]) => { setTecnicos(u); setClientes(c) })
+    Promise.all([api.admin.usuarios(), api.admin.clientes(), api.admin.falhas()])
+      .then(([u, c, f]) => { setTecnicos(u); setClientes(c); setFalhas(f) })
       .catch(() => {})
   }, [podeGerir])
+
+  // Equipamentos do cliente selecionado na nova O.S. (para o seletor de equipamento).
+  useEffect(() => {
+    if (!podeGerir || nova.cliente_id === '') { setEquipCliente([]); return }
+    api.admin.equipamentos(nova.cliente_id as number).then(setEquipCliente).catch(() => setEquipCliente([]))
+  }, [podeGerir, nova.cliente_id])
 
   const porDia = useMemo(() => {
     const m: Record<string, Visita[]> = {}
@@ -134,17 +148,25 @@ export default function Cronograma() {
   })
 
   async function adicionar() {
-    if (!diaSel || nova.usuarioIds.size === 0 || !nova.titulo.trim()) return
+    // Técnicos podem ficar vazios → o backend usa os fixos do cliente (#ALOC).
+    if (!diaSel || !nova.titulo.trim()) return
     try {
+      const doc = nova.tipo === 'corretiva'
+        ? Object.fromEntries(CAMPOS_DOC_OS.map(([k]) => [k, nova.doc[k]?.trim() || null]))
+        : {}
       await api.cronograma.criar({
         usuario_ids: Array.from(nova.usuarioIds),
         cliente_id: nova.cliente_id === '' ? null : (nova.cliente_id as number),
         data: diaSel, titulo: nova.titulo.trim(),
+        tipo: nova.tipo,
+        equipamento_id: nova.equipamento_id === '' ? null : (nova.equipamento_id as number),
+        falha_id: nova.falha_id === '' ? null : (nova.falha_id as number),
+        ...doc,
       })
-      setNova({ usuarioIds: new Set(), cliente_id: '', titulo: '' })
+      setNova({ usuarioIds: new Set(), cliente_id: '', titulo: '', tipo: 'corretiva', equipamento_id: '', falha_id: '', doc: {} })
       recarregar()
     } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Falha ao adicionar visita')
+      setErro(e instanceof Error ? e.message : 'Falha ao adicionar a O.S.')
     }
   }
   async function remover(id: number) {
@@ -328,12 +350,23 @@ export default function Cronograma() {
                       /* ---- Edição inline (apenas admin) ---- */
                       <div className="space-y-2 p-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold uppercase text-muted-foreground">Editar atividade</span>
+                          <span className="text-xs font-semibold uppercase text-muted-foreground">Editar O.S.</span>
                           <button className="text-xs text-primary hover:underline" onClick={() => setEditandoId(null)}>concluir</button>
                         </div>
                         <input defaultValue={v.titulo}
                                onBlur={(e) => { if (e.target.value.trim() && e.target.value !== v.titulo) atualizarVisita(v.id, { titulo: e.target.value }) }}
                                className="w-full rounded border bg-background px-2 py-1 text-sm font-medium" />
+                        <div className="grid grid-cols-2 gap-1">
+                          <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.tipo}
+                                  onChange={(e) => atualizarVisita(v.id, { tipo: e.target.value })} title="Tipo de manutenção">
+                            {TIPOS_OS.map((t) => <option key={t} value={t}>{TIPO_OS_LABEL[t]}</option>)}
+                          </select>
+                          <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.falha_id ?? ''}
+                                  onChange={(e) => atualizarVisita(v.id, { falha_id: e.target.value ? Number(e.target.value) : null })} title="Falha">
+                            <option value="">sem falha</option>
+                            {falhas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                          </select>
+                        </div>
                         <select className="h-8 w-full rounded border bg-background px-1 text-xs" value={v.cliente_id ?? ''}
                                 onChange={(e) => atualizarVisita(v.id, { cliente_id: e.target.value ? Number(e.target.value) : null })}>
                           <option value="">sem cliente</option>
@@ -396,9 +429,9 @@ export default function Cronograma() {
 
             {podeGerir && (
               <div className="mt-3 space-y-2 border-t pt-3">
-                <p className="text-xs font-medium text-muted-foreground">Adicionar atividade</p>
+                <p className="text-xs font-medium text-muted-foreground">Adicionar Ordem de Serviço</p>
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Técnicos (1+):</span>
+                  <span className="text-xs text-muted-foreground">Técnicos (vazio = fixos do cliente):</span>
                   <div className="flex flex-wrap gap-1.5">
                     {tecnicos.map((t) => {
                       const marcado = nova.usuarioIds.has(t.id)
@@ -416,14 +449,49 @@ export default function Cronograma() {
                   </div>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
+                  <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.tipo}
+                          onChange={(e) => setNova({ ...nova, tipo: e.target.value })} title="Tipo de manutenção">
+                    {TIPOS_OS.map((t) => <option key={t} value={t}>{TIPO_OS_LABEL[t]}</option>)}
+                  </select>
                   <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.cliente_id}
-                          onChange={(e) => setNova({ ...nova, cliente_id: e.target.value ? Number(e.target.value) : '' })}>
+                          onChange={(e) => setNova({ ...nova, cliente_id: e.target.value ? Number(e.target.value) : '', equipamento_id: '' })}>
                     <option value="">Cliente (opcional)…</option>
                     {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                   </select>
-                  <Input value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Atividade (ex.: Manutenção 4100)" />
+                  <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.equipamento_id}
+                          onChange={(e) => setNova({ ...nova, equipamento_id: e.target.value ? Number(e.target.value) : '' })}
+                          disabled={nova.cliente_id === ''} title="Equipamento alvo">
+                    <option value="">Equipamento (opcional)…</option>
+                    {equipCliente.map((eq) => <option key={eq.id} value={eq.id}>{eq.tag || eq.add || `#${eq.id}`}</option>)}
+                  </select>
+                  <select className="h-9 rounded-md border bg-background px-2 text-sm" value={nova.falha_id}
+                          onChange={(e) => setNova({ ...nova, falha_id: e.target.value ? Number(e.target.value) : '' })} title="Falha">
+                    <option value="">Falha (opcional)…</option>
+                    {falhas.map((f) => <option key={f.id} value={f.id}>{f.nome}{f.termo_en ? ` (${f.termo_en})` : ''}</option>)}
+                  </select>
                 </div>
-                <Button size="sm" onClick={adicionar} disabled={nova.usuarioIds.size === 0 || !nova.titulo.trim()}>Adicionar</Button>
+                <Input value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Descrição da O.S. (ex.: Manutenção 4100)" />
+
+                {/* Campos do documento — só manutenção corretiva (#OS item 12) */}
+                {nova.tipo === 'corretiva' && (
+                  <details className="rounded-md border bg-muted/20 px-2 py-1.5">
+                    <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Dados do documento (corretiva)</summary>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {CAMPOS_DOC_OS.map(([k, rot]) => {
+                        const isData = k === 'data_solicitacao' || k === 'data_execucao'
+                        return (
+                          <label key={k} className="text-[11px] text-muted-foreground">
+                            {rot}
+                            <input type={isData ? 'date' : 'text'} value={nova.doc[k] ?? ''}
+                                   onChange={(e) => setNova({ ...nova, doc: { ...nova.doc, [k]: e.target.value } })}
+                                   className="mt-0.5 w-full rounded border bg-background px-2 py-1 text-xs text-foreground" />
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </details>
+                )}
+                <Button size="sm" onClick={adicionar} disabled={!nova.titulo.trim()}>Adicionar</Button>
               </div>
             )}
             </div>{/* fim do corpo rolável */}

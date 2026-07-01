@@ -10,6 +10,12 @@ Cronograma real dos técnicos, com **card do dia** por papel. Depende da Etapa 1
 (atividade), `status` (`agendada|concluida|cancelada`), `observacoes`. Tabela nova →
 criada pela micro-migração no banco existente.
 
+> **Estendida depois:** vários técnicos (N:N `visita_tecnico`, #CR8), status `pendente`,
+> página com comentários/anexos (#ATV-1) e — pela unificação **#OS / D-025** — os campos de
+> **Ordem de Serviço** (`tipo`, `equipamento_id`, `falha_id` + 12 campos do documento de
+> corretiva). A `Visita` **é** a O.S. Ver [`spec-os-ordem-servico.md`](spec-os-ordem-servico.md)
+> e [`../../MODELO_DADOS.md`](../../MODELO_DADOS.md).
+
 ## API (`app/cronograma.py`, montado em `/cronograma`)
 - `GET /cronograma?de=&ate=&tecnico_id=` — visitas no intervalo. **RBAC:** técnico vê
   só as próprias; admin (`gerir_usuarios`) vê todas e pode filtrar por técnico.

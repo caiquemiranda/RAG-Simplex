@@ -71,7 +71,9 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
   [Lote 4 — token/e-mail/feriado](projeto/specs/spec-lote4-fixes.md) ·
   [#ATV-1 — página de atividade](projeto/specs/spec-atv1-pagina-atividade.md) ·
   [#EQP-1 — Equipamento + CSV](projeto/specs/spec-eqp1-equipamento-csv.md) ·
-  [#CLI-PG + #EQP-2 — página do cliente / sidebar](projeto/specs/spec-eqp2-cli-pg.md)
+  [#CLI-PG + #EQP-2 — página do cliente / sidebar](projeto/specs/spec-eqp2-cli-pg.md) ·
+  [#MAP — Mapa de dispositivos / Buscar equipamento](projeto/specs/spec-map-mapa-dispositivos.md) ·
+  [#OS — Ordem de Serviço](projeto/specs/spec-os-ordem-servico.md)
 
 ## 7. Roteiro: recriar o sistema em outra linguagem
 1. **Requisitos & invariantes** → [`prd…`](prd_sistema_rag_simplex.md) + [`FLUXOS.md`](FLUXOS.md) §"invariantes".

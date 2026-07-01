@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**97 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**102 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -67,6 +67,23 @@ pytest
 - `test_resolucao_sem_config_usa_settings` — fallback de configuração.
 - `test_cifrar_decifrar_roundtrip` / `test_mascarar` / `test_cifrar_sem_chave_erro_claro` — chaves nunca em claro.
 
+### O.S. unificada (#OS, D-025) — em `test_cronograma.py`
+- `test_os_unificada_falha_equipamento_manutencao` — catálogo de falha (`/admin/falhas`, 409 se
+  duplicado); criar **O.S.** corretiva concluída com `tipo`/equipamento/falha/campos-doc →
+  resumo expõe `tipo`/`equipamento_tag`/`falha_nome` e grava `ultima_manutencao`; histórico por
+  equipamento (`GET /cronograma/equipamento/{id}`); tipo inválido no POST → 400; sem técnicos → fixos.
+- `test_os_editar_deletar_falha_e_rbac` — **editar O.S.** via PATCH (muda `tipo`, vincula
+  equipamento/falha, preenche campo-doc; concluir grava `ultima_manutencao`; tipo inválido → 400);
+  **DELETE** de falha some do catálogo; **RBAC**: técnico não cria/remove falha (403) e só vê o
+  histórico do equipamento se atende o cliente (403 caso contrário).
+- `test_ordens.py` **removido** (entidade `OrdemServico` extinta pela unificação).
+
+### `test_plantas.py` (2) — mapa de dispositivos (#MAP)
+- `test_upload_pdf_gera_plantas_e_remove` — PDF 2 páginas → 2 plantas (PNG, dimensões);
+  lista admin/visível; remove; não-PDF → 400; não-admin → 403.
+- `test_equipamento_tag_posicao_e_busca` — CSV com tag/status/data; PATCH posiciona na
+  planta (`planta_id`/`pos_x`/`pos_y`); busca visível por `tag`.
+
 ### `test_migracoes.py` (2) — migrações Alembic (D-022)
 - `test_migracao_tem_unica_head` — grafo de migrações sem branches (uma só head).
 - `test_upgrade_cria_schema_igual_aos_modelos` — `upgrade head` num banco vazio gera
@@ -95,6 +112,7 @@ pytest
 - `test_email_case_insensitive` — e-mail normalizado (minúsculo) no cadastro/login; duplicado por caixa → 409.
 - `test_equipamentos_import_csv` — #EQP-1: importa CSV (vírgula/ponto-e-vírgula), `substituir`, remove, RBAC.
 - `test_cliente_detalhe_e_campos` — #CLI-PG: endereço/contatos no cadastro + `GET /admin/clientes/{id}` com equipamentos.
+- `test_equipamento_criar_avulso_e_tag_composta` — cria equipamento manual; tag vazia compõe de painel+loop+add+type.
 - `test_equipamentos_visiveis_por_papel` — #EQP-2: `GET /clientes/{id}/equipamentos` admin vê; técnico só dos seus (403).
 - `test_admin_troca_estrategia_vale_na_consulta` — estratégia aplicada na consulta.
 - `test_estrategia_por_usuario_get_e_put` — GET nulo → PUT → GET com valor.

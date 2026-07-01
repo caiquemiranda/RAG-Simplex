@@ -11,6 +11,7 @@ import {
   type AdminProvedor,
   type AdminUsuario,
   type DocumentoTecnico,
+  type Falha,
 } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
@@ -41,7 +42,7 @@ type PerfilForm = {
   observacoes: string
   acesso_expira_em: string
 }
-type Secao = null | 'usuarios' | 'auditoria' | 'apikeys' | 'banco' | 'clientes'
+type Secao = null | 'usuarios' | 'auditoria' | 'apikeys' | 'banco' | 'clientes' | 'falhas'
 
 const CAMADAS = ['simples', 'tecnica']
 
@@ -58,6 +59,7 @@ const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone:
   { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: '🔑' },
   { chave: 'banco', titulo: 'Banco de dados', desc: 'Gerenciar bancos de dados do sistema.', icone: '🗄️' },
   { chave: 'clientes', titulo: 'Clientes e unidades', desc: 'Clientes, unidades (bases) e quais técnicos têm acesso.', icone: '🏢' },
+  { chave: 'falhas', titulo: 'Catálogo de falhas', desc: 'Falhas do painel (No Answer, Dirty…) usadas nas O.S.', icone: '⚠️' },
   { chave: 'auditoria', titulo: 'Auditoria', desc: 'Histórico de consultas e feedback.', icone: '📋' },
 ]
 
@@ -75,6 +77,8 @@ export default function Admin() {
   const [novoCliente, setNovoCliente] = useState({ nome: '', unidade: '', cor: '#16C0CC', unidadeId: '' as number | '' })
   const [unidades, setUnidades] = useState<AdminUnidade[]>([])
   const [novaUnidade, setNovaUnidade] = useState({ nome: '', cidade: '' })
+  const [falhas, setFalhas] = useState<Falha[]>([])
+  const [novaFalha, setNovaFalha] = useState({ nome: '', termo_en: '' })
   const [banco, setBanco] = useState<BancoStatus | null>(null)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
   const [provedores, setProvedores] = useState<AdminProvedor[]>([])
@@ -101,13 +105,14 @@ export default function Admin() {
   async function carregar() {
     setErro(null)
     try {
-      const [us, ps, pms, es, cs, uns] = await Promise.all([
+      const [us, ps, pms, es, cs, uns, fs] = await Promise.all([
         api.admin.usuarios(),
         api.admin.papeis(),
         api.admin.permissoes(),
         api.admin.estrategias(),
         api.admin.clientes(),
         api.admin.unidades(),
+        api.admin.falhas(),
       ])
       setUsuarios(us)
       setPapeis(ps)
@@ -115,6 +120,7 @@ export default function Admin() {
       setEstrategias(es)
       setClientes(cs)
       setUnidades(uns)
+      setFalhas(fs)
       if (podeChaves) setProvedores(await api.admin.provedores())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar')
@@ -332,6 +338,29 @@ export default function Admin() {
       setUnidades(await api.admin.unidades())
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao remover unidade')
+    }
+  }
+
+  // --- Catálogo de falhas (#OS, D-025) ---
+  async function criarFalha() {
+    if (!novaFalha.nome.trim()) return
+    setErro(null)
+    try {
+      await api.admin.criarFalha({ nome: novaFalha.nome.trim(), termo_en: novaFalha.termo_en.trim() || null })
+      setNovaFalha({ nome: '', termo_en: '' })
+      setFalhas(await api.admin.falhas())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao criar falha')
+    }
+  }
+
+  async function removerFalha(f: Falha) {
+    setErro(null)
+    try {
+      await api.admin.removerFalha(f.id)
+      setFalhas(await api.admin.falhas())
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao remover falha')
     }
   }
 
@@ -600,6 +629,37 @@ export default function Admin() {
               A <strong>cor</strong> e o <strong>logo</strong> do cliente são usados onde ele aparece
               (relatórios, calendário). Os <strong>técnicos com acesso</strong> são definidos na
               edição do usuário (Perfil e gestão → Clientes atendidos).
+            </p>
+          </div>
+        )}
+
+        {secao === 'falhas' && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Nova falha</CardTitle></CardHeader>
+              <CardContent className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1"><Label>Nome</Label><Input value={novaFalha.nome} onChange={(e) => setNovaFalha({ ...novaFalha, nome: e.target.value })} placeholder="Cabeçote ausente" /></div>
+                <div className="space-y-1"><Label>Termo no painel (EN)</Label><Input value={novaFalha.termo_en} onChange={(e) => setNovaFalha({ ...novaFalha, termo_en: e.target.value })} placeholder="HEAD MISSING" /></div>
+                <Button size="sm" onClick={criarFalha} disabled={!novaFalha.nome.trim()}>Adicionar falha</Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="divide-y p-2">
+                {falhas.map((f) => (
+                  <div key={f.id} className="flex items-center gap-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{f.nome}</div>
+                      {f.termo_en && <div className="truncate text-xs text-muted-foreground">🖥️ {f.termo_en}</div>}
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => removerFalha(f)}>Remover</Button>
+                  </div>
+                ))}
+                {falhas.length === 0 && <p className="py-3 text-sm text-muted-foreground">Nenhuma falha cadastrada. Cadastre para classificar as O.S.</p>}
+              </CardContent>
+            </Card>
+            <p className="text-xs text-muted-foreground">
+              As falhas aparecem na criação/edição de <strong>Ordens de Serviço</strong>. O <strong>termo no painel</strong>
+              (em inglês, ex.: <code>HEAD MISSING</code>) é preservado como aparece no display Simplex.
             </p>
           </div>
         )}

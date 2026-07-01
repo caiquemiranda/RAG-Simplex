@@ -222,7 +222,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
           {grupoCron && (
             <div className="ml-3 space-y-0.5 border-l pl-2">
               <NavLink to="/cronograma" end className={linkCls} onClick={navegou}>Calendário</NavLink>
-              <NavLink to="/cronograma/atividades" className={linkCls} onClick={navegou}>Atividades</NavLink>
+              <NavLink to="/cronograma/atividades" className={linkCls} onClick={navegou}>Ordens de Serviço</NavLink>
             </div>
           )}
         </div>
