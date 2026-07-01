@@ -4,6 +4,19 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #EQP-PAGINA + #OS-HIST-FILTRO: página por dispositivo (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only.
+
+- **`pages/EquipamentoPagina.tsx`** (novo) em **`/equipamentos/:clienteId/:eqpId`**: dados do
+  equipamento + estado (cor por falha); **Documentos** = manuais/datasheets da biblioteca →
+  Marcas casados por **model/type** (link p/ download; senão link p/ cadastrar, D-026); **Ordens
+  de Serviço** associadas (`/cronograma/equipamento/{id}`).
+- **#OS-HIST-FILTRO:** o histórico tem **busca** (título/técnico/data) + filtros por **falha** e
+  **tipo** + limpar; itens linkam à página da O.S.
+- **`EquipamentosLista`**: linha da tabela agora **clica → página do dispositivo** (via
+  `aoClicarLinha` da `TabelaOrdenavel`). Rota nova em `App.tsx`. `tsc -b` limpo; 103 testes.
+
 ## 2026-06-30 — #OS-PAGINA: criar/editar O.S. com todos os campos (Lote 6)
 
 **Branch:** `feat/lote6-equipamentos`. Frontend-only (backend já suportava).

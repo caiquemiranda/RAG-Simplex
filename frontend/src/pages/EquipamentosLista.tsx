@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, type ClienteVisivel, type Equipamento } from '../lib/api'
 import { Avatar } from '../components/Avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -15,6 +15,7 @@ function rotuloStatus(e: Equipamento): string {
 /** Lista de equipamentos por cliente (#EQP-2): cards de clientes → lista do cliente. */
 export default function EquipamentosLista() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [clientes, setClientes] = useState<ClienteVisivel[]>([])
   const [equip, setEquip] = useState<Equipamento[]>([])
   const [busca, setBusca] = useState('')
@@ -102,6 +103,7 @@ export default function EquipamentosLista() {
             </div>
             <TabelaOrdenavel
               colunas={colunas} linhas={filtrados} chaveLinha={(e) => e.id}
+              aoClicarLinha={(e) => navigate(`/equipamentos/${id}/${e.id}`)}
               vazio={<p className="py-2 text-sm text-muted-foreground">{equip.length === 0 ? 'Nenhum equipamento cadastrado para este cliente.' : 'Nenhum equipamento corresponde ao filtro.'}</p>}
             />
           </CardContent>

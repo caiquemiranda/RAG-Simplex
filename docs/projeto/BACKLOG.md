@@ -78,20 +78,16 @@ salvas que alimentam documentos de manutenção preventiva).
       textual (tag/add/painel/loop/model) e **tipo**, filtros por **model** e **status** (com a
       falha) + botão **limpar**. Usa a `TabelaOrdenavel`. *Frontend* (endpoint já devolve tudo).
 
-- [ ] **#EQP-PAGINA — página por dispositivo** (item 4). Na lista de equipamentos do cliente, cada
-      dispositivo abre uma **página própria** (`/equipamentos/:clienteId/:eqpId`) com: **todos os
-      dados** do equipamento, **O.S. associadas** (reusa `/cronograma/equipamento/{id}`) e
-      **documentos associados**. **Decidido (D-026):** os documentos associados são **manuais/
-      datasheets** que o usuário sobe na **biblioteca → Marcas** (#DOC-MARCAS já existe); a página
-      do equipamento só exibe um **link** para o(s) documento(s) da biblioteca — **sem** relação de
-      upload nova por equipamento. **A resolver na implementação:** como casar o equipamento ao
-      documento da marca (por `model`/marca? seleção manual de um `documento_id`?). dep: #EQP-STATUS
-      (exibe estado), #OS-HIST-FILTRO (seção de O.S.).
+- [x] **#EQP-PAGINA — página por dispositivo** (item 4, D-026). `pages/EquipamentoPagina.tsx` em
+      **`/equipamentos/:clienteId/:eqpId`** (linha da lista clica → abre): **todos os dados** do
+      equipamento + estado (cor por falha), **Documentos** (manuais/datasheets da biblioteca →
+      Marcas, casados por **model/type** no nome/marca; link p/ download + link p/ cadastrar) e
+      **Ordens de Serviço** associadas (reusa `/cronograma/equipamento/{id}`) com filtros
+      (#OS-HIST-FILTRO). Associação por model/type (heurística) — seleção manual fica p/ evolução.
 
-- [ ] **#OS-HIST-FILTRO — histórico de O.S. com filtros** (item 1). No histórico de O.S. (página do
-      dispositivo e/ou Buscar equipamento), adicionar **busca** (por título/técnico/data) e
-      **filtro por falha** (e por tipo/status). *Frontend* sobre a lista já retornada; se necessário,
-      querystring no `/cronograma/equipamento/{id}`. dep: #EQP-PAGINA (onde vive), #OS-PAGINA (link p/ editar).
+- [x] **#OS-HIST-FILTRO — histórico de O.S. com filtros** (item 1). Na página do dispositivo, o
+      histórico de O.S. tem **busca** (título/técnico/data) + filtros por **falha** e **tipo** +
+      botão limpar; cada item linka à página da O.S. Frontend sobre a lista já retornada.
 
 - [x] **#OS-PAGINA — criar/editar O.S. na página "Ordens de Serviço"** (item 3). Componente
       **`components/FormOS.tsx`** (modal reutilizável) com **todos os campos**: `tipo`, cliente,
