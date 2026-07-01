@@ -13,7 +13,7 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote5-fixes` (Lote 4 mergeado em `main`, PR #7).
+- **Branch:** `feat/relatorio-cliente` (Lote 5 mergeado em `main`, PR #8).
   **Backend: 97 testes** passando.
 - **Fases 0–9 ✅ + muitas evoluções pós-fase-9** (tudo **sem API key e sem custo**):
   - **RAG:** ingestão, recuperação híbrida (limiar 0.78), `local_extrativa` (dupla camada).
@@ -36,9 +36,19 @@
     comentários), agrupamento por **cliente**, **editar**, feriados (#FER-1), **notificações**.
 - **Rodar:** `scripts\run.ps1` (nativo) ou `docker compose up --build`. Login: **admin@local / admin123**.
 
-## ⏭️ PRÓXIMO PASSO — Lote 5 **completo** (branch `feat/lote5-fixes`, falta merge)
+## ⏭️ PRÓXIMO PASSO
 
-Tudo do Lote 5 entregue (detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
+- ✅ **Lote 5 mergeado** (PR #8). ✅ **#R2** — página de relatório do cliente
+  (`/relatorios/:id`) deixou de ser placeholder (branch `feat/relatorio-cliente`, falta merge).
+- **Lacunas restantes (stubs):** `Equipamentos.tsx` (buscar) e `/equipamentos/sobre`.
+- **Adiado pelo usuário:** equipamentos fase B (colunas última manutenção/teste) e fase C
+  (histórico do painel).
+- **Roadmap:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem, *requer
+  API key*) · #1 (alinhamento ChatGPT).
+
+---
+
+### Histórico do Lote 5 (mergeado — detalhe no [`BACKLOG.md`](BACKLOG.md) §G):
 - ✅ **#CR-FILTROS** — filtros Equipe/Clientes (multi) + #ALOC só seg–sex.
 - ✅ **#ATV-1** — página de atividade (status, técnicos, galeria de imagens, comentários).
 - ✅ **#EQP-1** — entidade `Equipamento` + import CSV por cliente.

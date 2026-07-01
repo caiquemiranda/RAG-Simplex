@@ -4,6 +4,23 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-25 — #R2: página de relatório do cliente (fecha o placeholder)
+
+**Branch:** `feat/relatorio-cliente` (do `main` após o merge do Lote 5, PR #8).
+
+- `pages/RelatorioCliente.tsx` deixou de ser stub: **indicadores** (atividades, concluídas,
+  atrasadas, equipamentos), **técnicos que atendem** (dedup das atividades), **atividades
+  recentes** (link → página da atividade), **equipamentos** (link → lista #EQP-2) e
+  **documentos do cliente** (#DOC3, download).
+- **Sem mudança de backend** — usa só endpoints visíveis: `clientesVisiveis`,
+  `cronograma.atividades` (filtra por `cliente_id`), `equipamentosCliente`,
+  `biblioteca.listar({categoria:cliente,cliente_id})`.
+- **97 passed** (sem novo teste de backend); `tsc` OK.
+
+**Arquivos:** `frontend/src/pages/RelatorioCliente.tsx`, `docs/**`.
+
+---
+
 ## 2026-06-25 — Lote 5 (9): modal do dia — scroll único, cards-resumo, editar (admin)
 
 **Branch:** `feat/lote5-fixes`.

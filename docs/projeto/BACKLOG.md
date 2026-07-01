@@ -200,8 +200,12 @@ sem retrabalho. Atualize ao iniciar/terminar cada item. Para o status por fase, 
       card Clientes com **seletor de cor** e **upload de logo** (via `/upload`). `Avatar`
       ganhou prop `cor`. **Fundação pronta** para #R1 e #CR6.
 - [x] **#R1 — Relatórios = cards de clientes + sidebar** (item 1): `GET /clientes`
-      (visível por papel); página Relatórios com **cards** (avatar cor/logo) → `/relatorios/:id`
-      (shell do relatório); sidebar com **grupo "Relatórios"** colapsável listando os clientes.
+      (visível por papel); página Relatórios com **cards** (avatar cor/logo) → `/relatorios/:id`;
+      sidebar com **grupo "Relatórios"** colapsável listando os clientes.
+- [x] **#R2 — Página de relatório do cliente** (`/relatorios/:id`): deixou de ser placeholder.
+      Indicadores (atividades/concluídas/atrasadas/equipamentos), **técnicos que atendem**,
+      **atividades recentes** (link p/ a atividade), **equipamentos** (#EQP-2) e **documentos**
+      do cliente (#DOC3). Só endpoints visíveis (sem mudança de backend).
 - [x] **#CR6 — Calendário: atividade + cliente na célula** (item 3): célula agrupa por
       **cliente** (card-miniatura com **cor/logo** do cliente + avatares dos técnicos
       empilhados; 2+ técnicos → um card). **Editar** atividade no card do dia (admin:
