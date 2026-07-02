@@ -13,10 +13,10 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/documento-preventiva` (do `main`; Lote 6 já mergeado). **Backend: 105 testes**.
+- **Branch:** `main` — tudo mergeado. **Backend: 105 testes**.
   **Lote 6 ✅ (7/7)** + **#PREV-DOC ✅** (documento de Manutenção Preventiva imprimível a partir de
   uma `EquipamentoLista` — `GET /admin/listas/{id}/documento-preventiva` + página `/preventiva/:listaId`
-  fora do Layout, print-to-PDF). Migrações no repo: `8bf05fde56d0`, `5e88d54a7547`. **Falta:** merge na `main`.
+  fora do Layout, print-to-PDF). Migrações no repo: `8bf05fde56d0`, `5e88d54a7547`.
 - **Repo limpo:** só `main` + `feat/lote4-fixes` (esta tem 1 commit de docs **não** mergeado,
   `c1f4fa8` — decidir cherry-pick ou descarte). Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
