@@ -52,6 +52,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | `seed.py` | Semeia permissões e papéis padrão (idempotente). |
 | `admin.py` | Router `/admin`: usuários, perfil, documentos, clientes, estratégias, auditoria, provedores. |
 | `cronograma.py` | Router `/cronograma`: **O.S./visitas** (RBAC por papel) — `tipo`/equipamento/falha/campos-doc (#OS, D-025), técnicos default = fixos, concluir grava `ultima_manutencao`, histórico por equipamento + feriados (**dia de feriado fica sem atividades/#ALOC + notifica**, #FER-1) + **filtro por unidade** (D-021). |
+| `conversas.py` | Router `/conversas`: **chat interno** 1-a-1 (#CHAT) — contatos, histórico, enviar, não-lidas. Polling (sem WebSocket). |
 | `notificacoes.py` | Router `/notificacoes`: notificações do próprio usuário (sino). |
 | `arquivos.py` | Infra de **upload/arquivos** (`salvar_upload`/`remover_arquivo`) + `POST /upload`; estáticos em `/arquivos`. |
 | `biblioteca.py` | Router `/biblioteca`: documentos de **empresa/marcas** (CRUD; leitura por papel, upload admin). |
@@ -103,7 +104,9 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | POST | `/cronograma/{id}/comentarios` | atribuído ou admin | Comenta na atividade. |
 | POST/DELETE | `/cronograma/{id}/anexos[/{anexo_id}]` | atribuído ou admin | Anexa/remove **imagem** (`/arquivos/atividades/`). |
 | GET/POST/DELETE | `/cronograma/feriados[...]` | GET autenticado · escrita `gerir_usuarios` | Feriados globais. |
-| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). `tipo`=`cronograma` (link→atividade `ref_id`) / `feriado` (link→calendário). |
+| GET | `/conversas` · `/conversas/nao-lidas` · `/conversas/{id}` · POST `/conversas/{id}` | autenticado | **Chat interno** (#CHAT): contatos+não-lidas, total, histórico (marca lidas), enviar (notifica na 1ª). |
+| GET | `/equipamentos/{id}/tipo-imagem` · PUT `/admin/tipos-equipamento` | autenticado / `gerir_usuarios` | **Imagem por tipo** de equipamento (#EQP-TIPO-IMG), global. |
+| GET | `/notificacoes` · POST `/notificacoes/{id}/lida` · `/lidas` | autenticado | Notificações do próprio usuário (sino). `tipo`=`cronograma`/`feriado`/**`chat`** (link→conversa `ref_id`). |
 | POST | `/upload` · GET estáticos em `/arquivos/*` | upload: `gerir_usuarios` | Infra de arquivos (logos, documentos…) na pasta raiz `arquivos/`. |
 | GET/POST/PATCH/DELETE | `/biblioteca[/{id}]` | leitura autenticado · escrita `gerir_usuarios` | Documentos **empresa/marca/cliente** (`?categoria=&cliente_id=&busca=`); `oculto` só p/ admin. |
 | GET | `/admin/{papeis,permissoes,estrategias}` | gestão | Catálogos para os seletores. |
@@ -147,7 +150,7 @@ técnico/analista recebem também "🔧 resolução técnica".
 | `components/icons.tsx` | Ícones **SVG** reutilizáveis (#UI-ICONS) — substituem emoji; `currentColor`, `aria-hidden`, tamanho por `className`. |
 | `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). Tipos de domínio (ex.: `Visita` = O.S. com `tipo`/`equipamento`/`falha`/campos-doc; `Falha`). |
 | `lib/format.ts` | Helpers de UI: `isoData`, `STATUS_VISITA`, e para O.S. `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`CAMPOS_DOC_OS` (#OS, D-025). |
-| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos` (**cards por grupo** empresa/cliente/marca + drill-in, #DOC-CARDS), `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `EquipamentoPagina` (**página por dispositivo** #EQP-PAGINA: dados + documentos + O.S. filtráveis), `SobreEquipamento` (#EQP-SOBRE), `DocumentoPreventiva` (**relatório imprimível** #PREV-DOC, rota fora do Layout), `Notificacoes`. |
+| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos` (**cards por grupo** empresa/cliente/marca + drill-in, #DOC-CARDS), `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `EquipamentoPagina` (**página por dispositivo** #EQP-PAGINA: dados + documentos + O.S. filtráveis), `SobreEquipamento` (#EQP-SOBRE), `DocumentoPreventiva` (**relatório imprimível** #PREV-DOC, rota fora do Layout), `Conversas`/`Conversa` (**chat interno** #CHAT), `Notificacoes`. |
 
 ### Funcionalidades da UI
 

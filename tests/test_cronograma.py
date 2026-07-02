@@ -403,6 +403,25 @@ def test_relatorios_resumo(ctx):
     assert client.get("/relatorios/resumo", headers=_login(client, "tec2@x.com")).json() == []
 
 
+def test_os_multidata_intervalo(ctx):
+    """#OS-MULTIDATA (D-028): O.S. com data_fim aparece nos dias do intervalo; valida fim>=início."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    r = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": ids["cliente"],
+        "data": "2026-07-28", "data_fim": "2026-08-03", "titulo": "Preventiva longa"})
+    assert r.status_code == 201 and r.json()["data_fim"] == "2026-08-03"
+
+    # A O.S. começa em julho e termina em agosto → aparece nas duas janelas mensais (overlap).
+    assert any(v["titulo"] == "Preventiva longa" for v in client.get("/cronograma?de=2026-07-01&ate=2026-07-31", headers=admin).json())
+    assert any(v["titulo"] == "Preventiva longa" for v in client.get("/cronograma?de=2026-08-01&ate=2026-08-31", headers=admin).json())
+
+    # data_fim antes da inicial → 400 (na criação e no PATCH).
+    assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-07-10", "data_fim": "2026-07-05", "titulo": "x"}).status_code == 400
+    vid = r.json()["id"]
+    assert client.patch(f"/cronograma/{vid}", headers=admin, json={"data_fim": "2026-07-01"}).status_code == 400
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { api, type ClienteVisivel } from '../lib/api'
+import { api, type ClienteVisivel, type ContatoChat } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { useChat } from '../chat/ChatContext'
 import { useTema } from '../theme/ThemeContext'
@@ -20,6 +20,7 @@ const IconEquipamento = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}>
 const IconDocumentos = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>)
 const IconCronograma = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /></svg>)
 const IconSino = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>)
+const IconChat = () => (<svg className={ic} viewBox="0 0 24 24" {...svg}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>)
 const IconLixeira = () => (<svg className="h-4 w-4" viewBox="0 0 24 24" {...svg}><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>)
 const Chevron = ({ aberto }: { aberto: boolean }) => (
   <svg className={`h-4 w-4 shrink-0 transition-transform ${aberto ? 'rotate-90' : ''}`} viewBox="0 0 24 24" {...svg}><path d="m9 18 6-6-6-6" /></svg>
@@ -49,6 +50,8 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   const [grupoDoc, setGrupoDoc] = useState(false)
   const [grupoEqp, setGrupoEqp] = useState(false)
   const [grupoCron, setGrupoCron] = useState(false)
+  const [grupoConv, setGrupoConv] = useState(false)
+  const [contatos, setContatos] = useState<ContatoChat[]>([])   // #CHAT
   const [clientesRel, setClientesRel] = useState<ClienteVisivel[]>([])
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
@@ -58,6 +61,17 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
   useEffect(() => {
     if (usuario) api.clientesVisiveis().then(setClientesRel).catch(() => {})
   }, [usuario])
+
+  // #CHAT: carrega contatos + não-lidas; repõe a cada 15s (polling leve) e ao mudar de rota.
+  useEffect(() => {
+    if (!usuario) return
+    const puxar = () => api.conversas.contatos().then(setContatos).catch(() => {})
+    puxar()
+    const t = setInterval(puxar, 15000)
+    return () => clearInterval(t)
+  }, [usuario, local.pathname])
+
+  const totalChat = contatos.reduce((s, c) => s + c.nao_lidas, 0)
 
   const naConsulta = local.pathname === '/consulta'
   const naRel = local.pathname.startsWith('/relatorios')
@@ -223,6 +237,25 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
             <div className="ml-3 space-y-0.5 border-l pl-2">
               <NavLink to="/cronograma" end className={linkCls} onClick={navegou}>Calendário</NavLink>
               <NavLink to="/cronograma/atividades" className={linkCls} onClick={navegou}>Ordens de Serviço</NavLink>
+            </div>
+          )}
+
+          {/* Grupo Conversas (chat interno #CHAT) */}
+          <button className={`${itemBase} ${local.pathname.startsWith('/conversas') ? 'font-medium' : ''}`} onClick={() => setGrupoConv((v) => !v)}>
+            <Chevron aberto={grupoConv} />
+            <IconChat />
+            <span className="flex-1 text-left">Conversas</span>
+            {totalChat > 0 && <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">{totalChat > 9 ? '9+' : totalChat}</span>}
+          </button>
+          {grupoConv && (
+            <div className="ml-3 space-y-0.5 border-l pl-2">
+              {contatos.length === 0 && <span className="block px-2 py-1 text-xs text-muted-foreground">Nenhum usuário.</span>}
+              {contatos.map((c) => (
+                <NavLink key={c.id} to={`/conversas/${c.id}`} className={linkCls} onClick={navegou}>
+                  <span className="flex-1 truncate">{c.nome}</span>
+                  {c.nao_lidas > 0 && <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">{c.nao_lidas}</span>}
+                </NavLink>
+              ))}
             </div>
           )}
         </div>

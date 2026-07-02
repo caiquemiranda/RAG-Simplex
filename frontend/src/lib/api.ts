@@ -155,6 +155,7 @@ export type Visita = CamposDocOS & {
   unidade: string | null
   unidade_id: number | null
   data: string
+  data_fim: string | null
   titulo: string
   status: string
   observacoes: string | null
@@ -176,6 +177,7 @@ export type NovaVisita = CamposDocOS & {
   usuario_ids: number[]        // vazio → usa os técnicos fixos do cliente (#ALOC)
   cliente_id?: number | null
   data: string
+  data_fim?: string | null     // fim do intervalo (#OS-MULTIDATA)
   titulo: string
   status?: string
   observacoes?: string | null
@@ -196,6 +198,9 @@ export type DocEquip = {
   url: string
   oculto: boolean
 }
+// Chat interno (#CHAT).
+export type ContatoChat = { id: number; nome: string; email: string; foto: string | null; nao_lidas: number }
+export type MensagemChat = { id: number; remetente_id: number; texto: string; meu: boolean; criado_em: string }
 export type Notificacao = {
   id: number
   tipo: string
@@ -425,6 +430,7 @@ export const api = {
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
   ordensEquipamento: (equipamentoId: number) => request<Visita[]>(`/cronograma/equipamento/${equipamentoId}`),
   documentosEquipamento: (equipamentoId: number) => request<DocEquipRef[]>(`/equipamentos/${equipamentoId}/documentos`),
+  tipoImagemEquipamento: (equipamentoId: number) => request<{ tipo: string; imagem_url: string | null }>(`/equipamentos/${equipamentoId}/tipo-imagem`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -497,6 +503,8 @@ export const api = {
       request<Equipamento>(`/admin/clientes/${clienteId}/equipamentos`, { method: 'POST', body: JSON.stringify(dados) }),
     definirDocumentosEquipamento: (eqpId: number, documento_ids: number[]) =>
       request<DocEquipRef[]>(`/admin/equipamentos/${eqpId}/documentos`, { method: 'PUT', body: JSON.stringify({ documento_ids }) }),
+    definirTipoImagem: (tipo: string, imagem_url: string) =>
+      request<{ id: number; tipo: string; imagem_url: string }>(`/admin/tipos-equipamento`, { method: 'PUT', body: JSON.stringify({ tipo, imagem_url }) }),
     atualizarEquipamento: (eqpId: number, dados: Partial<Equipamento>) =>
       request<Equipamento>(`/admin/equipamentos/${eqpId}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     // Plantas (#MAP)
@@ -588,6 +596,13 @@ export const api = {
     atualizar: (id: number, dados: { nome?: string; marca?: string; oculto?: boolean }) =>
       request<DocEquip>(`/biblioteca/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/biblioteca/${id}`, { method: 'DELETE' }),
+  },
+  conversas: {
+    contatos: () => request<ContatoChat[]>('/conversas'),
+    naoLidas: () => request<{ total: number }>('/conversas/nao-lidas'),
+    historico: (outroId: number) => request<MensagemChat[]>(`/conversas/${outroId}`),
+    enviar: (outroId: number, texto: string) =>
+      request<MensagemChat>(`/conversas/${outroId}`, { method: 'POST', body: JSON.stringify({ texto }) }),
   },
   notificacoes: {
     listar: (apenasNaoLidas = false) =>

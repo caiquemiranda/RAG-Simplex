@@ -180,34 +180,33 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
 ### N. Lote 9 — Chat interno + O.S. por tipo + mídia/filtros (2026-07-02)
 Solicitações do usuário. **Registradas** (a implementar depois). Há **decisões a confirmar** antes de codar.
 
-- [ ] **#OS-TIPO-CAMPOS — form de O.S. muda conforme o tipo** (itens 4, 5). A criação passa a mostrar
-      **campos diferentes** por tipo e **descrição automática**; os "Dados do documento (corretiva)"
-      **saem da criação** (ficam no documento salvo, mais completo).
-  - **Preventiva:** Cliente · **Equipamentos = lista(s) cadastrada(s)** (não equipamento único) ·
-    Técnicos · **Data(s)** (ver #OS-MULTIDATA). Descrição = `MANUTENÇÃO PREVENTIVA <mês das datas>`.
-  - **Corretiva:** Cliente · **Equipamento único** · **Falha** · Técnicos · **Data(s)**.
-    Descrição = `MANUTENÇÃO CORRETIVA <equipamento> — <falha>`.
-  - Reaproveita `Visita.lista_id` (#PREV-OS) para a preventiva; `Visita.equipamento_id`+`falha_id` p/ corretiva.
-      *Frontend `FormOS` type-aware + descrição auto; backend valida por tipo.*
-- [ ] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5). Hoje `Visita.data` é única.
-      **Decisão a confirmar:** modelar como **intervalo** (`data_inicio`/`data_fim`) — recomendado —
-      ou **conjunto de datas** (tabela N:1). Afeta calendário, filtros e o "mês" da descrição preventiva.
-      *Migração + ajustes no cronograma/relatórios.*
-- [ ] **#CHAT — chat interno entre usuários** (item 1). Mensagens diretas entre técnicos e admin, com
-      **registro centralizado**. Sidebar ganha grupo **"Conversas"** listando **todos os usuários**;
-      clicar num usuário abre o chat 1-a-1. **Não lidas** com alerta (badge na conversa + no sino de
-      **Notificações**). *Backend novo:* entidades `Conversa`/`Mensagem` (par de usuários, texto,
-      lida, criado_em) + endpoints (listar conversas, histórico, enviar, marcar lida). *Frontend:*
-      grupo na sidebar + tela de chat + polling de não-lidas. **Decisão:** tempo real por **polling**
-      (processo único, sem WebSocket) — recomendado.
-- [ ] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3). Uma imagem associada ao **`type`**
-      do equipamento, exibida na **página do dispositivo** (#EQP-PAGINA) para identificação visual;
-      **uma imagem vale para todos os equipamentos daquele tipo**. *Backend:* mapa `tipo → imagem_url`
-      (entidade `TipoEquipamentoImagem` ou similar) + upload (#FILES). **Decisão a confirmar:** o `type`
-      é texto livre — o mapa é **global** por texto do tipo (recomendado) ou por cliente?
-- [ ] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Na página do
-      dispositivo (#EQP-PAGINA/#OS-HIST-FILTRO), seletor para ver **1 semana / 1 mês / todo o período**.
-      *Só frontend* sobre a lista já retornada (usa `Visita.data`/intervalo do #OS-MULTIDATA).
+- [x] **#OS-TIPO-CAMPOS — form de O.S. muda conforme o tipo** (itens 4, 5). `FormOS` reescrito
+      **type-aware**: **preventiva** → Cliente + **lista de equipamentos** + técnicos + data(s);
+      **corretiva** → Cliente + **equipamento único** + **falha** + técnicos + data(s). **Descrição
+      automática** (`MANUTENÇÃO PREVENTIVA — <mês>` / `MANUTENÇÃO CORRETIVA — <equip> — <falha>`,
+      com override opcional). **Campos-doc de corretiva removidos da criação** (vão no documento).
+      Campo `data_fim` (#OS-MULTIDATA) + validação por tipo no front; intervalo exibido nas listas
+      (`intervaloData`). Reaproveita `Visita.lista_id`/`equipamento_id`/`falha_id`. *Backend segue
+      permissivo (a validação estrita por tipo fica no form p/ não quebrar o quick-add do calendário).*
+- [x] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5, **D-028**). Modelado como
+      **intervalo**: `Visita.data` (início) + **`data_fim`** (nullable; `None` = 1 dia). Migração
+      `48dbeb05d767`. `listar` usa **overlap** (aparece em todos os meses que o intervalo cruza);
+      criar/PATCH validam `data_fim ≥ data` (400). Teste `test_os_multidata_intervalo`.
+      *Falta o campo `data_fim` no `FormOS` → entra no #OS-TIPO-CAMPOS.*
+- [x] **#CHAT — chat interno entre usuários** (item 1, **D-028**). Entidade `Mensagem` (remetente/
+      destinatário/texto/lida). Router `/conversas`: contatos (com não-lidas), histórico (marca lidas
+      ao abrir), enviar (cria `Notificacao` só na **1ª** não lida — dedupe), total não-lidas. Migração
+      `615d05505836`. Frontend: **grupo "Conversas"** na sidebar (usuários + badge de não-lidas,
+      polling 15s), páginas `Conversas` (lista) e `Conversa` (thread + envio + polling 5s); notificação
+      de chat linka a `/conversas/{remetente}`. **Polling** (sem WebSocket). Teste `test_conversas.py`.
+- [x] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3, **D-028**). Entidade
+      `TipoEquipamentoImagem` (`tipo` único → `imagem_url`), **global**. Endpoints: `GET/PUT
+      /admin/tipos-equipamento` (upsert; `imagem_url` vazio remove) + `GET /equipamentos/{id}/tipo-imagem`
+      (público, RBAC pelo cliente). Migração `55a1f2053b04`. Frontend: **imagem no topo** da página do
+      dispositivo (#EQP-PAGINA); admin **envia/troca** (upload → PUT por `type`). Teste `test_tipo_equipamento_imagem`.
+- [x] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Seletor
+      **Todo o período / Última semana / Último mês** na barra de filtros do histórico (#EQP-PAGINA);
+      corta por `data_fim ?? data` relativo a hoje. Intervalo (`intervaloData`) exibido em cada O.S.
 
 **Decisões a confirmar antes de codar (resumo):** #OS-MULTIDATA (intervalo vs conjunto), #EQP-TIPO-IMG
 (global por texto do tipo?), #CHAT (polling). **Dependência:** #OS-TIPO-CAMPOS e #OS-HIST-DATAS

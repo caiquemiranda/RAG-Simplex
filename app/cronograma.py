@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.arquivos import remover_arquivo, salvar_upload
@@ -75,6 +75,7 @@ class VisitaIn(_OSDoc):
     usuario_ids: list[int] = []       # técnicos (1+); vazio → fixos do cliente (item 5)
     cliente_id: int | None = None
     data: date
+    data_fim: date | None = None      # fim do intervalo (#OS-MULTIDATA); None = 1 dia
     titulo: str
     status: str = "agendada"
     observacoes: str | None = None
@@ -84,6 +85,7 @@ class VisitaAtualizar(_OSDoc):
     usuario_ids: list[int] | None = None
     cliente_id: int | None = None
     data: date | None = None
+    data_fim: date | None = None
     titulo: str | None = None
     status: str | None = None
     observacoes: str | None = None
@@ -108,6 +110,7 @@ class VisitaResumo(BaseModel):
     unidade: str | None = None        # nome da unidade (entidade) ou texto legado
     unidade_id: int | None = None     # base do cliente (D-021) — para a visão por unidade
     data: date
+    data_fim: date | None = None      # fim do intervalo (#OS-MULTIDATA)
     titulo: str
     status: str
     observacoes: str | None = None
@@ -179,7 +182,7 @@ def _resumo(v: Visita) -> VisitaResumo:
         cliente_logo=v.cliente.logo_url if v.cliente else None,
         unidade=_nome_unidade(v.cliente),
         unidade_id=v.cliente.unidade_id if v.cliente else None,
-        data=v.data, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
+        data=v.data, data_fim=v.data_fim, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
         tipo=v.tipo, equipamento_id=v.equipamento_id,
         equipamento_tag=(v.equipamento.tag or v.equipamento.add) if v.equipamento else None,
         falha_id=v.falha_id, falha_nome=v.falha.nome if v.falha else None,
@@ -214,7 +217,8 @@ def listar(
     sessao: Session = Depends(get_session),
 ) -> list[VisitaResumo]:
     admin = usuario.tem_permissao("gerir_usuarios")
-    consulta = select(Visita).where(Visita.data >= de, Visita.data <= ate)
+    # #OS-MULTIDATA: a O.S. aparece se o intervalo [data, data_fim] cruzar [de, ate].
+    consulta = select(Visita).where(Visita.data <= ate, func.coalesce(Visita.data_fim, Visita.data) >= de)
     # Técnico (sem gestão) só vê visitas em que está atribuído.
     if not admin:
         consulta = consulta.where(Visita.tecnicos.any(id=usuario.id))
@@ -344,10 +348,12 @@ def criar(dados: VisitaIn,
     ids = dados.usuario_ids or ([t.id for t in _fixos_do_cliente(sessao, dados.cliente_id)] if dados.cliente_id else [])
     if not ids:
         raise HTTPException(status_code=400, detail="Informe ao menos um técnico (ou defina fixos do cliente).")
+    if dados.data_fim is not None and dados.data_fim < dados.data:
+        raise HTTPException(status_code=400, detail="Data final antes da inicial.")
     tecnicos = _carregar_tecnicos(sessao, ids)
     v = Visita(
         usuario_id=tecnicos[0].id, cliente_id=dados.cliente_id, data=dados.data,
-        titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
+        data_fim=dados.data_fim, titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
     )
     v.tecnicos = tecnicos
     _aplicar_os(sessao, v, dados)
@@ -399,6 +405,10 @@ def atualizar(visita_id: int, dados: VisitaAtualizar,
         v.cliente_id = dados.cliente_id
     if admin and dados.data is not None:
         v.data = dados.data
+    if admin and "data_fim" in dados.model_fields_set:
+        v.data_fim = dados.data_fim
+    if admin and (v.data_fim is not None and v.data_fim < v.data):
+        raise HTTPException(status_code=400, detail="Data final antes da inicial.")
     if admin and dados.titulo is not None:
         v.titulo = dados.titulo.strip()
     if dados.status is not None:

@@ -352,6 +352,29 @@ def test_equipamento_documentos_manuais(ctx):
     assert client.put(f"/admin/equipamentos/{eid}/documentos", headers=_login(client, "tec@x.com"), json={"documento_ids": [did]}).status_code == 403
 
 
+def test_tipo_equipamento_imagem(ctx):
+    """#EQP-TIPO-IMG (D-028): imagem global por texto do tipo; GET público pelo equipamento; upsert/remove."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli T"}).json()["id"]
+    eid = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A", "type": "Detector"}).json()["id"]
+
+    # Sem imagem cadastrada → null.
+    assert client.get(f"/equipamentos/{eid}/tipo-imagem", headers=admin).json()["imagem_url"] is None
+    # Define a imagem do tipo "Detector".
+    r = client.put("/admin/tipos-equipamento", headers=admin, json={"tipo": "Detector", "imagem_url": "/arquivos/tipos/x.png"})
+    assert r.status_code == 200 and r.json()["imagem_url"] == "/arquivos/tipos/x.png"
+    # O equipamento desse tipo passa a devolver a imagem.
+    assert client.get(f"/equipamentos/{eid}/tipo-imagem", headers=admin).json()["imagem_url"] == "/arquivos/tipos/x.png"
+    # Vale para outro equipamento do mesmo tipo (global).
+    eid2 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B", "type": "Detector"}).json()["id"]
+    assert client.get(f"/equipamentos/{eid2}/tipo-imagem", headers=admin).json()["imagem_url"] == "/arquivos/tipos/x.png"
+    # RBAC (técnico não gerencia) + remover (imagem_url vazia).
+    assert client.put("/admin/tipos-equipamento", headers=_login(client, "tec@x.com"), json={"tipo": "Detector", "imagem_url": "y"}).status_code == 403
+    client.put("/admin/tipos-equipamento", headers=admin, json={"tipo": "Detector", "imagem_url": ""})
+    assert client.get(f"/equipamentos/{eid}/tipo-imagem", headers=admin).json()["imagem_url"] is None
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx

@@ -34,6 +34,7 @@ from app.banco import router as banco_router
 from app.biblioteca import router as biblioteca_router
 from app.plantas import router as plantas_router
 from app.cronograma import router as cronograma_router
+from app.conversas import router as conversas_router
 from app.notificacoes import router as notificacoes_router
 from app.auth import (
     TokenInvalido,
@@ -50,7 +51,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import Cliente, Equipamento, LogConsulta, Planta, Unidade, Usuario, Visita
+from app.modelos import Cliente, Equipamento, LogConsulta, Planta, TipoEquipamentoImagem, Unidade, Usuario, Visita
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -61,6 +62,7 @@ app = FastAPI(
 )
 app.include_router(admin_router)
 app.include_router(cronograma_router)
+app.include_router(conversas_router)
 app.include_router(notificacoes_router)
 app.include_router(arquivos_router)
 app.include_router(biblioteca_router)
@@ -433,6 +435,27 @@ def documentos_do_equipamento(
     if not usuario.tem_permissao("gerir_usuarios") and e.cliente not in usuario.clientes_rel:
         raise HTTPException(status_code=403, detail="Sem acesso a este equipamento.")
     return [DocEquipPublico(id=d.id, nome=d.nome, url=d.url, marca=d.marca) for d in e.documentos]
+
+
+class TipoImagemPublica(BaseModel):
+    tipo: str
+    imagem_url: str | None = None
+
+
+@app.get("/equipamentos/{equipamento_id}/tipo-imagem", response_model=TipoImagemPublica)
+def imagem_do_tipo(
+    equipamento_id: int,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> TipoImagemPublica:
+    """Imagem associada ao **tipo** do equipamento (#EQP-TIPO-IMG). RBAC pelo cliente."""
+    e = sessao.get(Equipamento, equipamento_id)
+    if e is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    if not usuario.tem_permissao("gerir_usuarios") and e.cliente not in usuario.clientes_rel:
+        raise HTTPException(status_code=403, detail="Sem acesso a este equipamento.")
+    ti = sessao.scalar(select(TipoEquipamentoImagem).where(TipoEquipamentoImagem.tipo == (e.type or "")))
+    return TipoImagemPublica(tipo=e.type or "", imagem_url=ti.imagem_url if ti else None)
 
 
 @app.get("/clientes/{cliente_id}/plantas", response_model=list[PlantaPublica])

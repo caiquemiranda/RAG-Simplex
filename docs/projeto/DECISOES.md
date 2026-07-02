@@ -221,3 +221,13 @@ por equipamento: `GET /cronograma/equipamento/{id}`. Spec `specs/spec-os-ordem-s
 corretiva}`; frontend `TIPOS_OS` idem; **migração `bf54f9b66560`** faz back-fill das O.S.
 existentes `avulsa → corretiva` (não há como distinguir depois — downgrade é no-op). Teste
 passa a rejeitar `tipo="avulsa"` (400).
+
+### D-028 ✅ O.S. multi-dia por intervalo; imagem por tipo global; chat por polling (Lote 9)
+**2026-07-02.** Decisões do Lote 9:
+- **#OS-MULTIDATA:** a O.S. que dura mais de um dia é modelada como **intervalo** —
+  `Visita.data` (início) + **`data_fim`** (nullable; `None` = 1 dia). Migração `48dbeb05d767`.
+  O `listar` usa **overlap** (`data ≤ ate AND coalesce(data_fim,data) ≥ de`). Escolhido intervalo
+  (contíguo) em vez de conjunto de datas avulsas — simples no calendário/filtros.
+- **#EQP-TIPO-IMG:** a imagem é associada ao **texto do `type`** e vale **globalmente** (todos os
+  clientes), não por cliente.
+- **#CHAT:** tempo real por **polling** (app de processo único, sem WebSocket).

@@ -255,6 +255,20 @@ class Equipamento(Base):
     documentos: Mapped[list["DocumentoEquipamento"]] = relationship(secondary=equipamento_documento)
 
 
+class TipoEquipamentoImagem(Base):
+    """Imagem associada ao **texto do `type`** do equipamento (#EQP-TIPO-IMG, D-028) — **global**
+    (vale para todos os equipamentos daquele tipo). Ajuda a identificar o dispositivo."""
+
+    __tablename__ = "tipo_equipamento_imagem"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tipo: Mapped[str] = mapped_column(String(80), unique=True)
+    imagem_url: Mapped[str] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
 class EquipamentoLista(Base):
     """Lista **nomeada** de equipamentos de um cliente (#EQP-LISTAS). Serve para filtrar a
     lista e, futuramente, gerar um documento de **manutenção preventiva** com esses itens."""
@@ -298,7 +312,8 @@ class Visita(Base):
     # Técnico responsável (1º da lista) — mantido para compat; a lista completa é `tecnicos`.
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
     cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
-    data: Mapped[date] = mapped_column(Date)
+    data: Mapped[date] = mapped_column(Date)                    # início da O.S. (data_inicio)
+    data_fim: Mapped[date | None] = mapped_column(Date, default=None)  # fim (#OS-MULTIDATA, D-028); None = 1 dia
     titulo: Mapped[str] = mapped_column(String(160))            # serviço / atividade
     status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|pendente|concluida|cancelada
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
@@ -397,6 +412,24 @@ class Notificacao(Base):
     criado_em: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+
+class Mensagem(Base):
+    """Mensagem de **chat interno** 1-a-1 entre usuários (#CHAT). A conversa entre A e B é o
+    conjunto de mensagens com {remetente, destinatario} = {A, B}."""
+
+    __tablename__ = "mensagem"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    remetente_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    destinatario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    texto: Mapped[str] = mapped_column(Text)
+    lida: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    remetente: Mapped["Usuario"] = relationship(foreign_keys=[remetente_id])
 
 
 class DocumentoEquipamento(Base):

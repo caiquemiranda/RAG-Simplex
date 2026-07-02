@@ -13,13 +13,13 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `main`. **Backend: 110 testes**. Lote 6/7 ✅ · Refinamentos ✅ · **Lote 8 ✅**
-  (conformidade com as skills de `.agents/`): #DOC-CARDS (Documentos como cards por grupo),
-  #SEC-HEADERS, #SEC-LOGIN (rate-limit 429), #SEC-UPLOAD (download de HTML/SVG), #UI-MOTION,
-  #UI-ICONS (emoji→SVG, `components/icons.tsx`), #UI-FOCUS (`:focus-visible` global), #UI-LABELS
-  (aria-label). **Sobra do Lote 8** ([BACKLOG §M](BACKLOG.md), baixo valor/opcional): #UI-TOUCH
-  (varredura fina), #UI-TOKENS, #UI-CHARTS, #UI-BRAND. Migrações no repo até: `ed5186ac4b27` (head).
-- **Repo limpo:** só `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
+- **Branch:** `feat/lote9-multidata` (do `main`). **Backend: 113 testes**. Lote 6/7/8 ✅ ·
+  **Lote 9 ✅ (5/5)** ([BACKLOG §N](BACKLOG.md)): #OS-MULTIDATA (`Visita.data_fim`, intervalo),
+  #OS-TIPO-CAMPOS (`FormOS` por tipo + descrição auto, sem campos-doc na criação), #OS-HIST-DATAS
+  (filtro semana/mês/todo), #EQP-TIPO-IMG (imagem global por tipo), #CHAT (chat interno, grupo
+  "Conversas", polling). Migrações novas: `48dbeb05d767`, `55a1f2053b04`, `615d05505836`.
+  **Sobra do Lote 8** (baixo valor/opcional): #UI-TOUCH (fino), #UI-TOKENS, #UI-CHARTS, #UI-BRAND.
+- **Falta:** mergear `feat/lote9-multidata` na `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`

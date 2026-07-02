@@ -4,10 +4,11 @@ import { Button } from '../components/ui/button'
 import { IconExternal } from '../components/icons'
 import type { Notificacao } from '../lib/api'
 
-/** Destino da notificação: atividade (cronograma) ou calendário (feriado). */
+/** Destino da notificação: atividade (cronograma), calendário (feriado) ou conversa (chat). */
 function destino(n: Notificacao): string | null {
   if (n.tipo === 'cronograma' && n.ref_id) return `/cronograma/atividade/${n.ref_id}`
   if (n.tipo === 'feriado') return '/cronograma'
+  if (n.tipo === 'chat' && n.ref_id) return `/conversas/${n.ref_id}`
   return null
 }
 

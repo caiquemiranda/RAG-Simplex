@@ -4,6 +4,50 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 9: #CHAT (chat interno entre usuários) — fecha o Lote 9 (5/5)
+
+**Branch:** `feat/lote9-multidata`. Full-stack.
+
+- **Modelo:** `Mensagem` (remetente/destinatário/texto/lida). Migração `615d05505836`. **Router
+  `app/conversas.py`** (`/conversas`): `GET ""` contatos com não-lidas (ordena não-lidas primeiro),
+  `GET /nao-lidas` total, `GET /{id}` histórico (marca as recebidas como lidas ao abrir),
+  `POST /{id}` envia (cria `Notificacao tipo=chat` **só na 1ª não lida** — dedupe). Teste
+  `test_conversas.py::test_chat_fluxo_completo`.
+- **Frontend:** sidebar ganha grupo **"Conversas"** (lista usuários + badge de não-lidas; polling
+  15s); `pages/Conversas` (lista) + `pages/Conversa` (thread com bolhas, envio Enter, polling 5s,
+  auto-scroll). Notificação de chat linka a `/conversas/{remetente}`. **113 testes**, `tsc -b` limpo.
+- **Lote 9 concluído (5/5).**
+
+## 2026-07-02 — Lote 9: #EQP-TIPO-IMG (imagem global por tipo de equipamento)
+
+**Branch:** `feat/lote9-multidata`.
+
+- **Modelo:** `TipoEquipamentoImagem` (`tipo` único → `imagem_url`, global). Migração `55a1f2053b04`.
+  **Backend:** `GET/PUT /admin/tipos-equipamento` (upsert; vazio remove) + `GET
+  /equipamentos/{id}/tipo-imagem` (público, RBAC pelo cliente). Teste `test_tipo_equipamento_imagem`.
+- **Frontend:** imagem do tipo **no topo** da página do dispositivo; admin envia/troca (upload → PUT
+  por `type`). **112 testes**, `tsc -b` limpo.
+
+## 2026-07-02 — Lote 9: #OS-HIST-DATAS (filtro de período no histórico)
+
+**Branch:** `feat/lote9-multidata`. Frontend-only.
+
+- Página do dispositivo (#EQP-PAGINA): seletor **Todo o período / Última semana / Último mês** no
+  histórico de O.S. (corta por `data_fim ?? data` relativo a hoje) + intervalo (`intervaloData`)
+  em cada item. `tsc -b` limpo.
+
+## 2026-07-02 — Lote 9: #OS-MULTIDATA + #OS-TIPO-CAMPOS
+
+**Branch:** `feat/lote9-multidata`.
+
+- **#OS-MULTIDATA (D-028):** `Visita.data_fim` (nullable; None = 1 dia). Migração `48dbeb05d767`.
+  `listar` com overlap; criar/PATCH validam `data_fim ≥ data`. Teste `test_os_multidata_intervalo`.
+- **#OS-TIPO-CAMPOS:** `FormOS` reescrito **por tipo** — preventiva (cliente + **lista** + técnicos +
+  data(s)) vs corretiva (cliente + **equipamento** + **falha** + técnicos + data(s)); **descrição
+  automática** (`MANUTENÇÃO PREVENTIVA — <mês>` / `MANUTENÇÃO CORRETIVA — <equip> — <falha>`, override
+  opcional); **campos-doc removidos da criação** (vão no documento). `data_fim` no form + helper
+  `intervaloData` exibindo o período nas listas. Frontend-only; 111 testes; `tsc -b` limpo.
+
 ## 2026-07-02 — Encerra o Lote 8 (docs) + registra o Lote 9
 
 - **Fechamento do Lote 8:** `ESTADO_ATUAL` atualizado (branch=`main`, 110 testes, Lote 8 ✅ com os

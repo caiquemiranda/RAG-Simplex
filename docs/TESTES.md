@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**110 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**113 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -180,3 +180,7 @@ pytest
 O frontend é validado por **`tsc --noEmit`** (typecheck estrito). Não há testes de
 runtime de UI no ambiente atual (npm restrito por SSL). A verificação visual é feita
 no navegador via `scripts/frontend.ps1`.
+
+### `test_conversas.py` (1) — chat interno (#CHAT)
+- `test_chat_fluxo_completo` — contatos (eu fora), enviar (dedupe da notificação na 1ª), não-lidas
+  por contato e total, abrir marca lidas, resposta inverte o contador; consigo mesmo/vazio → 400, inexistente → 404.
