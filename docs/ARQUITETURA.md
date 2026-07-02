@@ -65,7 +65,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 
 | Método | Rota | Permissão | Descrição |
 | --- | --- | --- | --- |
-| POST | `/auth/login` | pública | Login → access + refresh token. |
+| POST | `/auth/login` | pública | Login → access + refresh token. **Rate-limit** 5 falhas/5 min por conta → 429 (#SEC-LOGIN). |
 | POST | `/auth/refresh` | pública | Renova o access token. |
 | GET | `/auth/me` | autenticado | Dados + permissões efetivas do usuário. |
 | GET | `/health` | pública | Liveness. |

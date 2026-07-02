@@ -30,3 +30,7 @@ Thumbs.db
 
 # Arquivos enviados pelo app (logos, documentos de equipamentos)
 arquivos/
+
+# Agent skills (ferramenta local, nao versionar)
+.agents/
+skills-lock.json

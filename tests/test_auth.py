@@ -102,6 +102,23 @@ def test_login_senha_errada(client):
     assert r.status_code == 401
 
 
+def test_rate_limit_login(client):
+    """#SEC-LOGIN: após 5 falhas na mesma conta, o login responde 429 (brute-force barrado)."""
+    cred = {"email": "bruteforce@x.com", "senha": "errada"}
+    for _ in range(5):
+        assert client.post("/auth/login", json=cred).status_code == 401
+    r = client.post("/auth/login", json=cred)
+    assert r.status_code == 429
+
+
+def test_headers_seguranca(client):
+    """#SEC-HEADERS: respostas trazem os cabeçalhos de segurança."""
+    r = client.get("/health")
+    assert r.headers.get("X-Content-Type-Options") == "nosniff"
+    assert r.headers.get("X-Frame-Options") == "DENY"
+    assert "Referrer-Policy" in r.headers
+
+
 def test_rotas_protegidas_sem_token(client):
     assert client.get("/auth/me").status_code == 401
     # /query é protegida: 401 antes de tocar no RAG.

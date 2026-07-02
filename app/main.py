@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import re
+from time import monotonic
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +79,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def cabecalhos_seguranca(request, call_next):
+    """Headers de segurança em toda resposta (#SEC-HEADERS): impede sniffing de MIME,
+    enquadramento (clickjacking) e vazamento de referer."""
+    resp = await call_next(request)
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    resp.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    return resp
 
 
 # --------------------------------------------------------------------------- #
@@ -153,15 +166,35 @@ class UsuarioOut(BaseModel):
 # --------------------------------------------------------------------------- #
 # Autenticação                                                                 #
 # --------------------------------------------------------------------------- #
+# Rate-limit simples de login em memória (#SEC-LOGIN) — protege contra brute-force de senha.
+# Chaveado por e-mail; janela deslizante. Suficiente p/ app de processo único (sem Redis).
+_LOGIN_TENTATIVAS: dict[str, list[float]] = {}
+_LOGIN_MAX = 5
+_LOGIN_JANELA_S = 300.0
+
+
+def _checar_rate_login(chave: str) -> None:
+    agora = monotonic()
+    recentes = [t for t in _LOGIN_TENTATIVAS.get(chave, []) if agora - t < _LOGIN_JANELA_S]
+    _LOGIN_TENTATIVAS[chave] = recentes
+    if len(recentes) >= _LOGIN_MAX:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="Muitas tentativas de login. Aguarde alguns minutos.")
+
+
 @app.post("/auth/login", response_model=TokenOut)
 def login(dados: LoginIn, sessao: Session = Depends(get_session)) -> TokenOut:
     """Autentica por e-mail/senha e devolve tokens de acesso e refresh."""
-    usuario = sessao.scalar(select(Usuario).where(Usuario.email == normalizar_email(dados.email)))
+    chave = normalizar_email(dados.email)
+    _checar_rate_login(chave)
+    usuario = sessao.scalar(select(Usuario).where(Usuario.email == chave))
     if usuario is None or not verificar_senha(dados.senha, usuario.hash_senha):
+        _LOGIN_TENTATIVAS.setdefault(chave, []).append(monotonic())   # conta a falha
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="E-mail ou senha inválidos.")
     if not usuario.ativo:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Usuário inativo.")
+    _LOGIN_TENTATIVAS.pop(chave, None)   # sucesso limpa o contador
     papel = usuario.papel.nome if usuario.papel else None
     return TokenOut(
         access_token=criar_access_token(usuario.id, papel),
