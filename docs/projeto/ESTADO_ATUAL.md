@@ -3,7 +3,7 @@
 > **Leia este arquivo primeiro.** Ele diz onde o projeto está e qual é o próximo
 > passo. Atualize-o ao fim de cada sessão de trabalho.
 
-**Última atualização:** 2026-06-30
+**Última atualização:** 2026-07-01
 
 > **Planejamento mestre:** [`PLANEJAMENTO.md`](PLANEJAMENTO.md) (snapshot + linha do
 > tempo + plano). **O que existe:** [`../ARQUITETURA.md`](../ARQUITETURA.md),
@@ -13,11 +13,12 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote6-equipamentos` (do `main` com #MAP+#OS+#R2). **Backend: 104 testes**.
-  **Lote 6 ✅ COMPLETO (7/7):** #EQP-STATUS (migração `8bf05fde56d0`, D-026) · #TAB-ORDEM
-  (`TabelaOrdenavel`) · #EQP-FILTROS+ · #OS-PAGINA (`FormOS`, sem duplicação) · #EQP-PAGINA
-  (página por dispositivo) · #OS-HIST-FILTRO · #EQP-LISTAS (listas nomeadas, migração
-  `5e88d54a7547`). Migrações novas: `8bf05fde56d0`, `5e88d54a7547`. **Falta:** PR + merge na `main`.
+- **Branch:** `feat/documento-preventiva` (do `main`; Lote 6 já mergeado). **Backend: 105 testes**.
+  **Lote 6 ✅ (7/7)** + **#PREV-DOC ✅** (documento de Manutenção Preventiva imprimível a partir de
+  uma `EquipamentoLista` — `GET /admin/listas/{id}/documento-preventiva` + página `/preventiva/:listaId`
+  fora do Layout, print-to-PDF). Migrações no repo: `8bf05fde56d0`, `5e88d54a7547`. **Falta:** merge na `main`.
+- **Repo limpo:** só `main` + `feat/lote4-fixes` (esta tem 1 commit de docs **não** mergeado,
+  `c1f4fa8` — decidir cherry-pick ou descarte). Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`

@@ -278,7 +278,8 @@ Ver [`projeto/specs/spec-eqp1-equipamento-csv.md`](projeto/specs/spec-eqp1-equip
 ### EquipamentoLista (listas nomeadas, #EQP-LISTAS)
 Lista **nomeada** de equipamentos de um cliente (`nome`, `cliente_id` cascade) com N:N
 `lista_equipamento`. Na lista de equipamentos aparecem como **chips** no topo (filtram a
-tabela). Servem de base para **gerar um documento de manutenção preventiva** (futuro). CRUD em
+tabela). Servem de base para **gerar o documento de manutenção preventiva** (#PREV-DOC:
+`GET /admin/listas/{id}/documento-preventiva` → relatório imprimível). CRUD em
 `/admin/clientes/{id}/listas` + `/admin/listas/{id}` (`gerir_usuarios`); ids de outro cliente
 são ignorados na gravação.
 

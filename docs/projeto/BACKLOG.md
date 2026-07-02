@@ -102,12 +102,20 @@ salvas que alimentam documentos de manutenção preventiva).
       listas` e `/admin/listas/{id}` (ids de outro cliente ignorados); migração `5e88d54a7547`;
       teste `test_equipamento_listas`. **Frontend:** chips das listas **no topo** da lista do
       cliente (filtram a tabela ao clicar), **"+ Criar lista"** e ✎/✕ por lista, modal com nome +
-      seleção por checkbox (`ModalLista`). **Futuro (à parte):** gerar o **documento de Manutenção
-      Preventiva** a partir da lista (ligado ao `tipo=preventiva` da O.S.).
+      seleção por checkbox (`ModalLista`). Gera o documento de preventiva → **#PREV-DOC**.
 
-**Plano sugerido (sem retrabalho):** `#EQP-STATUS` → `#TAB-ORDEM` → `#EQP-FILTROS+` →
+- [x] **#PREV-DOC — documento de Manutenção Preventiva a partir da lista** (continuação do
+      #EQP-LISTAS). Backend `GET /admin/listas/{id}/documento-preventiva` monta cabeçalho do
+      cliente (nome/endereço/unidade) + equipamentos da lista **ordenados por tag** + `gerado_em`.
+      Frontend `pages/DocumentoPreventiva.tsx` em **`/preventiva/:listaId`** (rota **fora do
+      Layout**, folha cheia): relatório com identificação, tabela dos equipamentos + colunas de
+      **checklist** (Testado/Conforme/Observação em branco) e assinaturas; botão **"Imprimir /
+      Salvar PDF"** (`window.print()`; barra `print:hidden`). Acesso pelo chip da lista (📄).
+      Teste `test_documento_preventiva`. **Sem dependência nova** (print-to-PDF do navegador).
+
+**Plano executado (sem retrabalho):** `#EQP-STATUS` → `#TAB-ORDEM` → `#EQP-FILTROS+` →
 `#OS-PAGINA` (extrai `FormOS`) → `#EQP-PAGINA` → `#OS-HIST-FILTRO` → `#EQP-LISTAS` →
-(*futuro*) gerador de documento de Manutenção Preventiva.
+`#PREV-DOC` (gerador do documento de Manutenção Preventiva). ✅ **Lote 6 + preventiva concluídos.**
 **Decisões confirmadas:** ver [D-026](DECISOES.md) — `Equipamento.falha_id` para o estado "em
 falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upload por equipamento.
 

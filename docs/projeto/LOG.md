@@ -4,6 +4,20 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #PREV-DOC: documento de Manutenção Preventiva a partir da lista
+
+**Branch:** `feat/documento-preventiva`. Continuação do #EQP-LISTAS.
+
+- **Backend:** `GET /admin/listas/{id}/documento-preventiva` (perm `gerir_usuarios`) → cabeçalho
+  do cliente (nome/endereço/unidade) + equipamentos da lista **ordenados por tag** + `gerado_em`.
+  Schemas `DocPreventivaOut`/`DocPrevCliente`/`DocPrevEquip`. Teste `test_documento_preventiva`
+  (estrutura + ordenação + RBAC 403 + 404). **105 passed.**
+- **Frontend:** `pages/DocumentoPreventiva.tsx` em **`/preventiva/:listaId`** (rota **fora do
+  Layout** → folha cheia): relatório com identificação, tabela dos equipamentos + colunas de
+  **checklist** (Testado/Conforme/Observação) e assinaturas; botão **"Imprimir / Salvar PDF"**
+  (`window.print()`, barra `print:hidden`). Chip da lista ganhou ação **📄**. `tsc -b` limpo.
+- **Sem dependência nova** — usa o print-to-PDF do navegador (coerente com a restrição de npm).
+
 ## 2026-06-30 — #EQP-LISTAS: listas nomeadas de equipamentos (Lote 6, fim)
 
 **Branch:** `feat/lote6-equipamentos`. Full-stack — **fecha o Lote 6** (7/7).

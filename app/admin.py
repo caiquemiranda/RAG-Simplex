@@ -837,6 +837,61 @@ def remover_lista(lista_id: int,
 
 
 # --------------------------------------------------------------------------- #
+# Documento de Manutenção Preventiva a partir de uma lista (#PREV-DOC).        #
+# --------------------------------------------------------------------------- #
+class DocPrevCliente(BaseModel):
+    id: int
+    nome: str
+    endereco: str | None = None
+    unidade: str | None = None
+
+
+class DocPrevEquip(BaseModel):
+    id: int
+    tag: str
+    painel: str
+    loop: str
+    add: str
+    type: str
+    model: str
+    status: str
+    ultima_manutencao: date | None = None
+    ultimo_teste: date | None = None
+
+
+class DocPreventivaOut(BaseModel):
+    lista_id: int
+    lista_nome: str
+    gerado_em: date
+    cliente: DocPrevCliente
+    equipamentos: list[DocPrevEquip]
+
+
+@router.get("/listas/{lista_id}/documento-preventiva", response_model=DocPreventivaOut)
+def documento_preventiva(lista_id: int,
+                         _: Usuario = Depends(requer("gerir_usuarios")),
+                         sessao: Session = Depends(get_session)) -> DocPreventivaOut:
+    """Monta os dados do **documento de manutenção preventiva** de uma lista de equipamentos
+    (#PREV-DOC): cabeçalho do cliente + tabela dos equipamentos da lista (ordenados por tag)."""
+    lst = sessao.get(EquipamentoLista, lista_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail="Lista não encontrada.")
+    c = lst.cliente
+    equipamentos = sorted(lst.equipamentos, key=lambda e: (e.tag or "").lower())
+    unidade = c.unidade_rel.nome if c.unidade_rel else c.unidade
+    return DocPreventivaOut(
+        lista_id=lst.id, lista_nome=lst.nome, gerado_em=date.today(),
+        cliente=DocPrevCliente(id=c.id, nome=c.nome, endereco=c.endereco, unidade=unidade),
+        equipamentos=[
+            DocPrevEquip(id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add,
+                         type=e.type, model=e.model, status=e.status,
+                         ultima_manutencao=e.ultima_manutencao, ultimo_teste=e.ultimo_teste)
+            for e in equipamentos
+        ],
+    )
+
+
+# --------------------------------------------------------------------------- #
 # Catálogo de falhas (#OS) — No Answer, Dirty, Head Missing…                    #
 # --------------------------------------------------------------------------- #
 class FalhaIn(BaseModel):

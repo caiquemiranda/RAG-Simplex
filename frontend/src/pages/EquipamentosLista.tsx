@@ -116,6 +116,7 @@ export default function EquipamentosLista() {
                 {listas.map((l) => (
                   <span key={l.id} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs ${listaSel === l.id ? 'border-primary bg-accent font-medium' : ''}`}>
                     <button onClick={() => setListaSel(listaSel === l.id ? null : l.id)}>{l.nome} ({l.equipamento_ids.length})</button>
+                    <button className="text-muted-foreground hover:text-primary" title="Gerar documento de preventiva" onClick={() => navigate(`/preventiva/${l.id}`)}>📄</button>
                     <button className="text-muted-foreground hover:text-primary" title="Editar lista" onClick={() => setModal({ lista: l })}>✎</button>
                     <button className="text-muted-foreground hover:text-destructive" title="Remover lista" onClick={() => removerLista(l)}>✕</button>
                   </span>

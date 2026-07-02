@@ -94,6 +94,16 @@ export const STATUS_EQUIP = ['Operando', 'Desabilitado', 'Desativado', 'Em falha
 export type ImportEquipResultado = { importados: number; total: number }
 // Lista nomeada de equipamentos (#EQP-LISTAS) — base do doc de preventiva.
 export type EquipamentoLista = { id: number; cliente_id: number; nome: string; equipamento_ids: number[] }
+// Documento de Manutenção Preventiva gerado de uma lista (#PREV-DOC).
+export type DocPrevEquip = {
+  id: number; tag: string; painel: string; loop: string; add: string; type: string; model: string
+  status: string; ultima_manutencao: string | null; ultimo_teste: string | null
+}
+export type DocumentoPreventiva = {
+  lista_id: number; lista_nome: string; gerado_em: string
+  cliente: { id: number; nome: string; endereco: string | null; unidade: string | null }
+  equipamentos: DocPrevEquip[]
+}
 // Planta (projeto) do cliente — #MAP.
 export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }
 // Catálogo de falhas do painel (#OS, D-025).
@@ -487,6 +497,7 @@ export const api = {
     atualizarLista: (id: number, dados: { nome?: string; equipamento_ids?: number[] }) =>
       request<EquipamentoLista>(`/admin/listas/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     removerLista: (id: number) => request<void>(`/admin/listas/${id}`, { method: 'DELETE' }),
+    documentoPreventiva: (listaId: number) => request<DocumentoPreventiva>(`/admin/listas/${listaId}/documento-preventiva`),
     // Catálogo de falhas (#OS, D-025)
     falhas: () => request<Falha[]>('/admin/falhas'),
     criarFalha: (dados: FalhaEntrada) =>
