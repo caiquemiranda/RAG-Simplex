@@ -174,7 +174,7 @@ export default function Atividade() {
           {podeGerir && (
             <div className="flex gap-2">
               <textarea className="min-h-[40px] flex-1 rounded-md border bg-background px-3 py-2 text-sm" value={texto}
-                        onChange={(e) => setTexto(e.target.value)} placeholder="Escreva um comentário…" />
+                        onChange={(e) => setTexto(e.target.value)} aria-label="Escrever comentário" placeholder="Escreva um comentário…" />
               <Button size="sm" onClick={comentar} disabled={!texto.trim()}>Enviar</Button>
             </div>
           )}

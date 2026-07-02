@@ -154,7 +154,7 @@ export default function Documentos() {
       <div className="mx-auto max-w-4xl space-y-5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-lg font-semibold">Documentos{cat && <span className="text-sm font-normal text-muted-foreground"> · {cat}</span>}</h1>
-          <Input className="w-64" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar documento…" />
+          <Input className="w-64" value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Buscar documento" placeholder="Buscar documento…" />
         </div>
         {erro && <p className="text-sm text-destructive">{erro}</p>}
 

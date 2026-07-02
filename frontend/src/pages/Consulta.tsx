@@ -37,7 +37,7 @@ export default function Consulta() {
       <Input
         value={pergunta}
         onChange={(e) => setPergunta(e.target.value)}
-        placeholder="Descreva a falha ou cole o código do display…"
+        aria-label="Sua pergunta ao assistente" placeholder="Descreva a falha ou cole o código do display…"
         autoFocus
       />
       <Button type="submit" disabled={carregando || !pergunta.trim()}>Enviar</Button>

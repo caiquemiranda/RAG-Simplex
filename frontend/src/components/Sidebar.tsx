@@ -139,7 +139,7 @@ export default function Sidebar({ variant, onAbrir, onFechar, aoNavegar }: Props
                 ref={buscaRef}
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="Filtrar consultas…"
+                aria-label="Filtrar consultas" placeholder="Filtrar consultas…"
                 className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             )}
