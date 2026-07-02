@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, type DocumentoPreventiva } from '../lib/api'
+import { IconPrint } from '../components/icons'
 
 /**
  * Documento de **Manutenção Preventiva** (#PREV-DOC) gerado de uma lista de equipamentos.
@@ -30,8 +31,8 @@ export default function DocumentoPreventiva() {
       {/* Barra de ações — some na impressão */}
       <div className="flex items-center justify-between gap-2 border-b bg-neutral-100 px-4 py-2 print:hidden">
         <button className="text-sm text-neutral-700 hover:underline" onClick={() => navigate(-1)}>← Voltar</button>
-        <button className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
-                onClick={() => window.print()}>🖨️ Imprimir / Salvar PDF</button>
+        <button className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md bg-neutral-900 px-3 text-sm font-medium text-white hover:bg-neutral-700"
+                onClick={() => window.print()}><IconPrint /> Imprimir / Salvar PDF</button>
       </div>
 
       {/* Folha do documento */}

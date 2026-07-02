@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, type AdminCliente, type AdminUsuario, type Equipamento, type EquipamentoLista, type Falha, type NovaVisita, type Visita } from '../lib/api'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { IconClose } from './icons'
 import { CAMPOS_DOC_OS, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
 
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
@@ -94,7 +95,7 @@ export function FormOS({
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border bg-card shadow-xl">
         <div className="flex shrink-0 items-center justify-between border-b p-4">
           <h2 className="font-semibold">{inicial ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}</h2>
-          <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={aoFechar}>✕</button>
+          <button className="rounded p-2 text-muted-foreground hover:bg-accent" onClick={aoFechar} aria-label="Fechar"><IconClose /></button>
         </div>
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">

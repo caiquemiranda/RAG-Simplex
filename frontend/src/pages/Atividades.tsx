@@ -159,7 +159,7 @@ export default function Atividades() {
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    📅 {v.data}{v.cliente_nome ? ` · 📍 ${v.cliente_nome}` : ''}{v.equipamento_tag ? ` · 🔧 ${v.equipamento_tag}` : ''}{v.falha_nome ? ` · ⚠️ ${v.falha_nome}` : ''}
+                    {v.data}{v.cliente_nome ? ` · ${v.cliente_nome}` : ''}{v.equipamento_tag ? ` · ${v.equipamento_tag}` : ''}{v.falha_nome ? ` · ${v.falha_nome}` : ''}
                   </div>
                 </div>
                 <div className="flex -space-x-2">

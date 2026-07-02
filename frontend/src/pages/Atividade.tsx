@@ -6,6 +6,7 @@ import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { FormOS } from '../components/FormOS'
+import { IconClose, IconDoc, IconWrench, IconAlert, IconClipboard } from '../components/icons'
 import { STATUS_VISITA, TIPO_OS_COR } from '../lib/format'
 
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
@@ -89,7 +90,7 @@ export default function Atividade() {
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-lg">{atv.titulo}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">📅 {atv.data}{atv.cliente_nome ? ` · 📍 ${atv.cliente_nome}` : ''}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{atv.data}{atv.cliente_nome ? ` · ${atv.cliente_nome}` : ''}</p>
           </div>
           <div className="flex items-center gap-2">
             {ehAdmin && <Button size="sm" variant="outline" onClick={() => setEditando(true)}>Editar O.S.</Button>}
@@ -106,12 +107,12 @@ export default function Atividade() {
           {/* Tipo / equipamento / falha / lista (#OS) */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={`rounded-full px-2 py-0.5 ${TIPO_OS_COR[atv.tipo] ?? 'bg-muted'}`}>{atv.tipo}</span>
-            {atv.equipamento_tag && <span className="text-muted-foreground">🔧 {atv.equipamento_tag}</span>}
-            {atv.falha_nome && <span className="text-muted-foreground">⚠️ {atv.falha_nome}</span>}
-            {atv.lista_nome && <span className="text-muted-foreground">📋 {atv.lista_nome}</span>}
+            {atv.equipamento_tag && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconWrench className="h-3 w-3" /> {atv.equipamento_tag}</span>}
+            {atv.falha_nome && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconAlert className="h-3 w-3" /> {atv.falha_nome}</span>}
+            {atv.lista_nome && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconClipboard className="h-3 w-3" /> {atv.lista_nome}</span>}
             {atv.tipo === 'preventiva' && atv.lista_id != null && (
-              <button className="rounded-md border px-2 py-0.5 text-primary hover:bg-accent"
-                      onClick={() => navigate(`/preventiva/${atv.lista_id}`)}>📄 Gerar documento de preventiva</button>
+              <button className="inline-flex min-h-[44px] items-center gap-1 rounded-md border px-2 text-primary hover:bg-accent"
+                      onClick={() => navigate(`/preventiva/${atv.lista_id}`)}><IconDoc className="h-3.5 w-3.5" /> Gerar documento de preventiva</button>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -150,7 +151,7 @@ export default function Atividade() {
                   </button>
                   {podeGerir && (
                     <button className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white opacity-0 group-hover:opacity-100"
-                            title="Remover" onClick={() => removerAnexo(a.id)}>✕</button>
+                            title="Remover" onClick={() => removerAnexo(a.id)}><IconClose /></button>
                   )}
                 </div>
               ))}
@@ -191,7 +192,7 @@ export default function Atividade() {
       {/* Lightbox: imagem ampliada na mesma página, com X para fechar. */}
       {zoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setZoom(null)}>
-          <button className="absolute right-4 top-4 rounded-full bg-white/10 px-3 py-1 text-lg text-white hover:bg-white/20" onClick={() => setZoom(null)} aria-label="Fechar">✕</button>
+          <button className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20" onClick={() => setZoom(null)} aria-label="Fechar"><IconClose className="h-5 w-5" /></button>
           <img src={zoom} alt="" className="max-h-full max-w-full rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
         </div>
       )}

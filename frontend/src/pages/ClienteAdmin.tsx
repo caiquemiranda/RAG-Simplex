@@ -9,6 +9,7 @@ import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
 import { corStatusEquip } from '../lib/format'
+import { IconClose } from '../components/icons'
 
 const corStatus = corStatusEquip
 
@@ -286,7 +287,7 @@ export default function ClienteAdmin() {
               {plantas.map((p) => (
                 <span key={p.id} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${p.id === plantaEditId ? 'border-primary bg-accent' : ''}`}>
                   <button onClick={() => setPlantaEditId(p.id)} className="hover:underline">{p.nome}</button>
-                  <button className="text-destructive hover:underline" title="Remover planta" onClick={() => removerPlanta(p.id)}>✕</button>
+                  <button className="p-1 text-destructive hover:underline" title="Remover planta" aria-label="Remover planta" onClick={() => removerPlanta(p.id)}><IconClose className="h-3.5 w-3.5" /></button>
                 </span>
               ))}
             </div>
