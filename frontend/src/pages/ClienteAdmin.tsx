@@ -209,12 +209,12 @@ export default function ClienteAdmin() {
           <p className="mb-2 text-xs text-muted-foreground">Colunas do CSV: <span className="font-mono">tag, painel, loop, add, type, model, status, ultima_manutencao</span> — se a <strong>tag</strong> faltar, é composta de painel+loop+add+type.</p>
           {/* Cadastro manual (item 5) — campos vazios podem ser preenchidos depois */}
           <div className="mb-3 grid grid-cols-2 gap-1.5 rounded-lg border bg-muted/20 p-2 sm:grid-cols-7">
-            <Input className="h-8 sm:col-span-2" value={novoEq.tag} onChange={(e) => setNovoEq({ ...novoEq, tag: e.target.value })} placeholder="Tag (ou auto)" />
-            <Input className="h-8" value={novoEq.painel} onChange={(e) => setNovoEq({ ...novoEq, painel: e.target.value })} placeholder="Painel" />
-            <Input className="h-8" value={novoEq.loop} onChange={(e) => setNovoEq({ ...novoEq, loop: e.target.value })} placeholder="Loop" />
-            <Input className="h-8" value={novoEq.add} onChange={(e) => setNovoEq({ ...novoEq, add: e.target.value })} placeholder="Add" />
-            <Input className="h-8" value={novoEq.type} onChange={(e) => setNovoEq({ ...novoEq, type: e.target.value })} placeholder="Type" />
-            <Input className="h-8" value={novoEq.model} onChange={(e) => setNovoEq({ ...novoEq, model: e.target.value })} placeholder="Model" />
+            <Input className="h-8 sm:col-span-2" value={novoEq.tag} onChange={(e) => setNovoEq({ ...novoEq, tag: e.target.value })} aria-label="Tag do equipamento" placeholder="Tag (ou auto)" />
+            <Input className="h-8" value={novoEq.painel} onChange={(e) => setNovoEq({ ...novoEq, painel: e.target.value })} aria-label="Painel" placeholder="Painel" />
+            <Input className="h-8" value={novoEq.loop} onChange={(e) => setNovoEq({ ...novoEq, loop: e.target.value })} aria-label="Loop" placeholder="Loop" />
+            <Input className="h-8" value={novoEq.add} onChange={(e) => setNovoEq({ ...novoEq, add: e.target.value })} aria-label="Endereço (add)" placeholder="Add" />
+            <Input className="h-8" value={novoEq.type} onChange={(e) => setNovoEq({ ...novoEq, type: e.target.value })} aria-label="Tipo" placeholder="Type" />
+            <Input className="h-8" value={novoEq.model} onChange={(e) => setNovoEq({ ...novoEq, model: e.target.value })} aria-label="Modelo" placeholder="Model" />
             <div className="sm:col-span-7"><Button size="sm" variant="outline" onClick={criarEquip}>Adicionar equipamento</Button></div>
           </div>
           {cli.equipamentos.length === 0 ? (
@@ -326,7 +326,7 @@ export default function ClienteAdmin() {
               {/* Item 3: autocomplete por tag + Item 4: ver todos */}
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative">
-                  <Input className="w-64" value={buscaEd} placeholder="Equipamento (digite a tag)…"
+                  <Input className="w-64" value={buscaEd} aria-label="Buscar equipamento por tag" placeholder="Equipamento (digite a tag)…"
                          onChange={(e) => { setBuscaEd(e.target.value); setColocarId(null) }}
                          onKeyDown={(e) => { if (e.key === 'Enter') validarBusca() }} onBlur={validarBusca} />
                   {sugestoes.length > 0 && colocarId == null && (
@@ -378,11 +378,11 @@ export default function ClienteAdmin() {
                 <div className="rounded-lg border bg-card p-3">
                   <div className="mb-2 text-sm font-semibold">{aColocar.tag || `#${aColocar.id}`} — posição X {pendente.x}, Y {pendente.y}</div>
                   <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
-                    <Input className="h-8" value={boxFields.painel} onChange={(e) => setBoxFields({ ...boxFields, painel: e.target.value })} placeholder="Painel" />
-                    <Input className="h-8" value={boxFields.loop} onChange={(e) => setBoxFields({ ...boxFields, loop: e.target.value })} placeholder="Loop" />
-                    <Input className="h-8" value={boxFields.add} onChange={(e) => setBoxFields({ ...boxFields, add: e.target.value })} placeholder="Add" />
-                    <Input className="h-8" value={boxFields.type} onChange={(e) => setBoxFields({ ...boxFields, type: e.target.value })} placeholder="Type" />
-                    <Input className="h-8" value={boxFields.model} onChange={(e) => setBoxFields({ ...boxFields, model: e.target.value })} placeholder="Model" />
+                    <Input className="h-8" value={boxFields.painel} onChange={(e) => setBoxFields({ ...boxFields, painel: e.target.value })} aria-label="Painel" placeholder="Painel" />
+                    <Input className="h-8" value={boxFields.loop} onChange={(e) => setBoxFields({ ...boxFields, loop: e.target.value })} aria-label="Loop" placeholder="Loop" />
+                    <Input className="h-8" value={boxFields.add} onChange={(e) => setBoxFields({ ...boxFields, add: e.target.value })} aria-label="Endereço (add)" placeholder="Add" />
+                    <Input className="h-8" value={boxFields.type} onChange={(e) => setBoxFields({ ...boxFields, type: e.target.value })} aria-label="Tipo" placeholder="Type" />
+                    <Input className="h-8" value={boxFields.model} onChange={(e) => setBoxFields({ ...boxFields, model: e.target.value })} aria-label="Modelo" placeholder="Model" />
                   </div>
                   <div className="mt-2 flex gap-2">
                     <Button size="sm" onClick={() => salvarPosicao(boxFields)}>Salvar</Button>

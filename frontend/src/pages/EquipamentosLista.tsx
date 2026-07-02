@@ -126,16 +126,16 @@ export default function EquipamentosLista() {
               </div>
             )}
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Input className="w-64" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar (tag, add, painel, loop, model)…" />
-              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fTipo} onChange={(e) => setFTipo(e.target.value)}>
+              <Input className="w-64" value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Buscar equipamento" placeholder="Buscar (tag, add, painel, loop, model)…" />
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar por tipo" value={fTipo} onChange={(e) => setFTipo(e.target.value)}>
                 <option value="">Todos os tipos</option>
                 {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
-              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fModel} onChange={(e) => setFModel(e.target.value)}>
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar por modelo" value={fModel} onChange={(e) => setFModel(e.target.value)}>
                 <option value="">Todos os modelos</option>
                 {models.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
-              <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+              <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar por status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
                 <option value="">Todos os status</option>
                 {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -223,8 +223,8 @@ function ModalLista({ clienteId, equip, lista, aoFechar, aoSalvar }: {
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
           {erro && <p className="text-sm text-destructive">{erro}</p>}
-          <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da lista (ex.: Preventiva Q4 — pavimento 3)" />
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Filtrar equipamentos…" />
+          <Input value={nome} onChange={(e) => setNome(e.target.value)} aria-label="Nome da lista" placeholder="Nome da lista (ex.: Preventiva Q4 — pavimento 3)" />
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Filtrar equipamentos" placeholder="Filtrar equipamentos…" />
           <p className="text-xs text-muted-foreground">{sel.size} selecionado(s) de {equip.length}</p>
           <div className="space-y-1">
             {visiveis.map((e) => {

@@ -792,7 +792,7 @@ export default function Admin() {
                   )
                 })}
                 <div className="flex gap-2">
-                  <Input value={novoDoc.nome} onChange={(e) => setNovoDoc({ ...novoDoc, nome: e.target.value })} placeholder="Documento (ex.: NR-10, ASO, crachá Cliente X)" />
+                  <Input value={novoDoc.nome} onChange={(e) => setNovoDoc({ ...novoDoc, nome: e.target.value })} aria-label="Nome do documento exigido" placeholder="Documento (ex.: NR-10, ASO, crachá Cliente X)" />
                   <Input type="date" className="w-40" value={novoDoc.validade} onChange={(e) => setNovoDoc({ ...novoDoc, validade: e.target.value })} />
                   <Button type="button" variant="outline" size="sm" onClick={adicionarDoc} disabled={!novoDoc.nome.trim()}>Adicionar</Button>
                 </div>

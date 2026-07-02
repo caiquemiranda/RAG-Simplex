@@ -289,7 +289,7 @@ export default function Cronograma() {
               if (podeGerir) {
                 return (
                   <div className="mb-2 flex gap-2">
-                    <Input className="h-8" value={novoFeriado} onChange={(e) => setNovoFeriado(e.target.value)} placeholder="Marcar feriado (descrição)" />
+                    <Input className="h-8" value={novoFeriado} onChange={(e) => setNovoFeriado(e.target.value)} aria-label="Descrição do feriado" placeholder="Marcar feriado (descrição)" />
                     <Button size="sm" variant="outline" onClick={marcarFeriado}>Feriado</Button>
                   </div>
                 )
@@ -366,7 +366,7 @@ export default function Cronograma() {
                             )
                           })}
                         </div>
-                        <textarea defaultValue={v.observacoes ?? ''} rows={2} placeholder="observações…"
+                        <textarea defaultValue={v.observacoes ?? ''} rows={2} aria-label="Observações da atividade" placeholder="observações…"
                                   onBlur={(e) => { if (e.target.value !== (v.observacoes ?? '')) atualizarVisita(v.id, { observacoes: e.target.value }) }}
                                   className="w-full rounded border bg-background px-2 py-1 text-xs" />
                         <button className="text-xs text-destructive hover:underline" onClick={() => remover(v.id)}>remover atividade</button>

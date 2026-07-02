@@ -70,14 +70,14 @@ export default function Equipamentos() {
 
         {/* Cliente + busca + planta */}
         <div className="flex flex-wrap items-center gap-2">
-          <select className="h-9 rounded-md border bg-background px-3 text-sm" value={cid}
+          <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Selecionar cliente" value={cid}
                   onChange={(e) => setCid(e.target.value ? Number(e.target.value) : '')}>
             <option value="">Selecione o cliente…</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
           <div className="relative">
             <Input className="w-64" value={busca} onChange={(e) => { setBusca(e.target.value); setSelId(null) }}
-                   placeholder="Tag do equipamento (ex.: N2-L23-DF-003)" disabled={cid === ''} />
+                   aria-label="Buscar equipamento por tag" placeholder="Tag do equipamento (ex.: N2-L23-DF-003)" disabled={cid === ''} />
             {resultados.length > 0 && !selecionado && (
               <div className="absolute z-20 mt-1 max-h-64 w-72 overflow-auto rounded-md border bg-card shadow-lg">
                 {resultados.map((e) => (

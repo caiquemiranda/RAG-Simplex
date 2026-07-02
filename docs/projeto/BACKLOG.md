@@ -165,7 +165,9 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
 - [~] **#UI-TOUCH — alvos de toque ≥44×44px** — *parcial*: botões de ação principais (upload, fechar,
       imprimir, gerar doc, cards de grupo) ganharam `min-h-[44px]`/`p-2`. Falta a varredura fina dos
       controles densos (selects `h-8/h-9`, chips inline) — precisa de cuidado com layout compacto.
-- [ ] **#UI-LABELS — labels visíveis** (não só placeholder) nos formulários.
+- [x] **#UI-LABELS — nome acessível em todo campo**. Formulários de dados mantêm `<Label>` visível;
+      campos de **busca/filtro/inline** e **selects de filtro** ganharam **`aria-label`** (nenhum campo
+      fica "placeholder-only" sem nome acessível). ~20 controles cobertos.
 - [x] **#UI-FOCUS — foco visível** — regra global `:focus-visible` em `index.css` (anel `ring-2`)
       cobrindo `<select>` nativos, botões de ícone e links sem estilo próprio.
 - [ ] **#UI-TOKENS — cores de status via tokens** semânticos (hoje hex cru em `format.ts`).

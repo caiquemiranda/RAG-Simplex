@@ -4,6 +4,15 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 8 (parte 4): #UI-LABELS (nome acessível em todo campo)
+
+**Branch:** `feat/lote8-labels`. Frontend-only.
+
+- Todo campo passa a ter **nome acessível**: os formulários de dados já tinham `<Label>` visível;
+  os campos de **busca/filtro/inline** e os **selects de filtro** (lista de equipamentos, histórico
+  de O.S., seletor de cliente do mapa, filtro de consultas na sidebar, comentário, feriado) ganharam
+  **`aria-label`**. Nenhum campo fica "placeholder-only" sem nome. `tsc -b` limpo; 110 testes.
+
 ## 2026-07-02 — Lote 8 (parte 3): #SEC-UPLOAD + #UI-FOCUS
 
 **Branch:** `feat/lote8-seg-a11y`.

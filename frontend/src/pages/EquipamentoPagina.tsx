@@ -119,12 +119,12 @@ export default function EquipamentoPagina() {
             <CardHeader><CardTitle className="text-base">Ordens de Serviço ({ordensFiltradas.length}/{ordens.length})</CardTitle></CardHeader>
             <CardContent>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Input className="w-56" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar (título, técnico, data)…" />
-                <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fTipo} onChange={(e) => setFTipo(e.target.value)}>
+                <Input className="w-56" value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Buscar ordens de serviço" placeholder="Buscar (título, técnico, data)…" />
+                <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar O.S. por tipo" value={fTipo} onChange={(e) => setFTipo(e.target.value)}>
                   <option value="">Todos os tipos</option>
                   {TIPOS_OS.map((t) => <option key={t} value={t}>{TIPO_OS_LABEL[t]}</option>)}
                 </select>
-                <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fFalha} onChange={(e) => setFFalha(e.target.value)}>
+                <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar O.S. por falha" value={fFalha} onChange={(e) => setFFalha(e.target.value)}>
                   <option value="">Todas as falhas</option>
                   {falhasNasOrdens.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
@@ -192,7 +192,7 @@ function GerenciarDocs({ marcas, fixadosIds, aoFechar, aoSalvar }: {
           <button className="rounded p-2 text-muted-foreground hover:bg-accent" onClick={aoFechar} aria-label="Fechar"><IconClose /></button>
         </div>
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Filtrar por nome/marca…" />
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Filtrar documentos" placeholder="Filtrar por nome/marca…" />
           {marcas.length === 0 && <p className="text-sm text-muted-foreground">Nenhum documento em <Link to="/documentos?cat=marcas" className="text-primary hover:underline">biblioteca → Marcas</Link>.</p>}
           {visiveis.map((d) => {
             const marcado = sel.has(d.id)
