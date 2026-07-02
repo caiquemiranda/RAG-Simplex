@@ -4,6 +4,14 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Docs: atualiza FLUXOS (O.S. por tipo + chat) + registra Lote 10
+
+- **FLUXOS.md:** §8 (O.S.) reescrito **por tipo** (corretiva=intervalo/equip/falha; preventiva=datas
+  avulsas por cliente+mês com merge; sem "avulsa"); novo **§11 fluxo do chat** (#CHAT, polling +
+  dedupe da notificação). Reference docs alinhados às mudanças recentes.
+- **Lote 10 registrado** ([BACKLOG §O](BACKLOG.md)): **#DOC-FINAL** — editar o documento final
+  (HTML → PDF) do cliente no Painel ADM (a fazer com documento de referência).
+
 ## 2026-07-02 — #OS-PREV-DATAS: preventiva mensal com datas avulsas (D-029, ajusta D-028)
 
 **Branch:** `feat/prev-datas`. Refinamento a pedido do usuário.

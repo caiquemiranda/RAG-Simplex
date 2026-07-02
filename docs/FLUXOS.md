@@ -143,33 +143,44 @@ flowchart TD
   E & I --> J[resposta = reais + virtuais]
 ```
 
-## 8. Ordem de Serviço — criar / editar (#OS, D-025)
+## 8. Ordem de Serviço — criar / editar por tipo (#OS)
 
 A **O.S. é a própria visita** (D-025). `POST /cronograma` cria; `PATCH /cronograma/{id}` edita.
-Campos além do básico (`data`, `titulo`, `status`): **`tipo`** (manutenção
-`preventiva|corretiva|avulsa`), **`equipamento_id`**, **`falha_id`** (catálogo) e os **12 campos
-do documento de corretiva** (`especialidade`, `requisitante`, `data_solicitacao`, `centro_custo`,
-`numero_os`, `reserva_material`, `material_utilizado`, `endereco`, `setor`, `prioridade`,
-`data_execucao`, `acao_aplicada`). Regras aplicadas por `_aplicar_os`.
+O **`tipo`** é `preventiva|corretiva` (D-027; "avulsa" removida) e **define os campos** (form
+`FormOS`, #OS-TIPO-CAMPOS):
+- **Corretiva:** cliente + **equipamento único** + **falha** + técnicos + **intervalo**
+  `data`/`data_fim` (#OS-MULTIDATA). Descrição automática `MANUTENÇÃO CORRETIVA — <equip> — <falha>`.
+  Os 12 **campos do documento** (`especialidade`…`acao_aplicada`) **não** são preenchidos na criação
+  — vão no documento salvo depois.
+- **Preventiva:** cliente + **lista de equipamentos** (`lista_id`) + técnicos + **conjunto de datas
+  avulsas** do mês (`datas`, tabela `visita_data`, #OS-PREV-DATAS/D-029). É **uma O.S./documento por
+  cliente+mês**: criar com `datas` num mês que já tem preventiva **mescla** os dias (dedupe).
+  Descrição automática `MANUTENÇÃO PREVENTIVA — <mês>`. Documento único:
+  `GET /cronograma/{id}/documento-preventiva` (datas marcadas + equipamentos da lista).
+
+Regras aplicadas por `_aplicar_os` (tipo/equipamento/falha/lista/campos-doc).
 
 ```mermaid
 sequenceDiagram
   participant Admin as Admin (gerir_usuarios)
   participant API as FastAPI (cronograma.py)
   participant DB as Banco
-  Admin->>API: POST /cronograma {data, titulo, tipo, cliente_id,<br/>usuario_ids[], equipamento_id?, falha_id?, campos-doc?}
+  Admin->>API: POST /cronograma {tipo, cliente_id, usuario_ids[], titulo,<br/>corretiva: data/data_fim + equipamento_id + falha_id<br/>preventiva: datas[] + lista_id}
   API->>DB: dia é feriado? → 400 se sim (#FER-1)
   Note over API: usuario_ids vazio →<br/>técnicos = fixos do cliente (cliente_padrao_id, #ALOC)
-  API->>API: sem técnicos e sem cliente → 400
-  API->>API: _aplicar_os: tipo ∉ {preventiva,corretiva,avulsa} → 400
-  API->>DB: equipamento_id informado inexistente → 404
-  API->>DB: grava Visita + vínculo N:N de técnicos
-  API->>API: status=concluida E equipamento? → equipamento.ultima_manutencao = data (#MAP-4)
+  API->>API: sem técnicos e sem cliente → 400 · tipo ∉ {preventiva,corretiva} → 400 · data_fim<data → 400
+  alt preventiva com datas (#OS-PREV-DATAS)
+    API->>DB: existe preventiva do cliente no mesmo mês?
+    API->>DB: sim → **mescla** os dias (dedupe), ajusta data/data_fim (min/max) → retorna a MESMA O.S.
+    API->>DB: não → cria Visita + visita_data (dias)
+  else corretiva
+    API->>DB: equipamento_id inexistente → 404 · grava Visita (intervalo data/data_fim)
+  end
+  API->>DB: vínculo N:N de técnicos + status=concluida E equipamento → ultima_manutencao (#MAP-4)
   API->>DB: cria Notificacao "Nova O.S.: {titulo}" p/ cada técnico (ref_id = visita, #NOTIF-LINK)
-  API-->>Admin: 201 VisitaResumo {tipo, equipamento_tag, falha_nome, campos-doc}
-  Admin->>API: PATCH /cronograma/{id} {tipo?, equipamento_id?, falha_id?, campos-doc?, status?}
-  Note over API: admin edita tudo (_aplicar_os); técnico só status+observacoes.<br/>Só os campos em model_fields_set são tocados (Pydantic v2)
-  API->>API: concluir aqui também grava ultima_manutencao
+  API-->>Admin: 201 VisitaResumo {tipo, equipamento_tag, falha_nome, datas, data_fim}
+  Admin->>API: PATCH /cronograma/{id} {tipo?, equipamento_id?, falha_id?, datas?, data_fim?, status?}
+  Note over API: admin edita tudo (_aplicar_os); técnico só status+observacoes.<br/>Só os campos em model_fields_set são tocados (Pydantic v2); datas substitui o conjunto
   API-->>Admin: 200 VisitaResumo atualizado
 ```
 
@@ -216,6 +227,29 @@ sequenceDiagram
   API->>FS: remover_arquivo(url)
   API->>DB: remove AnexoVisita
   API-->>U: detalhe atualizado
+```
+
+## 11. Chat interno entre usuários (#CHAT)
+
+Mensagens diretas 1-a-1, com **registro centralizado**. Sem WebSocket — o frontend faz **polling**
+(sidebar 15s, tela de conversa 5s; D-028).
+
+```mermaid
+sequenceDiagram
+  participant A as Usuário A
+  participant API as FastAPI (conversas.py)
+  participant DB as Banco
+  A->>API: GET /conversas  (lista de contatos = usuários ativos, menos eu)
+  API->>DB: conta Mensagem não lidas por remetente → nao_lidas por contato
+  API-->>A: contatos (não lidas primeiro) — badge na sidebar
+  A->>API: POST /conversas/{B} {texto}
+  API->>DB: grava Mensagem A→B
+  Note over API: só cria Notificacao (tipo=chat, ref_id=A) se B ainda **não tinha**<br/>mensagem não lida minha (dedupe — evita inundar o sino)
+  API-->>A: 201 mensagem
+  A->>API: GET /conversas/{B}  (abrir a conversa)
+  API->>DB: histórico A↔B + marca como lidas as que A recebeu de B
+  API-->>A: mensagens {meu, texto, criado_em}
+  Note over A: notificação de chat linka a /conversas/{remetente}
 ```
 
 ## Invariantes refletidas nos fluxos

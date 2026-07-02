@@ -13,12 +13,14 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/prev-datas` (do `main`). **Backend: 114 testes**. Lote 6/7/8 ✅ · **Lote 9 ✅ (5/5)**
-  + **#OS-PREV-DATAS** (D-029): preventiva mensal com **datas avulsas** (tabela `visita_data`; uma
-  O.S./documento por cliente+mês; multi-date picker; documento único via `/cronograma/{id}/documento-preventiva`).
-  Migrações novas do Lote 9: `48dbeb05d767`, `55a1f2053b04`, `615d05505836`, **`965839fdf8d7`** (head).
-  **Sobra do Lote 8** (baixo valor/opcional): #UI-TOUCH (fino), #UI-TOKENS, #UI-CHARTS, #UI-BRAND.
-- **Falta:** mergear `feat/prev-datas` na `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
+- **Branch:** `main`. **Backend: 114 testes**. Lote 6/7/8 ✅ · **Lote 9 ✅ (5/5)** + **#OS-PREV-DATAS**
+  (D-029): preventiva mensal com **datas avulsas** (tabela `visita_data`; uma O.S./documento por
+  cliente+mês; multi-date picker; documento único via `/cronograma/{id}/documento-preventiva`).
+  Migrações até: `965839fdf8d7` (head). Tudo mergeado.
+- **➡️ Lote 10 registrado** ([BACKLOG §O](BACKLOG.md)): **#DOC-FINAL** — editar o **documento final**
+  (HTML → PDF) do cliente no Painel ADM (a fazer com um documento de referência).
+- **Sobra do Lote 8** (baixo valor/opcional): #UI-TOUCH (fino), #UI-TOKENS, #UI-CHARTS, #UI-BRAND.
+  Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`
