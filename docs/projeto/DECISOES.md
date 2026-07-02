@@ -214,3 +214,10 @@ por equipamento: `GET /cronograma/equipamento/{id}`. Spec `specs/spec-os-ordem-s
   datasheets são cadastrados na **biblioteca → Marcas** (#DOC-MARCAS) e a **página do
   equipamento** apenas **linka** para o documento da biblioteca. Falta definir na implementação
   o critério de associação (por `model`/marca automático vs. seleção manual de um `documento_id`).
+
+### D-027 ✅ Remover o tipo "avulsa" das O.S. (ajusta a D-025)
+**2026-07-01.** A pedido do usuário, os tipos de O.S. passam a ser apenas **preventiva** e
+**corretiva** (a D-025 previa três). "Avulsa" confundia. Backend `_TIPOS_OS={preventiva,
+corretiva}`; frontend `TIPOS_OS` idem; **migração `bf54f9b66560`** faz back-fill das O.S.
+existentes `avulsa → corretiva` (não há como distinguir depois — downgrade é no-op). Teste
+passa a rejeitar `tipo="avulsa"` (400).

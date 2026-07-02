@@ -4,6 +4,15 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #OS-SEM-AVULSA: remove o tipo "avulsa" das O.S. (Lote 7, D-027)
+
+**Branch:** `feat/lote7`. Fundação do Lote 7 (mexe em tipos em todo lugar).
+
+- Tipos de O.S. agora só **preventiva/corretiva** (D-027 ajusta a D-025). Backend
+  `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`BAR_TIPO`
+  sem avulsa; `EquipamentoPagina` usa `TIPOS_OS`. **Migração `bf54f9b66560`**: back-fill
+  `avulsa→corretiva` (downgrade no-op). Teste passa a rejeitar `tipo="avulsa"` (400).
+
 ## 2026-07-01 — #PREV-DOC: documento de Manutenção Preventiva a partir da lista
 
 **Branch:** `feat/documento-preventiva`. Continuação do #EQP-LISTAS.

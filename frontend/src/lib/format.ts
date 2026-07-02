@@ -14,16 +14,14 @@ export const STATUS_VISITA: Record<string, string> = {
 }
 
 /** Tipos de Ordem de Serviço (#OS, D-025) e rótulos/cores de exibição. */
-export const TIPOS_OS = ['preventiva', 'corretiva', 'avulsa'] as const
+export const TIPOS_OS = ['preventiva', 'corretiva'] as const   // "avulsa" removida (#OS-SEM-AVULSA)
 export const TIPO_OS_LABEL: Record<string, string> = {
   preventiva: 'Manutenção preventiva',
   corretiva: 'Manutenção corretiva',
-  avulsa: 'Manutenção avulsa',
 }
 export const TIPO_OS_COR: Record<string, string> = {
   preventiva: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200',
   corretiva: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200',
-  avulsa: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200',
 }
 /** Campos do documento de corretiva: chave → rótulo (ordem do documento img1). */
 export const CAMPOS_DOC_OS: [string, string][] = [

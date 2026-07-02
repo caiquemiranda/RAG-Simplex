@@ -319,8 +319,9 @@ def test_os_unificada_falha_equipamento_manutencao(ctx):
     hist = client.get(f"/cronograma/equipamento/{eid}", headers=admin).json()
     assert len(hist) == 1 and hist[0]["id"] == j["id"]
 
-    # Tipo inválido → 400.
+    # Tipo inválido → 400 (inclui "avulsa", removida no #OS-SEM-AVULSA).
     assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "xpto"}).status_code == 400
+    assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "avulsa"}).status_code == 400
 
     # Item 5: sem técnicos → usa os fixos do cliente.
     client.patch(f"/admin/usuarios/{ids['tec2']}", headers=admin, json={"cliente_padrao_id": cid})
@@ -343,10 +344,10 @@ def test_os_editar_deletar_falha_e_rbac(ctx):
     assert client.post("/admin/falhas", headers=tec, json={"nome": "Dirty"}).status_code == 403
     assert client.delete(f"/admin/falhas/{fid}", headers=tec).status_code == 403
 
-    # Cria O.S. avulsa/agendada sem equipamento/falha.
+    # Cria O.S. preventiva/agendada sem equipamento/falha.
     osid = client.post("/cronograma", headers=admin, json={
         "usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-09-05",
-        "titulo": "Abertura", "tipo": "avulsa"}).json()["id"]
+        "titulo": "Abertura", "tipo": "preventiva"}).json()["id"]
 
     # T1 — editar a O.S. (item 4): muda tipo, vincula equipamento/falha e preenche campo-doc.
     r = client.patch(f"/cronograma/{osid}", headers=admin, json={

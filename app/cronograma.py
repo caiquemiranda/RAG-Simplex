@@ -45,7 +45,7 @@ class FeriadoResumo(BaseModel):
 
 # Campos do documento de O.S. corretiva (todos opcionais) — item 12.
 class _OSDoc(BaseModel):
-    tipo: str | None = None           # preventiva|corretiva|avulsa
+    tipo: str | None = None           # preventiva|corretiva (#OS-SEM-AVULSA)
     equipamento_id: int | None = None
     falha_id: int | None = None
     especialidade: str | None = None
@@ -291,7 +291,7 @@ def _buscar_cliente(sessao: Session, cliente_id: int | None) -> int | None:
     return cliente_id
 
 
-_TIPOS_OS = {"preventiva", "corretiva", "avulsa"}
+_TIPOS_OS = {"preventiva", "corretiva"}   # "avulsa" removida (#OS-SEM-AVULSA)
 
 
 def _fixos_do_cliente(sessao: Session, cliente_id: int) -> list[Usuario]:

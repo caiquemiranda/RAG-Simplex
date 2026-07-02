@@ -13,7 +13,7 @@ const BAR: Record<string, string> = {
   agendada: 'bg-blue-500', pendente: 'bg-amber-500', concluida: 'bg-emerald-500', cancelada: 'bg-rose-500',
 }
 const BAR_TIPO: Record<string, string> = {
-  preventiva: 'bg-sky-500', corretiva: 'bg-orange-500', avulsa: 'bg-violet-500',
+  preventiva: 'bg-sky-500', corretiva: 'bg-orange-500',
 }
 
 /** Prazo da atividade em relação a hoje: faltam N dias / atrasada há N / hoje. */

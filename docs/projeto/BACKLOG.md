@@ -131,10 +131,9 @@ Seis solicitações do usuário. **Registradas** (a implementar depois).
       de um cliente (`/relatorios/:id`), exibir **dois cards**: **"Manutenção Preventiva"** e
       **"Manutenção Corretiva"**, cada um listando **apenas as O.S. daquele tipo** do cliente.
       dep: #OS-SEM-AVULSA (só 2 tipos).
-- [ ] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3). Tirar `avulsa` de **tudo**: backend
-      `_TIPOS_OS = {preventiva, corretiva}`; frontend `TIPOS_OS`, `FormOS`, filtros e gráficos.
-      **Atenção:** back-fill de O.S. existentes com `tipo="avulsa"` → definir destino (provável
-      `corretiva`). **Atualiza a D-025** (que previa 3 tipos) — registrar em `DECISOES.md`.
+- [x] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3, **D-027**). `avulsa` fora de tudo:
+      backend `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/labels/cores/`BAR_TIPO`;
+      **migração `bf54f9b66560`** back-fill `avulsa→corretiva`. Teste rejeita `tipo="avulsa"` (400).
 - [ ] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na **página da atividade/O.S.**
       (`/cronograma/atividade/:id`, #ATV-1), permitir **abrir e editar** todos os campos ali (reusar
       o `FormOS` embutido ou modo edição na própria página), não só pelo modal a partir da lista.

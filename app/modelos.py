@@ -280,7 +280,7 @@ class Falha(Base):
 class Visita(Base):
     """**Ordem de Serviço** (O.S., #OS) — unifica a atividade do cronograma com a manutenção
     (D-025). Por dia e cliente; **vários técnicos** (visita_tecnico); pode referenciar um
-    `Equipamento` e uma `Falha`. `tipo` = manutenção preventiva/corretiva/avulsa. Concluir com
+    `Equipamento` e uma `Falha`. `tipo` = manutenção preventiva/corretiva (#OS-SEM-AVULSA). Concluir com
     data grava `equipamento.ultima_manutencao`. Campos do **documento de corretiva** opcionais."""
 
     __tablename__ = "visita"
@@ -294,7 +294,7 @@ class Visita(Base):
     status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|pendente|concluida|cancelada
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)
     # --- Ordem de Serviço (#OS, D-025) ---
-    tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # preventiva|corretiva|avulsa
+    tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # preventiva|corretiva
     equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
     falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
     # Campos do documento de O.S. corretiva (todos opcionais).
