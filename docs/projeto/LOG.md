@@ -4,6 +4,19 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #EQP-LISTAS: listas nomeadas de equipamentos (Lote 6, fim)
+
+**Branch:** `feat/lote6-equipamentos`. Full-stack — **fecha o Lote 6** (7/7).
+
+- **Modelo:** `EquipamentoLista` (nome, cliente_id cascade) + N:N `lista_equipamento`. Migração
+  `5e88d54a7547` (2 tabelas). **Backend:** CRUD `/admin/clientes/{id}/listas` + `/admin/listas/{id}`
+  (perm `gerir_usuarios`); ids de outro cliente ignorados na gravação. Teste `test_equipamento_listas`.
+- **api.ts:** `EquipamentoLista` + `api.admin.listas/criarLista/atualizarLista/removerLista`.
+- **`EquipamentosLista.tsx`:** **chips das listas no topo** (clicam → filtram a tabela), **"+ Criar
+  lista"** e ✎/✕ por lista; componente `ModalLista` (nome + seleção por checkbox com busca).
+- **104 passed**, `tsc -b` limpo. **Uso futuro:** gerar o documento de Manutenção Preventiva a
+  partir da lista.
+
 ## 2026-06-30 — #EQP-PAGINA + #OS-HIST-FILTRO: página por dispositivo (Lote 6)
 
 **Branch:** `feat/lote6-equipamentos`. Frontend-only.

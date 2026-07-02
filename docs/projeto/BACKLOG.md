@@ -97,15 +97,13 @@ salvas que alimentam documentos de manutenção preventiva).
       calendário passou a **reusar o FormOS** ("+ Nova O.S. neste dia", com `dataFixa`) — removida
       a duplicação do form embutido. Resolve a pendência de editar campos-doc fora da criação.
 
-- [ ] **#EQP-LISTAS — listas de equipamentos (base do doc de preventiva)** (item 6). Criar **listas
-      nomeadas** de equipamentos: botão **"Criar lista"** abre uma janela para **marcar** os
-      equipamentos → **Salvar** → a lista aparece **no topo**. Clicar numa lista **filtra** a tabela
-      para mostrar só os equipamentos dela. Uso futuro: **gerar um documento de Manutenção
-      Preventiva** a partir da lista (os equipamentos entram no documento automaticamente).
-      *Backend novo:* entidade `EquipamentoLista` (nome, cliente, N:N com `Equipamento`) + CRUD.
-      *Frontend:* seleção/salvar/filtrar + chip das listas no topo. dep: #TAB-ORDEM/#EQP-FILTROS+;
-      a **geração do documento** de preventiva é um item futuro à parte (ligado ao `tipo=preventiva`
-      da O.S.).
+- [x] **#EQP-LISTAS — listas de equipamentos (base do doc de preventiva)** (item 6). Entidade
+      **`EquipamentoLista`** (nome, cliente, N:N `lista_equipamento`) + CRUD `/admin/clientes/{id}/
+      listas` e `/admin/listas/{id}` (ids de outro cliente ignorados); migração `5e88d54a7547`;
+      teste `test_equipamento_listas`. **Frontend:** chips das listas **no topo** da lista do
+      cliente (filtram a tabela ao clicar), **"+ Criar lista"** e ✎/✕ por lista, modal com nome +
+      seleção por checkbox (`ModalLista`). **Futuro (à parte):** gerar o **documento de Manutenção
+      Preventiva** a partir da lista (ligado ao `tipo=preventiva` da O.S.).
 
 **Plano sugerido (sem retrabalho):** `#EQP-STATUS` → `#TAB-ORDEM` → `#EQP-FILTROS+` →
 `#OS-PAGINA` (extrai `FormOS`) → `#EQP-PAGINA` → `#OS-HIST-FILTRO` → `#EQP-LISTAS` →

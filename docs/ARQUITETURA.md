@@ -89,6 +89,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST/DELETE | `/admin/clientes/{id}/plantas` · `/admin/plantas/{id}` | `gerir_usuarios` | Plantas: **upload PDF→PNG** (1 pág=1 planta), listar, remover (#MAP). |
 | PATCH | `/admin/equipamentos/{id}` | `gerir_usuarios` | Edita equipamento + **posição na planta** (`planta_id`/`pos_x`/`pos_y`) — editor de mapa. |
 | GET/POST/DELETE | `/admin/falhas[/{id}]` | `gerir_usuarios` | **Catálogo de falhas** (#OS): nome+termo_en (409 se duplicado). |
+| GET/POST `/admin/clientes/{id}/listas` · PATCH/DELETE `/admin/listas/{id}` | `gerir_usuarios` | **Listas de equipamentos** (#EQP-LISTAS): nome + N:N; ids de outro cliente ignorados. |
 | GET | `/cronograma/equipamento/{id}` | autenticado | **Histórico de O.S.** do equipamento (#MAP-4); RBAC pelo cliente. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |

@@ -26,6 +26,8 @@ erDiagram
   EQUIPAMENTO ||--o{ VISITA : "0..1 (alvo/histórico #MAP-4)"
   FALHA ||--o{ VISITA : "0..1 (catálogo #OS)"
   FALHA ||--o{ EQUIPAMENTO : "0..1 (falha atual #EQP-STATUS)"
+  CLIENTE ||--o{ EQUIPAMENTO_LISTA : "1:N (cascade #EQP-LISTAS)"
+  EQUIPAMENTO_LISTA }o--o{ EQUIPAMENTO : "N:N lista_equipamento"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -112,6 +114,12 @@ erDiagram
     int planta_id FK "posição (#MAP)"
     float pos_x
     float pos_y
+    datetime criado_em
+  }
+  EQUIPAMENTO_LISTA {
+    int id PK
+    int cliente_id FK "cascade"
+    string nome
     datetime criado_em
   }
   PLANTA {
@@ -264,7 +272,15 @@ Dispositivo do painel de incêndio de um **cliente** (`cliente_id`, cascade), im
 **CSV**. Colunas: `painel`, `loop`, `add` (endereço no loop), `type`, `model`. Fases
 seguintes (adiadas): `ultima_manutencao`/`ultimo_teste` e histórico do painel. A UI (lista +
 upload) vive na **página do cliente** (#CLI-PG) e na sidebar "Equipamentos" (#EQP-2).
+Cada dispositivo tem **página própria** (#EQP-PAGINA): dados + O.S. + documentos da biblioteca.
 Ver [`projeto/specs/spec-eqp1-equipamento-csv.md`](projeto/specs/spec-eqp1-equipamento-csv.md).
+
+### EquipamentoLista (listas nomeadas, #EQP-LISTAS)
+Lista **nomeada** de equipamentos de um cliente (`nome`, `cliente_id` cascade) com N:N
+`lista_equipamento`. Na lista de equipamentos aparecem como **chips** no topo (filtram a
+tabela). Servem de base para **gerar um documento de manutenção preventiva** (futuro). CRUD em
+`/admin/clientes/{id}/listas` + `/admin/listas/{id}` (`gerir_usuarios`); ids de outro cliente
+são ignorados na gravação.
 
 ### ComentarioVisita / AnexoVisita (página da atividade, #ATV-1)
 A atividade (`Visita`) tem uma **página própria** com **comentários** e **anexos de

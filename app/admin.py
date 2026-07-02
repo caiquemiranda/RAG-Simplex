@@ -30,6 +30,7 @@ from app.modelos import (
     ConfigEstrategia,
     DocumentoTecnico,
     Equipamento,
+    EquipamentoLista,
     Falha,
     LogConsulta,
     Papel,
@@ -742,6 +743,96 @@ def remover_equipamento(equipamento_id: int,
     if e is None:
         raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
     sessao.delete(e)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Listas nomeadas de equipamentos (#EQP-LISTAS) — base do doc de preventiva.   #
+# --------------------------------------------------------------------------- #
+class ListaIn(BaseModel):
+    nome: str
+    equipamento_ids: list[int] = []
+
+
+class ListaAtualizar(BaseModel):
+    nome: str | None = None
+    equipamento_ids: list[int] | None = None
+
+
+class ListaResumo(BaseModel):
+    id: int
+    cliente_id: int
+    nome: str
+    equipamento_ids: list[int]
+
+
+def _resumo_lista(lst: EquipamentoLista) -> ListaResumo:
+    return ListaResumo(id=lst.id, cliente_id=lst.cliente_id, nome=lst.nome,
+                       equipamento_ids=[e.id for e in lst.equipamentos])
+
+
+def _equips_do_cliente(sessao: Session, cliente_id: int, ids: list[int]) -> list[Equipamento]:
+    """Carrega os equipamentos por id, garantindo que pertencem ao cliente (ignora estranhos)."""
+    if not ids:
+        return []
+    achados = sessao.scalars(select(Equipamento).where(Equipamento.id.in_(ids))).all()
+    return [e for e in achados if e.cliente_id == cliente_id]
+
+
+@router.get("/clientes/{cliente_id}/listas", response_model=list[ListaResumo])
+def listar_listas(cliente_id: int,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> list[ListaResumo]:
+    _cliente_ou_404(sessao, cliente_id)
+    listas = sessao.scalars(
+        select(EquipamentoLista).where(EquipamentoLista.cliente_id == cliente_id).order_by(EquipamentoLista.nome)
+    ).all()
+    return [_resumo_lista(l) for l in listas]
+
+
+@router.post("/clientes/{cliente_id}/listas", response_model=ListaResumo,
+             status_code=status.HTTP_201_CREATED)
+def criar_lista(cliente_id: int, dados: ListaIn,
+                _: Usuario = Depends(requer("gerir_usuarios")),
+                sessao: Session = Depends(get_session)) -> ListaResumo:
+    c = _cliente_ou_404(sessao, cliente_id)
+    nome = dados.nome.strip()
+    if not nome:
+        raise HTTPException(status_code=400, detail="Informe o nome da lista.")
+    lst = EquipamentoLista(cliente_id=c.id, nome=nome)
+    lst.equipamentos = _equips_do_cliente(sessao, cliente_id, dados.equipamento_ids)
+    sessao.add(lst)
+    sessao.commit()
+    sessao.refresh(lst)
+    return _resumo_lista(lst)
+
+
+@router.patch("/listas/{lista_id}", response_model=ListaResumo)
+def atualizar_lista(lista_id: int, dados: ListaAtualizar,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)) -> ListaResumo:
+    lst = sessao.get(EquipamentoLista, lista_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail="Lista não encontrada.")
+    if dados.nome is not None:
+        if not dados.nome.strip():
+            raise HTTPException(status_code=400, detail="Nome da lista vazio.")
+        lst.nome = dados.nome.strip()
+    if dados.equipamento_ids is not None:
+        lst.equipamentos = _equips_do_cliente(sessao, lst.cliente_id, dados.equipamento_ids)
+    sessao.commit()
+    sessao.refresh(lst)
+    return _resumo_lista(lst)
+
+
+@router.delete("/listas/{lista_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_lista(lista_id: int,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)):
+    lst = sessao.get(EquipamentoLista, lista_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail="Lista não encontrada.")
+    sessao.delete(lst)
     sessao.commit()
 
 

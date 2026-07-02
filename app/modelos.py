@@ -65,6 +65,14 @@ visita_tecnico = Table(
     Column("usuario_id", ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Listas nomeadas de equipamentos (#EQP-LISTAS) — base do documento de manutenção preventiva.
+lista_equipamento = Table(
+    "lista_equipamento",
+    Base.metadata,
+    Column("lista_id", ForeignKey("equipamento_lista.id", ondelete="CASCADE"), primary_key=True),
+    Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -236,6 +244,23 @@ class Equipamento(Base):
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
     planta: Mapped[Planta | None] = relationship()
     falha: Mapped["Falha | None"] = relationship()
+
+
+class EquipamentoLista(Base):
+    """Lista **nomeada** de equipamentos de um cliente (#EQP-LISTAS). Serve para filtrar a
+    lista e, futuramente, gerar um documento de **manutenção preventiva** com esses itens."""
+
+    __tablename__ = "equipamento_lista"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    nome: Mapped[str] = mapped_column(String(120))
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship()
+    equipamentos: Mapped[list[Equipamento]] = relationship(secondary=lista_equipamento)
 
 
 class Falha(Base):

@@ -276,6 +276,36 @@ def test_equipamento_status_e_falha(ctx):
     assert r.json()["falha_id"] is None and r.json()["falha_nome"] is None
 
 
+def test_equipamento_listas(ctx):
+    """#EQP-LISTAS: cria lista nomeada de equipamentos do cliente; edita; ignora estranhos; remove."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli L"}).json()["id"]
+    cid2 = client.post("/admin/clientes", headers=admin, json={"nome": "Outro"}).json()["id"]
+    e1 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A"}).json()["id"]
+    e2 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B"}).json()["id"]
+    alheio = client.post(f"/admin/clientes/{cid2}/equipamentos", headers=admin, json={"tag": "X"}).json()["id"]
+
+    # Cria a lista com dois equipamentos + um de outro cliente (ignorado).
+    r = client.post(f"/admin/clientes/{cid}/listas", headers=admin,
+                    json={"nome": "Preventiva Q3", "equipamento_ids": [e1, e2, alheio]})
+    assert r.status_code == 201
+    lid = r.json()["id"]
+    assert sorted(r.json()["equipamento_ids"]) == sorted([e1, e2])  # alheio fora
+
+    # Aparece na listagem do cliente.
+    assert [l["nome"] for l in client.get(f"/admin/clientes/{cid}/listas", headers=admin).json()] == ["Preventiva Q3"]
+
+    # Edita nome + conjunto de equipamentos.
+    r = client.patch(f"/admin/listas/{lid}", headers=admin, json={"nome": "Preventiva Q4", "equipamento_ids": [e1]})
+    assert r.status_code == 200 and r.json()["nome"] == "Preventiva Q4" and r.json()["equipamento_ids"] == [e1]
+
+    # RBAC: técnico não gerencia; remover some.
+    assert client.post(f"/admin/clientes/{cid}/listas", headers=_login(client, "tec@x.com"), json={"nome": "z"}).status_code == 403
+    assert client.delete(f"/admin/listas/{lid}", headers=admin).status_code == 204
+    assert client.get(f"/admin/clientes/{cid}/listas", headers=admin).json() == []
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx
