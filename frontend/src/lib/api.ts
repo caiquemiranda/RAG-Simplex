@@ -163,6 +163,8 @@ export type Visita = CamposDocOS & {
   equipamento_tag: string | null
   falha_id: number | null
   falha_nome: string | null
+  lista_id: number | null
+  lista_nome: string | null
 }
 // Página da atividade (#ATV-1).
 export type ComentarioVisita = { id: number; autor_id: number | null; autor_nome: string | null; texto: string; criado_em: string }
@@ -179,6 +181,7 @@ export type NovaVisita = CamposDocOS & {
   tipo?: string
   equipamento_id?: number | null
   falha_id?: number | null
+  lista_id?: number | null
 }
 export type Feriado = { id: number; data: string; descricao: string }
 export type DocEquip = {

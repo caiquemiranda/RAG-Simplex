@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type AdminCliente, type AdminUsuario, type Equipamento, type Falha, type NovaVisita, type Visita } from '../lib/api'
+import { api, type AdminCliente, type AdminUsuario, type Equipamento, type EquipamentoLista, type Falha, type NovaVisita, type Visita } from '../lib/api'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { CAMPOS_DOC_OS, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
@@ -7,14 +7,14 @@ import { CAMPOS_DOC_OS, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 
 type Estado = {
-  tipo: string; cliente_id: number | ''; equipamento_id: number | ''; falha_id: number | ''
+  tipo: string; cliente_id: number | ''; equipamento_id: number | ''; falha_id: number | ''; lista_id: number | ''
   data: string; titulo: string; status: string; observacoes: string
   usuarioIds: Set<number>; doc: Record<string, string>
 }
 
 function inicialDe(v?: Visita): Estado {
   if (!v) return {
-    tipo: 'corretiva', cliente_id: '', equipamento_id: '', falha_id: '',
+    tipo: 'corretiva', cliente_id: '', equipamento_id: '', falha_id: '', lista_id: '',
     data: isoData(new Date()), titulo: '', status: 'agendada', observacoes: '',
     usuarioIds: new Set(), doc: {},
   }
@@ -25,7 +25,7 @@ function inicialDe(v?: Visita): Estado {
   }
   return {
     tipo: v.tipo || 'corretiva', cliente_id: v.cliente_id ?? '', equipamento_id: v.equipamento_id ?? '',
-    falha_id: v.falha_id ?? '', data: v.data, titulo: v.titulo, status: v.status,
+    falha_id: v.falha_id ?? '', lista_id: v.lista_id ?? '', data: v.data, titulo: v.titulo, status: v.status,
     observacoes: v.observacoes ?? '', usuarioIds: new Set(v.tecnicos.map((t) => t.id)), doc,
   }
 }
@@ -48,13 +48,15 @@ export function FormOS({
 }) {
   const [f, setF] = useState<Estado>(() => ({ ...inicialDe(inicial), ...(dataFixa ? { data: dataFixa } : {}) }))
   const [equip, setEquip] = useState<Equipamento[]>([])
+  const [listas, setListas] = useState<EquipamentoLista[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
 
-  // Equipamentos do cliente escolhido (para o seletor de equipamento).
+  // Equipamentos e listas do cliente escolhido (seletores de equipamento e lista).
   useEffect(() => {
-    if (f.cliente_id === '') { setEquip([]); return }
+    if (f.cliente_id === '') { setEquip([]); setListas([]); return }
     api.admin.equipamentos(f.cliente_id as number).then(setEquip).catch(() => setEquip([]))
+    api.admin.listas(f.cliente_id as number).then(setListas).catch(() => setListas([]))
   }, [f.cliente_id])
 
   async function salvar() {
@@ -72,6 +74,7 @@ export function FormOS({
         tipo: f.tipo,
         equipamento_id: f.equipamento_id === '' ? null : (f.equipamento_id as number),
         falha_id: f.falha_id === '' ? null : (f.falha_id as number),
+        lista_id: f.tipo === 'preventiva' && f.lista_id !== '' ? (f.lista_id as number) : null,
         ...doc,
       })
       aoFechar()
@@ -139,6 +142,15 @@ export function FormOS({
                 {falhas.map((fa) => <option key={fa.id} value={fa.id}>{fa.nome}{fa.termo_en ? ` (${fa.termo_en})` : ''}</option>)}
               </select>
             </label>
+            {f.tipo === 'preventiva' && (
+              <label><span className={rotulo}>Lista de equipamentos (documento de preventiva)</span>
+                <select className={campo} value={f.lista_id} disabled={f.cliente_id === ''}
+                        onChange={(e) => setF({ ...f, lista_id: e.target.value ? Number(e.target.value) : '' })}>
+                  <option value="">— nenhuma —</option>
+                  {listas.map((l) => <option key={l.id} value={l.id}>{l.nome} ({l.equipamento_ids.length})</option>)}
+                </select>
+              </label>
+            )}
           </div>
 
           <div>

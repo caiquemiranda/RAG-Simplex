@@ -4,6 +4,19 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Refinamentos: #PREV-OS (O.S. preventiva ↔ lista) + higiene
+
+**Branch:** `feat/refinamentos`.
+
+- **Higiene:** `feat/lote4-fixes` **descartada** (local+remota) — commit `c1f4fa8` já superado na
+  `main` (spec-lote4 idêntico; FLUXOS cobre login/#ALOC/#FER-1). Repo = só `main`.
+- **#PREV-OS (refinamento 2):** `Visita.lista_id` (FK → `EquipamentoLista`, SET NULL) — a O.S.
+  **preventiva** referencia a lista que vira o documento. Backend: `_OSDoc`/`VisitaResumo`
+  (+`lista_id`/`lista_nome`), `_aplicar_os` valida (404), `_resumo` popula. Migração `ff498bb4b9d6`.
+  Frontend: `FormOS` mostra **seletor de lista** quando tipo=preventiva (carrega listas do cliente);
+  a página da O.S. exibe 📋 lista e botão **"Gerar documento de preventiva"** → `/preventiva/:listaId`.
+  Teste no `test_os_unificada...` (cria preventiva com lista; `lista_id` inexistente → 404).
+
 ## 2026-07-01 — #GIT-SKILL: skill git-flow (Lote 7, fim)
 
 **Branch:** `feat/lote7`. Fecha o Lote 7 (6/6).

@@ -297,6 +297,8 @@ class Visita(Base):
     tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # preventiva|corretiva
     equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
     falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
+    # Lista de equipamentos da O.S. preventiva → base do documento de preventiva (#PREV-OS).
+    lista_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento_lista.id", ondelete="SET NULL"), default=None)
     # Campos do documento de O.S. corretiva (todos opcionais).
     especialidade: Mapped[str | None] = mapped_column(String(160), default=None)
     requisitante: Mapped[str | None] = mapped_column(String(120), default=None)
@@ -315,6 +317,7 @@ class Visita(Base):
     cliente: Mapped[Cliente | None] = relationship()
     equipamento: Mapped[Equipamento | None] = relationship()
     falha: Mapped[Falha | None] = relationship()
+    lista: Mapped["EquipamentoLista | None"] = relationship()
     tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
     # Página da atividade (#ATV-1): comentários e anexos de imagem.
     comentarios: Mapped[list[ComentarioVisita]] = relationship(

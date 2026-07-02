@@ -22,6 +22,7 @@ from app.modelos import (
     Cliente,
     ComentarioVisita,
     Equipamento,
+    EquipamentoLista,
     Falha,
     Feriado,
     Notificacao,
@@ -48,6 +49,7 @@ class _OSDoc(BaseModel):
     tipo: str | None = None           # preventiva|corretiva (#OS-SEM-AVULSA)
     equipamento_id: int | None = None
     falha_id: int | None = None
+    lista_id: int | None = None       # lista de equipamentos (O.S. preventiva → doc, #PREV-OS)
     especialidade: str | None = None
     requisitante: str | None = None
     data_solicitacao: date | None = None
@@ -116,6 +118,8 @@ class VisitaResumo(BaseModel):
     equipamento_tag: str | None = None
     falha_id: int | None = None
     falha_nome: str | None = None
+    lista_id: int | None = None
+    lista_nome: str | None = None
     especialidade: str | None = None
     requisitante: str | None = None
     data_solicitacao: date | None = None
@@ -179,6 +183,7 @@ def _resumo(v: Visita) -> VisitaResumo:
         tipo=v.tipo, equipamento_id=v.equipamento_id,
         equipamento_tag=(v.equipamento.tag or v.equipamento.add) if v.equipamento else None,
         falha_id=v.falha_id, falha_nome=v.falha.nome if v.falha else None,
+        lista_id=v.lista_id, lista_nome=v.lista.nome if v.lista else None,
         especialidade=v.especialidade, requisitante=v.requisitante, data_solicitacao=v.data_solicitacao,
         centro_custo=v.centro_custo, numero_os=v.numero_os, reserva_material=v.reserva_material,
         material_utilizado=v.material_utilizado, endereco=v.endereco, setor=v.setor,
@@ -313,6 +318,10 @@ def _aplicar_os(sessao: Session, v: Visita, dados: _OSDoc) -> None:
         if dados.falha_id is not None and sessao.get(Falha, dados.falha_id) is None:
             raise HTTPException(status_code=404, detail="Falha não encontrada.")
         v.falha_id = dados.falha_id
+    if "lista_id" in dados.model_fields_set:
+        if dados.lista_id is not None and sessao.get(EquipamentoLista, dados.lista_id) is None:
+            raise HTTPException(status_code=404, detail="Lista não encontrada.")
+        v.lista_id = dados.lista_id
     for campo in _OS_CAMPOS:
         if campo in dados.model_fields_set:
             setattr(v, campo, getattr(dados, campo))
