@@ -231,3 +231,16 @@ passa a rejeitar `tipo="avulsa"` (400).
 - **#EQP-TIPO-IMG:** a imagem é associada ao **texto do `type`** e vale **globalmente** (todos os
   clientes), não por cliente.
 - **#CHAT:** tempo real por **polling** (app de processo único, sem WebSocket).
+
+### D-029 ✅ Preventiva mensal = conjunto de datas por cliente+mês (ajusta D-028)
+**2026-07-02.** A manutenção **preventiva** de um mês é **uma única O.S./documento** por
+**cliente + mês**, mas as visitas podem ocorrer em **dias avulsos** (ex.: 2, 3, 15, 16, 20).
+Ajusta a D-028 (que só previa intervalo contíguo):
+- **Modelo:** nova tabela **`visita_data`** (N datas por `Visita`); a **corretiva** continua usando
+  `data`/`data_fim` (intervalo). Migração `965839fdf8d7`.
+- **Unicidade:** `criar` de preventiva com `datas` **mescla** na O.S. existente do mesmo
+  **cliente+mês** (adiciona dias, dedupe) em vez de criar outra; `data`/`data_fim` viram o
+  bounding (min/max) do mês só para o calendário. Outro mês → outra O.S.
+- **Documento:** `GET /cronograma/{id}/documento-preventiva` gera o documento **único** com as
+  **datas marcadas** + equipamentos da lista da O.S. (rota `/preventiva/os/:visitaId`).
+- **Form:** preventiva usa um **multi-date picker** (dias do mesmo mês); corretiva mantém intervalo.

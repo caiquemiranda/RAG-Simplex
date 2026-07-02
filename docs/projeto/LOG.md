@@ -4,6 +4,19 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — #OS-PREV-DATAS: preventiva mensal com datas avulsas (D-029, ajusta D-028)
+
+**Branch:** `feat/prev-datas`. Refinamento a pedido do usuário.
+
+- **Modelo:** `visita_data` (N datas por O.S.; corretiva mantém `data`/`data_fim`). Migração
+  `965839fdf8d7`. **Backend:** `_OSDoc`/`VisitaResumo` com `datas`; `criar` de preventiva **mescla**
+  na O.S. do mesmo **cliente+mês** (dedupe, ajusta bounding min/max); `atualizar` substitui as datas;
+  **`GET /cronograma/{id}/documento-preventiva`** (documento único do mês: datas + equipamentos da
+  lista). Teste `test_preventiva_datas_mensal`.
+- **Frontend:** `FormOS` preventiva com **multi-date picker** (dias do mesmo mês; validação);
+  descrição automática usa o mês das datas. `DocumentoPreventiva` suporta rota `/preventiva/os/:id`
+  (mostra as datas); Atividade linka o "Gerar documento" à O.S. **114 testes**, `tsc -b` limpo.
+
 ## 2026-07-02 — Lote 9: #CHAT (chat interno entre usuários) — fecha o Lote 9 (5/5)
 
 **Branch:** `feat/lote9-multidata`. Full-stack.

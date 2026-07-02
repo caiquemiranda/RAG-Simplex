@@ -9,20 +9,21 @@ const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 
 type Estado = {
   tipo: string; cliente_id: number | ''; equipamento_id: number | ''; falha_id: number | ''; lista_id: number | ''
-  data: string; data_fim: string; status: string; observacoes: string
+  data: string; data_fim: string; datas: string[]; status: string; observacoes: string
   usuarioIds: Set<number>; tituloManual: string
 }
 
 function inicialDe(v?: Visita): Estado {
   if (!v) return {
     tipo: 'preventiva', cliente_id: '', equipamento_id: '', falha_id: '', lista_id: '',
-    data: isoData(new Date()), data_fim: '', status: 'agendada', observacoes: '',
+    data: isoData(new Date()), data_fim: '', datas: [], status: 'agendada', observacoes: '',
     usuarioIds: new Set(), tituloManual: '',
   }
   return {
     tipo: v.tipo || 'corretiva', cliente_id: v.cliente_id ?? '', equipamento_id: v.equipamento_id ?? '',
     falha_id: v.falha_id ?? '', lista_id: v.lista_id ?? '', data: v.data, data_fim: v.data_fim ?? '',
-    status: v.status, observacoes: v.observacoes ?? '', usuarioIds: new Set(v.tecnicos.map((t) => t.id)),
+    datas: [...v.datas], status: v.status, observacoes: v.observacoes ?? '',
+    usuarioIds: new Set(v.tecnicos.map((t) => t.id)),
     tituloManual: v.titulo, // ao editar, começa com o título atual
   }
 }
@@ -66,10 +67,12 @@ export function FormOS({
     api.admin.listas(f.cliente_id as number).then(setListas).catch(() => setListas([]))
   }, [f.cliente_id])
 
+  const datasOrdenadas = [...f.datas].sort()
+
   // Descrição automática conforme o tipo (#OS-TIPO-CAMPOS).
   function descricaoAuto(): string {
     if (f.tipo === 'preventiva') {
-      const mes = mesExtenso(f.data)
+      const mes = mesExtenso(datasOrdenadas[0] || f.data)   // mês vem das datas marcadas
       return `MANUTENÇÃO PREVENTIVA${mes ? ` — ${mes}` : ''}`
     }
     const eq = equip.find((e) => e.id === f.equipamento_id)
@@ -78,20 +81,31 @@ export function FormOS({
     return `MANUTENÇÃO CORRETIVA${tag ? ` — ${tag}` : ''}${fa ? ` — ${fa.nome}` : ''}`
   }
 
+  function addData(iso: string) {
+    if (!iso || f.datas.includes(iso)) return
+    setF({ ...f, datas: [...f.datas, iso] })
+  }
+
   async function salvar() {
     setErro(null)
+    const ehPrev = f.tipo === 'preventiva'
     // Campos obrigatórios por tipo.
-    if (f.tipo === 'corretiva' && f.equipamento_id === '') { setErro('Selecione o equipamento (corretiva).'); return }
-    if (f.tipo === 'preventiva' && f.lista_id === '') { setErro('Selecione a lista de equipamentos (preventiva).'); return }
-    if (f.data_fim && f.data_fim < f.data) { setErro('A data final é antes da inicial.'); return }
+    if (!ehPrev && f.equipamento_id === '') { setErro('Selecione o equipamento (corretiva).'); return }
+    if (ehPrev && f.lista_id === '') { setErro('Selecione a lista de equipamentos (preventiva).'); return }
+    if (ehPrev && datasOrdenadas.length === 0) { setErro('Marque ao menos uma data da preventiva.'); return }
+    // Preventiva: todas as datas devem ser do mesmo mês (um documento por mês).
+    if (ehPrev && datasOrdenadas.some((d) => d.slice(0, 7) !== datasOrdenadas[0].slice(0, 7))) {
+      setErro('As datas da preventiva devem ser do mesmo mês.'); return
+    }
+    if (!ehPrev && f.data_fim && f.data_fim < f.data) { setErro('A data final é antes da inicial.'); return }
     setSalvando(true)
     try {
-      const ehPrev = f.tipo === 'preventiva'
       await aoSalvar({
         usuario_ids: Array.from(f.usuarioIds),
         cliente_id: f.cliente_id === '' ? null : (f.cliente_id as number),
-        data: f.data,
-        data_fim: f.data_fim || null,
+        data: ehPrev ? datasOrdenadas[0] : f.data,
+        data_fim: ehPrev ? null : (f.data_fim || null),
+        datas: ehPrev ? datasOrdenadas : [],
         titulo: f.tituloManual.trim() || descricaoAuto(),
         status: f.status,
         observacoes: f.observacoes.trim() || null,
@@ -161,13 +175,35 @@ export function FormOS({
               </div>
             </label>
 
-            {/* Data(s) — a O.S. pode durar mais de um dia (#OS-MULTIDATA) */}
-            <label><span className={rotulo}>Data{dataFixa ? '' : ' (início)'}</span>
-              <Input type="date" value={f.data} disabled={!!dataFixa} onChange={(e) => setF({ ...f, data: e.target.value })} />
-            </label>
-            <label><span className={rotulo}>Data fim (opcional — se durar vários dias)</span>
-              <Input type="date" value={f.data_fim} min={f.data} onChange={(e) => setF({ ...f, data_fim: e.target.value })} />
-            </label>
+            {/* Datas — preventiva: dias avulsos do mês (#OS-PREV-DATAS); corretiva: intervalo (#OS-MULTIDATA) */}
+            {ehPrev ? (
+              <div className="sm:col-span-2">
+                <span className={rotulo}>Datas da preventiva (dias do mês — ex.: 2, 3, 15, 16, 20)</span>
+                <div className="mt-1 flex items-center gap-2">
+                  <Input type="date" aria-label="Adicionar data" onChange={(e) => { addData(e.target.value); e.target.value = '' }} />
+                  <span className="text-[11px] text-muted-foreground">escolha uma data para adicionar</span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {datasOrdenadas.length === 0 && <span className="text-xs text-muted-foreground">Nenhuma data marcada.</span>}
+                  {datasOrdenadas.map((d) => (
+                    <span key={d} className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-xs">
+                      {d.split('-').reverse().slice(0, 2).join('/')}
+                      <button type="button" className="text-muted-foreground hover:text-destructive" aria-label={`Remover ${d}`}
+                              onClick={() => setF({ ...f, datas: f.datas.filter((x) => x !== d) })}>×</button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                <label><span className={rotulo}>Data{dataFixa ? '' : ' (início)'}</span>
+                  <Input type="date" value={f.data} disabled={!!dataFixa} onChange={(e) => setF({ ...f, data: e.target.value })} />
+                </label>
+                <label><span className={rotulo}>Data fim (opcional — se durar vários dias)</span>
+                  <Input type="date" value={f.data_fim} min={f.data} onChange={(e) => setF({ ...f, data_fim: e.target.value })} />
+                </label>
+              </>
+            )}
 
             {/* Campos que dependem do tipo (#OS-TIPO-CAMPOS) */}
             {ehPrev ? (

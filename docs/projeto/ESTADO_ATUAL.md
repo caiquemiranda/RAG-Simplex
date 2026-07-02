@@ -13,13 +13,12 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote9-multidata` (do `main`). **Backend: 113 testes**. Lote 6/7/8 ✅ ·
-  **Lote 9 ✅ (5/5)** ([BACKLOG §N](BACKLOG.md)): #OS-MULTIDATA (`Visita.data_fim`, intervalo),
-  #OS-TIPO-CAMPOS (`FormOS` por tipo + descrição auto, sem campos-doc na criação), #OS-HIST-DATAS
-  (filtro semana/mês/todo), #EQP-TIPO-IMG (imagem global por tipo), #CHAT (chat interno, grupo
-  "Conversas", polling). Migrações novas: `48dbeb05d767`, `55a1f2053b04`, `615d05505836`.
+- **Branch:** `feat/prev-datas` (do `main`). **Backend: 114 testes**. Lote 6/7/8 ✅ · **Lote 9 ✅ (5/5)**
+  + **#OS-PREV-DATAS** (D-029): preventiva mensal com **datas avulsas** (tabela `visita_data`; uma
+  O.S./documento por cliente+mês; multi-date picker; documento único via `/cronograma/{id}/documento-preventiva`).
+  Migrações novas do Lote 9: `48dbeb05d767`, `55a1f2053b04`, `615d05505836`, **`965839fdf8d7`** (head).
   **Sobra do Lote 8** (baixo valor/opcional): #UI-TOUCH (fino), #UI-TOKENS, #UI-CHARTS, #UI-BRAND.
-- **Falta:** mergear `feat/lote9-multidata` na `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
+- **Falta:** mergear `feat/prev-datas` na `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`

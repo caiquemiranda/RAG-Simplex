@@ -28,6 +28,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         {/* Fora do Layout — documento em folha cheia para impressão (#PREV-DOC) */}
         <Route path="/preventiva/:listaId" element={<DocumentoPreventiva />} />
+        <Route path="/preventiva/os/:visitaId" element={<DocumentoPreventiva />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
           <Route path="/consulta" element={<Consulta />} />

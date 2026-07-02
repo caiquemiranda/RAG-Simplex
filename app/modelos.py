@@ -350,6 +350,20 @@ class Visita(Base):
     anexos: Mapped[list[AnexoVisita]] = relationship(
         back_populates="visita", cascade="all, delete-orphan", order_by="AnexoVisita.criado_em"
     )
+    # Datas avulsas da preventiva mensal (#OS-PREV-DATAS, D-029) — corretiva usa data/data_fim.
+    datas: Mapped[list["VisitaData"]] = relationship(
+        cascade="all, delete-orphan", order_by="VisitaData.data"
+    )
+
+
+class VisitaData(Base):
+    """Uma data marcada de uma O.S. **preventiva** mensal (#OS-PREV-DATAS, D-029). A preventiva do
+    mês pode ter dias avulsos (ex.: 2, 3, 15, 16, 20) — todos apontam para a mesma `Visita`/documento."""
+
+    __tablename__ = "visita_data"
+
+    visita_id: Mapped[int] = mapped_column(ForeignKey("visita.id", ondelete="CASCADE"), primary_key=True)
+    data: Mapped[date] = mapped_column(Date, primary_key=True)
 
 
 class ComentarioVisita(Base):

@@ -108,8 +108,9 @@ export type DocPrevEquip = {
   status: string; ultima_manutencao: string | null; ultimo_teste: string | null
 }
 export type DocumentoPreventiva = {
-  lista_id: number; lista_nome: string; gerado_em: string
-  cliente: { id: number; nome: string; endereco: string | null; unidade: string | null }
+  lista_id?: number; visita_id?: number; lista_nome?: string; titulo?: string; gerado_em: string
+  datas?: string[]                 // datas marcadas (#OS-PREV-DATAS), quando gerado da O.S.
+  cliente: { id: number; nome: string; endereco: string | null; unidade: string | null } | null
   equipamentos: DocPrevEquip[]
 }
 // Planta (projeto) do cliente — #MAP.
@@ -156,6 +157,7 @@ export type Visita = CamposDocOS & {
   unidade_id: number | null
   data: string
   data_fim: string | null
+  datas: string[]              // datas avulsas da preventiva (#OS-PREV-DATAS)
   titulo: string
   status: string
   observacoes: string | null
@@ -178,6 +180,7 @@ export type NovaVisita = CamposDocOS & {
   cliente_id?: number | null
   data: string
   data_fim?: string | null     // fim do intervalo (#OS-MULTIDATA)
+  datas?: string[]             // datas avulsas da preventiva (#OS-PREV-DATAS)
   titulo: string
   status?: string
   observacoes?: string | null
@@ -429,6 +432,7 @@ export const api = {
     request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
   ordensEquipamento: (equipamentoId: number) => request<Visita[]>(`/cronograma/equipamento/${equipamentoId}`),
+  documentoPreventivaOS: (visitaId: number) => request<DocumentoPreventiva>(`/cronograma/${visitaId}/documento-preventiva`),
   documentosEquipamento: (equipamentoId: number) => request<DocEquipRef[]>(`/equipamentos/${equipamentoId}/documentos`),
   tipoImagemEquipamento: (equipamentoId: number) => request<{ tipo: string; imagem_url: string | null }>(`/equipamentos/${equipamentoId}/tipo-imagem`),
   query: (pergunta: string, persona?: string) =>

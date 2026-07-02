@@ -10,16 +10,18 @@ import { IconPrint } from '../components/icons'
  * preenchimento em campo.
  */
 export default function DocumentoPreventiva() {
-  const { listaId } = useParams()
+  const { listaId, visitaId } = useParams()
   const navigate = useNavigate()
   const [doc, setDoc] = useState<DocumentoPreventiva | null>(null)
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    api.admin.documentoPreventiva(Number(listaId))
-      .then(setDoc)
-      .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao gerar o documento'))
-  }, [listaId])
+    // Da O.S. mensal (com as datas marcadas, #OS-PREV-DATAS) ou de uma lista avulsa (#PREV-DOC).
+    const p = visitaId ? api.documentoPreventivaOS(Number(visitaId)) : api.admin.documentoPreventiva(Number(listaId))
+    p.then(setDoc).catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao gerar o documento'))
+  }, [listaId, visitaId])
+
+  const brData = (iso: string) => iso.split('-').reverse().slice(0, 2).join('/')
 
   if (erro) return <div className="p-6 text-sm text-destructive">{erro}</div>
   if (!doc) return <div className="p-6 text-sm text-muted-foreground">Gerando documento…</div>
@@ -54,19 +56,19 @@ export default function DocumentoPreventiva() {
           <tbody>
             <tr>
               <td className={`${linha} w-28 bg-neutral-100 font-medium`}>Cliente</td>
-              <td className={linha}>{doc.cliente.nome}</td>
+              <td className={linha}>{doc.cliente?.nome ?? '—'}</td>
               <td className={`${linha} w-24 bg-neutral-100 font-medium`}>Unidade</td>
-              <td className={linha}>{doc.cliente.unidade ?? '—'}</td>
+              <td className={linha}>{doc.cliente?.unidade ?? '—'}</td>
             </tr>
             <tr>
               <td className={`${linha} bg-neutral-100 font-medium`}>Endereço</td>
-              <td className={linha} colSpan={3}>{doc.cliente.endereco ?? '—'}</td>
+              <td className={linha} colSpan={3}>{doc.cliente?.endereco ?? '—'}</td>
             </tr>
             <tr>
-              <td className={`${linha} bg-neutral-100 font-medium`}>Lista/Escopo</td>
-              <td className={linha}>{doc.lista_nome}</td>
-              <td className={`${linha} bg-neutral-100 font-medium`}>Data execução</td>
-              <td className={linha}>&nbsp;</td>
+              <td className={`${linha} bg-neutral-100 font-medium`}>Escopo</td>
+              <td className={linha}>{doc.titulo ?? doc.lista_nome ?? '—'}</td>
+              <td className={`${linha} bg-neutral-100 font-medium`}>Datas</td>
+              <td className={linha}>{doc.datas && doc.datas.length > 0 ? doc.datas.map(brData).join(', ') : ' '}</td>
             </tr>
             <tr>
               <td className={`${linha} bg-neutral-100 font-medium`}>Técnico(s)</td>
