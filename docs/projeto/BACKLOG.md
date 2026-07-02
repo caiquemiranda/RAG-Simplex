@@ -215,9 +215,20 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
       **Todo o período / Última semana / Último mês** na barra de filtros do histórico (#EQP-PAGINA);
       corta por `data_fim ?? data` relativo a hoje. Intervalo (`intervaloData`) exibido em cada O.S.
 
-**Decisões a confirmar antes de codar (resumo):** #OS-MULTIDATA (intervalo vs conjunto), #EQP-TIPO-IMG
-(global por texto do tipo?), #CHAT (polling). **Dependência:** #OS-TIPO-CAMPOS e #OS-HIST-DATAS
-dependem do #OS-MULTIDATA (modelo de data).
+**Decisões confirmadas:** #OS-MULTIDATA/#OS-PREV-DATAS (intervalo p/ corretiva; **conjunto de datas
+por cliente+mês** p/ preventiva, D-029), #EQP-TIPO-IMG (global por texto do tipo, D-028), #CHAT (polling).
+
+### O. Lote 10 — Documento final do cliente (2026-07-02)
+Solicitação do usuário. **Registrada** (a implementar depois, com um documento de referência).
+
+- [ ] **#DOC-FINAL — editar o "documento final" do cliente (HTML → PDF)**. No **Painel ADM →
+      Clientes → \<cliente\>** ([`ClienteAdmin`](../../frontend/src/pages/ClienteAdmin.tsx)), um campo
+      **"Editar documento final"**: um **documento HTML editável** por cliente, que será o **PDF
+      enviado ao cliente** (o entregável). *A definir na implementação:* onde guardar o HTML
+      (`Cliente.documento_final_html` ou entidade própria/versão), o **editor** (textarea HTML simples
+      vs. editor rico), e a **geração do PDF** (impressão do navegador `window.print()` — sem dep — ou
+      lib server-side). **Depende de um documento de referência** (modelo) que o usuário fornecerá.
+      Relaciona-se com os documentos já existentes (#PREV-DOC / documento de corretiva).
 
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
