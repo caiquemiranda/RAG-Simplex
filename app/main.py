@@ -49,7 +49,7 @@ from app.db import get_session
 from app.estrategias import montar_texto
 from app.geracao import gerar_resposta
 from app.ingestao import documentos_indexados, get_collection, indexar
-from app.modelos import Cliente, Equipamento, LogConsulta, Planta, Unidade, Usuario
+from app.modelos import Cliente, Equipamento, LogConsulta, Planta, Unidade, Usuario, Visita
 from app.preferencias import resolver_camadas, resolver_estrategia
 from app.recuperacao import buscar
 
@@ -246,6 +246,51 @@ def clientes_visiveis(
                        cor=c.cor, logo_url=c.logo_url)
         for c in clientes
     ]
+
+
+class ResumoClienteOut(BaseModel):
+    cliente_id: int
+    nome: str
+    cor: str | None = None
+    logo_url: str | None = None
+    unidade: str | None = None
+    equip_total: int
+    equip_operando: int          # Operando e sem falha → base da "disponibilidade"
+    equip_falha: int             # com falha_id (em falha)
+    os_preventiva: int
+    os_corretiva: int
+    os_abertas: int              # agendada + pendente
+    os_concluidas: int
+
+
+@app.get("/relatorios/resumo", response_model=list[ResumoClienteOut])
+def relatorios_resumo(
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[ResumoClienteOut]:
+    """Resumo por cliente para os **cards de Relatórios** (#R2-CARDS): disponibilidade dos
+    equipamentos + contagem de O.S. preventivas/corretivas. Respeita a visibilidade por papel."""
+    if usuario.tem_permissao("gerir_usuarios"):
+        clientes = sessao.scalars(select(Cliente).where(Cliente.ativo.is_(True)).order_by(Cliente.nome)).all()
+    else:
+        clientes = sorted((c for c in usuario.clientes_rel if c.ativo), key=lambda c: c.nome)
+
+    saida: list[ResumoClienteOut] = []
+    for c in clientes:
+        eqs = c.equipamentos
+        operando = sum(1 for e in eqs if e.falha_id is None and (e.status or "").lower().startswith("opera"))
+        falha = sum(1 for e in eqs if e.falha_id is not None)
+        visitas = sessao.scalars(select(Visita).where(Visita.cliente_id == c.id)).all()
+        saida.append(ResumoClienteOut(
+            cliente_id=c.id, nome=c.nome, cor=c.cor, logo_url=c.logo_url,
+            unidade=(c.unidade_rel.nome if c.unidade_rel else c.unidade),
+            equip_total=len(eqs), equip_operando=operando, equip_falha=falha,
+            os_preventiva=sum(1 for v in visitas if v.tipo == "preventiva"),
+            os_corretiva=sum(1 for v in visitas if v.tipo == "corretiva"),
+            os_abertas=sum(1 for v in visitas if v.status in ("agendada", "pendente")),
+            os_concluidas=sum(1 for v in visitas if v.status == "concluida"),
+        ))
+    return saida
 
 
 @app.get("/unidades", response_model=list[UnidadePublica])

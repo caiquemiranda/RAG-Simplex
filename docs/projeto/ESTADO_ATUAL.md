@@ -13,10 +13,11 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `main` — tudo mergeado. **Backend: 105 testes**.
-  **Lote 6 ✅ (7/7)** + **#PREV-DOC ✅** (documento de Manutenção Preventiva imprimível a partir de
-  uma `EquipamentoLista` — `GET /admin/listas/{id}/documento-preventiva` + página `/preventiva/:listaId`
-  fora do Layout, print-to-PDF). Migrações no repo: `8bf05fde56d0`, `5e88d54a7547`.
+- **Branch:** `feat/lote7` (do `main`). **Backend: 106 testes**. **Lote 6 ✅ (7/7)** + **#PREV-DOC ✅**.
+  **Lote 7 ✅ (6/6):** #OS-SEM-AVULSA (D-027, migração `bf54f9b66560`) · #MAP-DETALHES · #OS-EDIT-INLINE
+  (FormOS na página #ATV-1) · #R2-CARDS (`GET /relatorios/resumo` + cards com gráficos) · #R2-TIPOS
+  (relatório com cards Preventiva/Corretiva) · #GIT-SKILL (skill `git-flow`). **Falta:** merge na `main`.
+  Migrações no repo: `8bf05fde56d0`, `5e88d54a7547`, `bf54f9b66560`.
 - **Repo limpo:** só `main` + `feat/lote4-fixes` (esta tem 1 commit de docs **não** mergeado,
   `c1f4fa8` — decidir cherry-pick ou descarte). Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
@@ -56,16 +57,12 @@
 
 ## ⏭️ PRÓXIMO PASSO
 
-Tudo mergeado na `main` (Lote 5 · #MAP · #OS/D-025 · #R2 · **Lote 6 (7/7)** · **#PREV-DOC**).
+Concluídos: Lote 5 · #MAP · #OS/D-025 · #R2 · **Lote 6 (7/7)** · #PREV-DOC · **Lote 7 (6/6)**.
+Falta **mergear `feat/lote7` na `main`**.
 
-- **➡️ Lote 7** (registrado, 6 itens — ver [`BACKLOG.md`](BACKLOG.md) §L): `#R2-CARDS` (cards de
-  cliente maiores com gráficos), `#R2-TIPOS` (relatório do cliente com cards Preventiva/Corretiva),
-  **`#OS-SEM-AVULSA`** (remover o tipo "avulsa" de tudo — **atualiza a D-025**), `#OS-EDIT-INLINE`
-  (editar a O.S. na própria página #ATV-1), `#MAP-DETALHES` (botão "Detalhes do dispositivo" no
-  mapa → #EQP-PAGINA), `#GIT-SKILL` (skill de Git profissional). **A decidir:** destino das O.S.
-  `tipo=avulsa` existentes ao remover (provável → `corretiva`).
 - **Lacunas/pendências menores:** `feat/lote4-fixes` (commit `c1f4fa8` não mergeado); stub
-  `/equipamentos/sobre`; associação equipamento↔documento manual no #EQP-PAGINA.
+  `/equipamentos/sobre`; associação equipamento↔documento manual no #EQP-PAGINA; vincular a
+  preventiva a uma O.S. `tipo=preventiva` (hoje o #PREV-DOC sai da lista, standalone).
 - **Adiado pelo usuário:** equipamentos fase B/C; **infra "big-tech"** ([BACKLOG §K](BACKLOG.md)).
 - **Roadmap:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem, *requer
   API key*) · #1 (alinhamento ChatGPT).

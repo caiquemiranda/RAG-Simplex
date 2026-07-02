@@ -84,6 +84,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST | `/admin/clientes/{id}/equipamentos[/importar]` · DELETE `/admin/equipamentos/{id}` | `gerir_usuarios` | **Equipamentos** do cliente (#EQP-1): listar + **import CSV** (`painel,loop,add,type,model`; `substituir`). |
 | GET | `/admin/banco` · POST `/admin/banco/backup` | `gerir_usuarios` | Status do banco (migração/tabelas/tamanho) + **backup** do SQLite (D-022). |
 | GET | `/clientes` | autenticado | Clientes visíveis (admin: todos ativos; técnico: os seus) — Relatórios/sidebar. |
+| GET | `/relatorios/resumo` | autenticado | **Resumo por cliente** (#R2-CARDS): disponibilidade dos equipamentos + contagem de O.S. por tipo/status. Respeita visibilidade. |
 | GET | `/clientes/{id}/equipamentos?busca=` | autenticado | **Equipamentos do cliente** (#EQP-2/#MAP): admin todos; técnico só dos seus (403). `busca` filtra por **tag/add**. Traz status/posição. |
 | GET | `/clientes/{id}/plantas` | autenticado | **Plantas** (projetos) do cliente — visualizador #MAP (RBAC igual). |
 | GET/POST/DELETE | `/admin/clientes/{id}/plantas` · `/admin/plantas/{id}` | `gerir_usuarios` | Plantas: **upload PDF→PNG** (1 pág=1 planta), listar, remover (#MAP). |

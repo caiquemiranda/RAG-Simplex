@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api, type ClienteVisivel, type Equipamento, type Visita, type Planta } from '../lib/api'
 import { TIPO_OS_LABEL, corStatusEquip } from '../lib/format'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input'
 
 /** Buscar equipamento (#MAP): cliente → tag → localiza o dispositivo na planta. */
 export default function Equipamentos() {
+  const navigate = useNavigate()
   const [clientes, setClientes] = useState<ClienteVisivel[]>([])
   const [cid, setCid] = useState<number | ''>('')
   const [plantas, setPlantas] = useState<Planta[]>([])
@@ -127,9 +128,15 @@ export default function Equipamentos() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{selecionado.tag || `Equipamento #${selecionado.id}`}</CardTitle>
-              {selecionado.planta_id != null && (
-                <button className="text-xs text-primary hover:underline" onClick={() => { setPlantaSel(selecionado.planta_id as number); focar(selecionado.id) }}>Localizar no mapa</button>
-              )}
+              <div className="flex items-center gap-3">
+                {selecionado.planta_id != null && (
+                  <button className="text-xs text-primary hover:underline" onClick={() => { setPlantaSel(selecionado.planta_id as number); focar(selecionado.id) }}>Localizar no mapa</button>
+                )}
+                {cid !== '' && (
+                  <button className="rounded-md border px-2 py-1 text-xs text-primary hover:bg-accent"
+                          onClick={() => navigate(`/equipamentos/${cid}/${selecionado.id}`)}>Detalhes do dispositivo →</button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
               <div><span className="text-muted-foreground">Tipo:</span> {selecionado.type || '—'}</div>

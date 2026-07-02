@@ -122,30 +122,28 @@ falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upl
 ### L. Lote 7 — Relatórios por tipo + refinamentos de O.S./mapa (2026-07-01)
 Seis solicitações do usuário. **Registradas** (a implementar depois).
 
-- [ ] **#R2-CARDS — cards de cliente maiores com gráficos** (item 1). Na tela **Relatórios**, os
-      cards de cliente ficam **maiores** e mostram **gráficos**: **disponibilidade** (equipamentos
-      Operando vs. em falha/desativado), **preventiva** (nº de O.S. preventivas / cobertura) e
-      **quantidade de corretivas**. *Frontend* sobre dados já disponíveis (equipamentos + O.S. do
-      cliente); avaliar um endpoint de agregação se ficar pesado.
-- [ ] **#R2-TIPOS — dois cards por tipo dentro do relatório do cliente** (item 2). Ao abrir o card
-      de um cliente (`/relatorios/:id`), exibir **dois cards**: **"Manutenção Preventiva"** e
-      **"Manutenção Corretiva"**, cada um listando **apenas as O.S. daquele tipo** do cliente.
-      dep: #OS-SEM-AVULSA (só 2 tipos).
-- [ ] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3). Tirar `avulsa` de **tudo**: backend
-      `_TIPOS_OS = {preventiva, corretiva}`; frontend `TIPOS_OS`, `FormOS`, filtros e gráficos.
-      **Atenção:** back-fill de O.S. existentes com `tipo="avulsa"` → definir destino (provável
-      `corretiva`). **Atualiza a D-025** (que previa 3 tipos) — registrar em `DECISOES.md`.
-- [ ] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na **página da atividade/O.S.**
-      (`/cronograma/atividade/:id`, #ATV-1), permitir **abrir e editar** todos os campos ali (reusar
-      o `FormOS` embutido ou modo edição na própria página), não só pelo modal a partir da lista.
-- [ ] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No **Buscar equipamento**
-      (`/equipamentos`), no card de detalhe do dispositivo selecionado, um botão **"Detalhes do
-      dispositivo"** que navega para a **página do dispositivo** (#EQP-PAGINA,
-      `/equipamentos/:clienteId/:eqpId`).
-- [ ] **#GIT-SKILL — skill de Git profissional** (item 6). Criar uma **skill** (em `.claude/skills/`)
-      que padroniza o fluxo **ponta a ponta**: abrir trabalho (branch a partir da `main`
-      atualizada) → commits no padrão `tipo(#TAG)` → certificação (testes/tsc/alembic) → PR →
-      **merge `--no-ff` para a `main`** → limpeza da branch. Baseada no [`../GUIA_GIT.md`](../GUIA_GIT.md).
+- [x] **#R2-CARDS — cards de cliente maiores com gráficos** (item 1). Endpoint de agregação
+      **`GET /relatorios/resumo`** (respeita visibilidade por papel) → por cliente: disponibilidade
+      (operando/total + em falha), O.S. preventivas/corretivas/abertas/concluídas. `Relatorios.tsx`
+      renderiza cards maiores com **barra de disponibilidade** (verde/âmbar/vermelho) + stats por
+      tipo. Teste `test_relatorios_resumo`.
+- [x] **#R2-TIPOS — dois cards por tipo dentro do relatório do cliente** (item 2). `RelatorioCliente`
+      exibe **"Manutenção Preventiva"** e **"Manutenção Corretiva"** lado a lado, cada um só com as
+      O.S. do respectivo tipo (substitui "Atividades recentes").
+- [x] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3, **D-027**). `avulsa` fora de tudo:
+      backend `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/labels/cores/`BAR_TIPO`;
+      **migração `bf54f9b66560`** back-fill `avulsa→corretiva`. Teste rejeita `tipo="avulsa"` (400).
+- [x] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na página da atividade/O.S.
+      (`/cronograma/atividade/:id`, #ATV-1) o **admin** tem **"Editar O.S."** que abre o `FormOS`
+      (todos os campos) e recarrega ao salvar; a página passa a exibir **tipo/equipamento/falha**.
+- [x] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No Buscar equipamento
+      (`/equipamentos`), o card de detalhe ganhou **"Detalhes do dispositivo →"** que navega para
+      `/equipamentos/:clienteId/:eqpId` (#EQP-PAGINA).
+- [x] **#GIT-SKILL — skill de Git profissional** (item 6). Skill **`git-flow`**
+      (`.claude/skills/git-flow/SKILL.md`) padroniza o fluxo ponta a ponta: abrir (branch da `main`
+      atualizada) → commits `tipo(#TAG)` → certificar (pytest/tsc/alembic) → fechar (PR ou merge
+      `--no-ff` + push + limpeza) → higiene/releases. Invocável via `/git-flow`; baseada no
+      [`../GUIA_GIT.md`](../GUIA_GIT.md). **Lote 7 concluído (6/6).**
 
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do

@@ -4,6 +4,45 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #GIT-SKILL: skill git-flow (Lote 7, fim)
+
+**Branch:** `feat/lote7`. Fecha o Lote 7 (6/6).
+
+- Nova skill **`git-flow`** em `.claude/skills/git-flow/SKILL.md` (frontmatter name/description +
+  fases: abrir → commits `tipo(#TAG)` → certificar → fechar `--no-ff` → higiene/releases).
+  Invocável via `/git-flow`; espelha o `docs/GUIA_GIT.md`. Primeira skill do repo (`.claude/skills/`).
+
+## 2026-07-01 — #R2-CARDS + #R2-TIPOS: Relatórios com gráficos e por tipo (Lote 7)
+
+**Branch:** `feat/lote7`.
+
+- **#R2-CARDS:** endpoint **`GET /relatorios/resumo`** (agrega por cliente: disponibilidade
+  operando/total + em falha, O.S. preventiva/corretiva/abertas/concluídas; respeita visibilidade).
+  `Relatorios.tsx` reescrito — cards maiores com **barra de disponibilidade** + stats por tipo.
+  Teste `test_relatorios_resumo`. **106 testes.**
+- **#R2-TIPOS:** `RelatorioCliente.tsx` — dois cards **"Manutenção Preventiva"** e **"Manutenção
+  Corretiva"** lado a lado, cada um só com as O.S. do respectivo tipo (substitui "Atividades
+  recentes"). `tsc -b` limpo.
+
+## 2026-07-01 — #MAP-DETALHES + #OS-EDIT-INLINE (Lote 7, frontend)
+
+**Branch:** `feat/lote7`.
+
+- **#MAP-DETALHES:** no Buscar equipamento (`Equipamentos.tsx`), o card de detalhe ganhou botão
+  **"Detalhes do dispositivo →"** que navega para `/equipamentos/:clienteId/:eqpId` (#EQP-PAGINA).
+- **#OS-EDIT-INLINE:** na página da atividade/O.S. (`Atividade.tsx`, #ATV-1), o **admin** tem
+  **"Editar O.S."** abrindo o `FormOS` (todos os campos) com recarga ao salvar; a página passa a
+  exibir **tipo/equipamento/falha**. `tsc -b` limpo.
+
+## 2026-07-01 — #OS-SEM-AVULSA: remove o tipo "avulsa" das O.S. (Lote 7, D-027)
+
+**Branch:** `feat/lote7`. Fundação do Lote 7 (mexe em tipos em todo lugar).
+
+- Tipos de O.S. agora só **preventiva/corretiva** (D-027 ajusta a D-025). Backend
+  `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`BAR_TIPO`
+  sem avulsa; `EquipamentoPagina` usa `TIPOS_OS`. **Migração `bf54f9b66560`**: back-fill
+  `avulsa→corretiva` (downgrade no-op). Teste passa a rejeitar `tipo="avulsa"` (400).
+
 ## 2026-07-01 — #PREV-DOC: documento de Manutenção Preventiva a partir da lista
 
 **Branch:** `feat/documento-preventiva`. Continuação do #EQP-LISTAS.

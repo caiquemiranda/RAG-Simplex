@@ -319,8 +319,9 @@ def test_os_unificada_falha_equipamento_manutencao(ctx):
     hist = client.get(f"/cronograma/equipamento/{eid}", headers=admin).json()
     assert len(hist) == 1 and hist[0]["id"] == j["id"]
 
-    # Tipo inválido → 400.
+    # Tipo inválido → 400 (inclui "avulsa", removida no #OS-SEM-AVULSA).
     assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "xpto"}).status_code == 400
+    assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "avulsa"}).status_code == 400
 
     # Item 5: sem técnicos → usa os fixos do cliente.
     client.patch(f"/admin/usuarios/{ids['tec2']}", headers=admin, json={"cliente_padrao_id": cid})
@@ -343,10 +344,10 @@ def test_os_editar_deletar_falha_e_rbac(ctx):
     assert client.post("/admin/falhas", headers=tec, json={"nome": "Dirty"}).status_code == 403
     assert client.delete(f"/admin/falhas/{fid}", headers=tec).status_code == 403
 
-    # Cria O.S. avulsa/agendada sem equipamento/falha.
+    # Cria O.S. preventiva/agendada sem equipamento/falha.
     osid = client.post("/cronograma", headers=admin, json={
         "usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-09-05",
-        "titulo": "Abertura", "tipo": "avulsa"}).json()["id"]
+        "titulo": "Abertura", "tipo": "preventiva"}).json()["id"]
 
     # T1 — editar a O.S. (item 4): muda tipo, vincula equipamento/falha e preenche campo-doc.
     r = client.patch(f"/cronograma/{osid}", headers=admin, json={
@@ -371,6 +372,29 @@ def test_os_editar_deletar_falha_e_rbac(ctx):
     assert client.delete(f"/admin/falhas/{fid2}", headers=admin).status_code == 204
     nomes = [f["nome"] for f in client.get("/admin/falhas", headers=admin).json()]
     assert "Warm Start" not in nomes and "No Answer" in nomes
+
+
+def test_relatorios_resumo(ctx):
+    """#R2-CARDS: resumo por cliente = disponibilidade dos equipamentos + contagem de O.S."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    cid = ids["cliente"]
+    fid = client.post("/admin/falhas", headers=admin, json={"nome": "Dirty"}).json()["id"]
+    e1 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A"}).json()["id"]
+    client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B"})  # Operando
+    client.patch(f"/admin/equipamentos/{e1}", headers=admin, json={"status": "Em falha", "falha_id": fid})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-08-01", "titulo": "P", "tipo": "preventiva"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-08-02", "titulo": "C", "tipo": "corretiva", "status": "concluida"})
+
+    r = client.get("/relatorios/resumo", headers=admin)
+    assert r.status_code == 200
+    res = next(x for x in r.json() if x["cliente_id"] == cid)
+    assert res["equip_total"] == 2 and res["equip_operando"] == 1 and res["equip_falha"] == 1
+    assert res["os_preventiva"] == 1 and res["os_corretiva"] == 1
+    assert res["os_abertas"] == 1 and res["os_concluidas"] == 1
+
+    # Técnico sem clientes vinculados → resumo vazio.
+    assert client.get("/relatorios/resumo", headers=_login(client, "tec2@x.com")).json() == []
 
 
 def test_feriado_crud(ctx):

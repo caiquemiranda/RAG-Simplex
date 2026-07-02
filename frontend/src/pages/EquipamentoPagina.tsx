@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api, urlArquivo, type ClienteVisivel, type DocEquip, type Equipamento, type Visita } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
-import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, corStatusEquip } from '../lib/format'
+import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, corStatusEquip } from '../lib/format'
 
 /** Página de um dispositivo (#EQP-PAGINA): dados + O.S. associadas (com filtros) + documentos. */
 export default function EquipamentoPagina() {
@@ -117,7 +117,7 @@ export default function EquipamentoPagina() {
                 <Input className="w-56" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar (título, técnico, data)…" />
                 <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fTipo} onChange={(e) => setFTipo(e.target.value)}>
                   <option value="">Todos os tipos</option>
-                  {(['preventiva', 'corretiva', 'avulsa'] as const).map((t) => <option key={t} value={t}>{TIPO_OS_LABEL[t]}</option>)}
+                  {TIPOS_OS.map((t) => <option key={t} value={t}>{TIPO_OS_LABEL[t]}</option>)}
                 </select>
                 <select className="h-9 rounded-md border bg-background px-3 text-sm" value={fFalha} onChange={(e) => setFFalha(e.target.value)}>
                   <option value="">Todas as falhas</option>
