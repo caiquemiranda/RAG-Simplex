@@ -73,6 +73,14 @@ lista_equipamento = Table(
     Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Documentos (manuais/datasheets da biblioteca) fixados a um equipamento (#EQP-DOC, seleção manual).
+equipamento_documento = Table(
+    "equipamento_documento",
+    Base.metadata,
+    Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
+    Column("documento_id", ForeignKey("documento_equipamento.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -244,6 +252,7 @@ class Equipamento(Base):
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
     planta: Mapped[Planta | None] = relationship()
     falha: Mapped["Falha | None"] = relationship()
+    documentos: Mapped[list["DocumentoEquipamento"]] = relationship(secondary=equipamento_documento)
 
 
 class EquipamentoLista(Base):

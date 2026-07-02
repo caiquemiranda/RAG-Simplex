@@ -4,6 +4,20 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Refinamento #EQP-DOC: documentos manuais do equipamento (N:N)
+
+**Branch:** `feat/refinamentos`. Decisão do usuário: **seleção manual** (não heurística).
+
+- **Modelo:** N:N **`equipamento_documento`** (`Equipamento.documentos` ↔ `DocumentoEquipamento`).
+  Migração `ed5186ac4b27`. **Backend:** `PUT /admin/equipamentos/{id}/documentos {documento_ids}`
+  (fixa; RBAC `gerir_usuarios`) + `GET /equipamentos/{id}/documentos` (público, RBAC pelo cliente).
+- **Frontend:** `EquipamentoPagina` mostra os **documentos fixados** (via GET); admin tem
+  **"Gerenciar"** (modal `GerenciarDocs` com checkboxes da biblioteca → Marcas). Substitui a
+  associação heurística por model/type.
+- **Bug corrigido:** a `EquipamentoPagina` filtrava a biblioteca por `categoria:'marcas'` (plural),
+  mas a categoria armazenada é **`'marca'`** (singular) — a seção de documentos nunca casava nada.
+  Agora usa `'marca'`. Teste `test_equipamento_documentos_manuais`. **107 testes.**
+
 ## 2026-07-02 — Refinamentos: #PREV-OS (O.S. preventiva ↔ lista) + higiene
 
 **Branch:** `feat/refinamentos`.

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, urlArquivo, type ClienteVisivel, type DocEquip, type Equipamento, type Visita } from '../lib/api'
+import { api, urlArquivo, type ClienteVisivel, type DocEquip, type DocEquipRef, type Equipamento, type Visita } from '../lib/api'
+import { useAuth } from '../auth/AuthContext'
+import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, corStatusEquip } from '../lib/format'
@@ -10,35 +12,33 @@ export default function EquipamentoPagina() {
   const { clienteId, eqpId } = useParams()
   const cid = Number(clienteId)
   const eid = Number(eqpId)
+  const { usuario } = useAuth()
+  const podeGerir = usuario?.permissoes.includes('gerir_usuarios') ?? false
   const [cliente, setCliente] = useState<ClienteVisivel | null>(null)
   const [eq, setEq] = useState<Equipamento | null>(null)
   const [ordens, setOrdens] = useState<Visita[]>([])
-  const [docs, setDocs] = useState<DocEquip[]>([])
+  const [docsFixados, setDocsFixados] = useState<DocEquipRef[]>([])   // #EQP-DOC: manuais fixados
+  const [marcas, setMarcas] = useState<DocEquip[]>([])                // biblioteca (Marcas) — p/ o seletor
+  const [gerenciar, setGerenciar] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   // #OS-HIST-FILTRO: busca + filtros do histórico.
   const [busca, setBusca] = useState('')
   const [fFalha, setFFalha] = useState('')
   const [fTipo, setFTipo] = useState('')
 
+  function carregarDocs() {
+    api.documentosEquipamento(eid).then(setDocsFixados).catch(() => setDocsFixados([]))
+  }
   useEffect(() => {
     api.clientesVisiveis().then((cs) => setCliente(cs.find((c) => c.id === cid) ?? null)).catch(() => {})
     api.equipamentosCliente(cid).then((es) => setEq(es.find((e) => e.id === eid) ?? null))
       .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar o equipamento'))
     api.ordensEquipamento(eid).then(setOrdens).catch(() => setOrdens([]))
-    // Documentos da marca (manuais/datasheets) — associação por model/type (D-026).
-    api.biblioteca.listar({ categoria: 'marcas' }).then(setDocs).catch(() => setDocs([]))
-  }, [cid, eid])
-
-  // Documentos "associados": os da biblioteca (Marcas) cujo nome/marca casa com model/type do equipamento.
-  const docsAssociados = useMemo(() => {
-    if (!eq) return []
-    const alvos = [eq.model, eq.type].map((s) => (s || '').toLowerCase().trim()).filter(Boolean)
-    if (alvos.length === 0) return []
-    return docs.filter((d) => {
-      const hay = `${d.nome} ${d.marca}`.toLowerCase()
-      return alvos.some((a) => hay.includes(a))
-    })
-  }, [docs, eq])
+    carregarDocs()
+    // Biblioteca (Marcas) só é necessária para o admin gerenciar os vínculos.
+    if (podeGerir) api.biblioteca.listar({ categoria: 'marca' }).then(setMarcas).catch(() => setMarcas([]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cid, eid, podeGerir])
 
   const falhasNasOrdens = useMemo(
     () => [...new Set(ordens.map((o) => o.falha_nome).filter(Boolean) as string[])].sort(),
@@ -90,15 +90,19 @@ export default function EquipamentoPagina() {
             </CardContent>
           </Card>
 
-          {/* Documentos associados (manuais/datasheets da biblioteca → Marcas) */}
+          {/* Documentos do equipamento (manuais/datasheets fixados da biblioteca → Marcas, #EQP-DOC) */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Documentos ({docsAssociados.length})</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Documentos ({docsFixados.length})</CardTitle>
+              {podeGerir && <Button size="sm" variant="outline" onClick={() => setGerenciar(true)}>Gerenciar</Button>}
+            </CardHeader>
             <CardContent className="space-y-1.5">
-              {docsAssociados.length === 0 ? (
+              {docsFixados.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum manual/datasheet casando com o modelo. Cadastre em <Link to="/documentos?cat=marcas" className="text-primary hover:underline">Documentos → Marcas</Link>.
+                  Nenhum documento vinculado.{podeGerir ? ' Use “Gerenciar” para fixar manuais/datasheets da ' : ' Cadastre em '}
+                  <Link to="/documentos?cat=marcas" className="text-primary hover:underline">biblioteca → Marcas</Link>.
                 </p>
-              ) : docsAssociados.map((d) => (
+              ) : docsFixados.map((d) => (
                 <a key={d.id} href={urlArquivo(d.url)} target="_blank" rel="noreferrer"
                    className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-accent">
                   <span className="text-muted-foreground">📄</span>
@@ -150,6 +154,65 @@ export default function EquipamentoPagina() {
           </Card>
         </>
       )}
+
+      {/* Gerenciar documentos vinculados (#EQP-DOC) — admin */}
+      {gerenciar && podeGerir && (
+        <GerenciarDocs
+          marcas={marcas} fixadosIds={docsFixados.map((d) => d.id)}
+          aoFechar={() => setGerenciar(false)}
+          aoSalvar={async (ids) => { await api.admin.definirDocumentosEquipamento(eid, ids); setGerenciar(false); carregarDocs() }}
+        />
+      )}
+    </div>
+  )
+}
+
+/** Modal p/ o admin fixar quais documentos da biblioteca (Marcas) aparecem no equipamento. */
+function GerenciarDocs({ marcas, fixadosIds, aoFechar, aoSalvar }: {
+  marcas: DocEquip[]
+  fixadosIds: number[]
+  aoFechar: () => void
+  aoSalvar: (ids: number[]) => Promise<void>
+}) {
+  const [sel, setSel] = useState<Set<number>>(new Set(fixadosIds))
+  const [busca, setBusca] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const visiveis = useMemo(() => {
+    const t = busca.trim().toLowerCase()
+    return marcas.filter((d) => !t || `${d.nome} ${d.marca}`.toLowerCase().includes(t))
+  }, [marcas, busca])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button className="absolute inset-0 bg-black/40" aria-label="Fechar" onClick={aoFechar} />
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl border bg-card shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b p-4">
+          <h2 className="font-semibold">Documentos do equipamento</h2>
+          <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={aoFechar}>✕</button>
+        </div>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Filtrar por nome/marca…" />
+          {marcas.length === 0 && <p className="text-sm text-muted-foreground">Nenhum documento em <Link to="/documentos?cat=marcas" className="text-primary hover:underline">biblioteca → Marcas</Link>.</p>}
+          {visiveis.map((d) => {
+            const marcado = sel.has(d.id)
+            return (
+              <label key={d.id} className={`flex cursor-pointer items-center gap-2 rounded border px-2 py-1 text-sm ${marcado ? 'border-primary bg-accent' : ''}`}>
+                <input type="checkbox" checked={marcado} onChange={(e) => {
+                  const s = new Set(sel); if (e.target.checked) s.add(d.id); else s.delete(d.id); setSel(s)
+                }} />
+                <span className="min-w-0 flex-1 truncate">{d.nome}</span>
+                {d.marca && <span className="shrink-0 text-xs text-muted-foreground">{d.marca}</span>}
+              </label>
+            )
+          })}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t p-4">
+          <Button variant="outline" size="sm" onClick={aoFechar}>Cancelar</Button>
+          <Button size="sm" disabled={salvando} onClick={async () => { setSalvando(true); try { await aoSalvar(Array.from(sel)) } finally { setSalvando(false) } }}>
+            {salvando ? 'Salvando…' : 'Salvar'}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

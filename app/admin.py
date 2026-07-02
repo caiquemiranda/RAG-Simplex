@@ -28,6 +28,7 @@ from app.estrategias import ESTRATEGIAS
 from app.modelos import (
     Cliente,
     ConfigEstrategia,
+    DocumentoEquipamento,
     DocumentoTecnico,
     Equipamento,
     EquipamentoLista,
@@ -744,6 +745,36 @@ def remover_equipamento(equipamento_id: int,
         raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
     sessao.delete(e)
     sessao.commit()
+
+
+class DocsEquipIn(BaseModel):
+    documento_ids: list[int] = []
+
+
+class DocEquipRef(BaseModel):
+    id: int
+    nome: str
+    url: str
+    marca: str | None = None
+
+
+def _docs_do_equip(e: Equipamento) -> list[DocEquipRef]:
+    return [DocEquipRef(id=d.id, nome=d.nome, url=d.url, marca=d.marca) for d in e.documentos]
+
+
+@router.put("/equipamentos/{equipamento_id}/documentos", response_model=list[DocEquipRef])
+def definir_docs_equip(equipamento_id: int, dados: DocsEquipIn,
+                       _: Usuario = Depends(requer("gerir_usuarios")),
+                       sessao: Session = Depends(get_session)) -> list[DocEquipRef]:
+    """Fixa manualmente os documentos (manuais/datasheets da biblioteca) do equipamento (#EQP-DOC)."""
+    e = sessao.get(Equipamento, equipamento_id)
+    if e is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    docs = sessao.scalars(select(DocumentoEquipamento).where(DocumentoEquipamento.id.in_(dados.documento_ids))).all() if dados.documento_ids else []
+    e.documentos = list(docs)
+    sessao.commit()
+    sessao.refresh(e)
+    return _docs_do_equip(e)
 
 
 # --------------------------------------------------------------------------- #

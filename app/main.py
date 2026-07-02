@@ -368,6 +368,28 @@ def equipamentos_do_cliente(
     ]
 
 
+class DocEquipPublico(BaseModel):
+    id: int
+    nome: str
+    url: str
+    marca: str | None = None
+
+
+@app.get("/equipamentos/{equipamento_id}/documentos", response_model=list[DocEquipPublico])
+def documentos_do_equipamento(
+    equipamento_id: int,
+    usuario: Usuario = Depends(usuario_atual),
+    sessao: Session = Depends(get_session),
+) -> list[DocEquipPublico]:
+    """Documentos (manuais/datasheets) fixados a um equipamento (#EQP-DOC). RBAC pelo cliente."""
+    e = sessao.get(Equipamento, equipamento_id)
+    if e is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+    if not usuario.tem_permissao("gerir_usuarios") and e.cliente not in usuario.clientes_rel:
+        raise HTTPException(status_code=403, detail="Sem acesso a este equipamento.")
+    return [DocEquipPublico(id=d.id, nome=d.nome, url=d.url, marca=d.marca) for d in e.documentos]
+
+
 @app.get("/clientes/{cliente_id}/plantas", response_model=list[PlantaPublica])
 def plantas_do_cliente(
     cliente_id: int,

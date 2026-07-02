@@ -327,6 +327,31 @@ def test_documento_preventiva(ctx):
     assert client.get("/admin/listas/99999/documento-preventiva", headers=admin).status_code == 404
 
 
+def test_equipamento_documentos_manuais(ctx):
+    """#EQP-DOC: admin fixa documentos (Marcas) num equipamento; GET público lista; RBAC."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli D"}).json()["id"]
+    eid = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A"}).json()["id"]
+    # Sobe um documento de marca à biblioteca (multipart).
+    import io
+    r = client.post("/biblioteca", headers=admin,
+                    files={"arquivo": ("manual.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")},
+                    data={"categoria": "marca", "marca": "Simplex", "nome": "Manual 4100"})
+    did = r.json()["id"]
+
+    # Fixa o documento no equipamento.
+    r = client.put(f"/admin/equipamentos/{eid}/documentos", headers=admin, json={"documento_ids": [did]})
+    assert r.status_code == 200 and [d["id"] for d in r.json()] == [did]
+    # GET público lista o vínculo.
+    pub = client.get(f"/equipamentos/{eid}/documentos", headers=admin).json()
+    assert len(pub) == 1 and pub[0]["nome"] == "Manual 4100" and pub[0]["marca"] == "Simplex"
+    # Limpa (lista vazia).
+    assert client.put(f"/admin/equipamentos/{eid}/documentos", headers=admin, json={"documento_ids": []}).json() == []
+    # RBAC: técnico não fixa.
+    assert client.put(f"/admin/equipamentos/{eid}/documentos", headers=_login(client, "tec@x.com"), json={"documento_ids": [did]}).status_code == 403
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx

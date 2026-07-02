@@ -98,6 +98,8 @@ export type Equipamento = {
 // Estados possíveis do equipamento (#EQP-STATUS, D-026). "Em falha" usa falha_id.
 export const STATUS_EQUIP = ['Operando', 'Desabilitado', 'Desativado', 'Em falha'] as const
 export type ImportEquipResultado = { importados: number; total: number }
+// Documento (manual/datasheet da biblioteca) fixado a um equipamento (#EQP-DOC).
+export type DocEquipRef = { id: number; nome: string; url: string; marca: string | null }
 // Lista nomeada de equipamentos (#EQP-LISTAS) — base do doc de preventiva.
 export type EquipamentoLista = { id: number; cliente_id: number; nome: string; equipamento_ids: number[] }
 // Documento de Manutenção Preventiva gerado de uma lista (#PREV-DOC).
@@ -422,6 +424,7 @@ export const api = {
     request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
   ordensEquipamento: (equipamentoId: number) => request<Visita[]>(`/cronograma/equipamento/${equipamentoId}`),
+  documentosEquipamento: (equipamentoId: number) => request<DocEquipRef[]>(`/equipamentos/${equipamentoId}/documentos`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -492,6 +495,8 @@ export const api = {
       request<void>(`/admin/equipamentos/${eqpId}`, { method: 'DELETE' }),
     criarEquipamento: (clienteId: number, dados: Partial<Equipamento>) =>
       request<Equipamento>(`/admin/clientes/${clienteId}/equipamentos`, { method: 'POST', body: JSON.stringify(dados) }),
+    definirDocumentosEquipamento: (eqpId: number, documento_ids: number[]) =>
+      request<DocEquipRef[]>(`/admin/equipamentos/${eqpId}/documentos`, { method: 'PUT', body: JSON.stringify({ documento_ids }) }),
     atualizarEquipamento: (eqpId: number, dados: Partial<Equipamento>) =>
       request<Equipamento>(`/admin/equipamentos/${eqpId}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     // Plantas (#MAP)
