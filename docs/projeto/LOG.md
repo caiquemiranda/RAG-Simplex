@@ -4,6 +4,20 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 8 (parte 1): cards de documentos + conformidade de segurança/motion
+
+**Branch:** `feat/lote8`. Auditoria das skills em `.agents/skills/`.
+
+- **#DOC-CARDS:** `pages/Documentos.tsx` reescrita como **cards por grupo** (Empresa + um por
+  cliente + um por marca, com imagem/avatar e **contagem**); clicar entra no grupo (drill-in) com
+  lista + upload contextual. Sem emoji (ícone SVG); "+ Nova marca"; alvos ≥44px.
+- **#SEC-HEADERS:** middleware em `main.py` (`X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`). Teste `test_headers_seguranca`.
+- **#SEC-LOGIN:** rate-limit de login em memória (5 falhas/5 min por conta → 429; sucesso limpa).
+  Teste `test_rate_limit_login`.
+- **#UI-MOTION:** `@media (prefers-reduced-motion: reduce)` global em `index.css`.
+- **109 testes**, `tsc -b` limpo. Pendentes do Lote 8 (varreduras UI + #SEC-UPLOAD) no [BACKLOG §M](BACKLOG.md).
+
 ## 2026-07-02 — Refinamento #EQP-SOBRE: página "Sobre equipamento"
 
 **Branch:** `feat/refinamentos`. Frontend-only.

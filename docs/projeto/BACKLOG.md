@@ -145,6 +145,30 @@ Seis solicitações do usuário. **Registradas** (a implementar depois).
       `--no-ff` + push + limpeza) → higiene/releases. Invocável via `/git-flow`; baseada no
       [`../GUIA_GIT.md`](../GUIA_GIT.md). **Lote 7 concluído (6/6).**
 
+### M. Lote 8 — Conformidade com as skills (UI/segurança) + cards de documentos (2026-07-02)
+Auditoria das skills em `.agents/skills/` (security-review, ui-ux-pro-max, frontend-design).
+Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplicam ao código.
+
+- [x] **#DOC-CARDS — aba Documentos como cards** (pedido do usuário). Tela de **cards por grupo**
+      (à la Relatórios): **Empresa** (logo IBSystems), **um card por cliente** (avatar/logo + nº de
+      docs) e **um card por marca** (avatar + nº). Clicar entra no grupo (drill-in) com lista +
+      upload contextual. `pages/Documentos.tsx` reescrita; sem emoji (SVG); "+ Nova marca".
+- [x] **#SEC-HEADERS** — middleware de headers de segurança (`X-Content-Type-Options: nosniff`,
+      `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`). Teste `test_headers_seguranca`.
+- [x] **#SEC-LOGIN** — rate-limit de login em memória (5 falhas/5 min por conta → 429). Sucesso
+      limpa o contador. Teste `test_rate_limit_login`.
+- [x] **#UI-MOTION** — `@media (prefers-reduced-motion: reduce)` global em `index.css`.
+- [ ] **#UI-ICONS — emoji → SVG** em todo o frontend (78 ocorrências / 12 arquivos). Sidebar já usa
+      SVG; falta o restante (📄🔧⚠️📋📅📍🖨️…). *(Documentos já migrado.)*
+- [ ] **#UI-TOUCH — alvos de toque ≥44×44px** (44 controles `h-7/h-8/h-9` + botões `text-xs`).
+- [ ] **#UI-LABELS — labels visíveis** (não só placeholder) nos formulários.
+- [ ] **#UI-FOCUS — foco visível** nos `<select>` nativos e botões de ícone (base já tem `focus-visible`).
+- [ ] **#UI-TOKENS — cores de status via tokens** semânticos (hoje hex cru em `format.ts`).
+- [ ] **#SEC-UPLOAD — servir uploads com `Content-Disposition: attachment`** (evita XSS de SVG/HTML
+      subido à biblioteca; hoje mitigado por upload ser só de admin + `nosniff`).
+- [ ] **#UI-CHARTS — sinal não-cor** nos gráficos (disponibilidade não só por verde/âmbar/vermelho).
+- [ ] **(opcional) #UI-BRAND — tipografia/identidade distinta** (display+body) — frontend-design.
+
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
 usuário** (revisitar mais tarde). Nenhum item bloqueia o produto; são qualidade/processo.

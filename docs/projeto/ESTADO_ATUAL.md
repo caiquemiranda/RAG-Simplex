@@ -13,10 +13,11 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/refinamentos` (do `main`). **Backend: 107 testes**. Lote 6 ✅ · #PREV-DOC ✅ ·
-  **Lote 7 ✅ (6/6)** · **Refinamentos ✅**: #PREV-OS (`Visita.lista_id`, migração `ff498bb4b9d6`) ·
-  #EQP-DOC (N:N `equipamento_documento`, migração `ed5186ac4b27`, + fix do bug `categoria 'marcas'`) ·
-  #EQP-SOBRE (página real). Migrações no repo até: `ed5186ac4b27` (head).
+- **Branch:** `feat/lote8` (do `main`). **Backend: 109 testes**. Lote 6/7 ✅ · Refinamentos ✅ ·
+  **Lote 8 (parte 1) ✅**: #DOC-CARDS (Documentos como cards por grupo), #SEC-HEADERS, #SEC-LOGIN
+  (rate-limit), #UI-MOTION. **Pendente do Lote 8** ([BACKLOG §M](BACKLOG.md)): varreduras UI
+  (#UI-ICONS/#UI-TOUCH/#UI-LABELS/#UI-FOCUS/#UI-TOKENS/#UI-CHARTS), #SEC-UPLOAD, #UI-BRAND (opcional).
+  Migrações no repo até: `ed5186ac4b27` (head).
 - **Repo limpo:** só `main` + `feat/lote4-fixes` (esta tem 1 commit de docs **não** mergeado,
   `c1f4fa8` — decidir cherry-pick ou descarte). Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
