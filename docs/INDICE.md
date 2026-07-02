@@ -23,6 +23,7 @@ como **reconstruir com exatidão** (inclusive em outra linguagem). Comece por aq
 | Documento | O que contém |
 | --- | --- |
 | [`TESTES.md`](TESTES.md) | Inventário dos testes (cobertura por arquivo) + como rodar. |
+| [`GUIA_GIT.md`](GUIA_GIT.md) | **Git profissional** como usado no projeto: branches, commits (`tipo(#TAG)`), tags/SemVer, PR, merge `--no-ff`, migrações no fluxo, desfazer com segurança. |
 
 ## 4. Produto (requisitos & base de conhecimento)
 | Documento | O que contém |
