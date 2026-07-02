@@ -269,6 +269,8 @@ class EquipamentoPublico(BaseModel):
     type: str
     model: str
     status: str
+    falha_id: int | None = None
+    falha_nome: str | None = None      # falha atual do dispositivo (D-026)
     ultima_manutencao: str | None = None
     ultimo_teste: str | None = None
     planta_id: int | None = None
@@ -311,6 +313,7 @@ def equipamentos_do_cliente(
         EquipamentoPublico(
             id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add, type=e.type,
             model=e.model, status=e.status,
+            falha_id=e.falha_id, falha_nome=(e.falha.nome if e.falha else None),
             ultima_manutencao=e.ultima_manutencao.isoformat() if e.ultima_manutencao else None,
             ultimo_teste=e.ultimo_teste.isoformat() if e.ultimo_teste else None,
             planta_id=e.planta_id, pos_x=e.pos_x, pos_y=e.pos_y,

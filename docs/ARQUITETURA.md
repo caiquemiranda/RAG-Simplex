@@ -89,6 +89,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST/DELETE | `/admin/clientes/{id}/plantas` · `/admin/plantas/{id}` | `gerir_usuarios` | Plantas: **upload PDF→PNG** (1 pág=1 planta), listar, remover (#MAP). |
 | PATCH | `/admin/equipamentos/{id}` | `gerir_usuarios` | Edita equipamento + **posição na planta** (`planta_id`/`pos_x`/`pos_y`) — editor de mapa. |
 | GET/POST/DELETE | `/admin/falhas[/{id}]` | `gerir_usuarios` | **Catálogo de falhas** (#OS): nome+termo_en (409 se duplicado). |
+| GET/POST `/admin/clientes/{id}/listas` · PATCH/DELETE `/admin/listas/{id}` | `gerir_usuarios` | **Listas de equipamentos** (#EQP-LISTAS): nome + N:N; ids de outro cliente ignorados. |
 | GET | `/cronograma/equipamento/{id}` | autenticado | **Histórico de O.S.** do equipamento (#MAP-4); RBAC pelo cliente. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
@@ -137,9 +138,11 @@ técnico/analista recebem também "🔧 resolução técnica".
 | `components/DocumentoPanel.tsx` | Split-screen: abre o guia no trecho citado. |
 | `components/AuditoriaView.tsx` | Tabela de auditoria (painel ADM). |
 | `components/Placeholder.tsx` | Páginas "em construção". |
+| `components/TabelaOrdenavel.tsx` | Tabela genérica com **ordenação por coluna** (asc→desc→sem ordem, #TAB-ORDEM) — usada na lista de equipamentos. |
+| `components/FormOS.tsx` | Formulário modal de **Ordem de Serviço** (#OS-PAGINA): todos os campos (tipo/cliente/equipamento/falha/técnicos/data/status/obs/12 campos-doc); reusado pela página de O.S. e pelo calendário. |
 | `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). Tipos de domínio (ex.: `Visita` = O.S. com `tipo`/`equipamento`/`falha`/campos-doc; `Falha`). |
 | `lib/format.ts` | Helpers de UI: `isoData`, `STATUS_VISITA`, e para O.S. `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`CAMPOS_DOC_OS` (#OS, D-025). |
-| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos`, `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `Notificacoes`. |
+| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos`, `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `EquipamentoPagina` (**página por dispositivo** #EQP-PAGINA: dados + documentos + O.S. filtráveis), `Notificacoes`. |
 
 ### Funcionalidades da UI
 

@@ -38,6 +38,12 @@ notificação. Liga-se a um **equipamento** → alimenta o **histórico** do dis
 - `GET /cronograma/equipamento/{id}` — **histórico** de O.S. do equipamento (RBAC pelo cliente, #MAP-4).
 - `VisitaResumo` expõe `tipo`, `equipamento_id`/`equipamento_tag`, `falha_id`/`falha_nome` e os 12 campos.
 
+## CRUD completo na página (#OS-PAGINA, Lote 6)
+Componente **`components/FormOS.tsx`** (modal) concentra **todos os campos** da O.S. e é reusado:
+- **Página "Ordens de Serviço"** (`Atividades.tsx`): **"+ Nova O.S."** e **editar** por linha (ADM).
+- **Calendário** (`Cronograma.tsx`): **"+ Nova O.S. neste dia"** (`dataFixa`) — substituiu o form
+  embutido (sem duplicação). Campos-doc de corretiva agora editáveis (não só na criação).
+
 ## Frontend (✅ Fase 2)
 - **Atividades → "Ordens de Serviço"** (`pages/Atividades.tsx`): título, sidebar Cronograma,
   filtro por **tipo**, **gráfico por tipo** (além do por status), badges tipo/falha/equipamento.

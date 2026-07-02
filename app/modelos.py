@@ -65,6 +65,14 @@ visita_tecnico = Table(
     Column("usuario_id", ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Listas nomeadas de equipamentos (#EQP-LISTAS) — base do documento de manutenção preventiva.
+lista_equipamento = Table(
+    "lista_equipamento",
+    Base.metadata,
+    Column("lista_id", ForeignKey("equipamento_lista.id", ondelete="CASCADE"), primary_key=True),
+    Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -220,7 +228,9 @@ class Equipamento(Base):
     add: Mapped[str] = mapped_column(String(40), default="")     # endereço do dispositivo
     type: Mapped[str] = mapped_column(String(80), default="")
     model: Mapped[str] = mapped_column(String(80), default="")
-    status: Mapped[str] = mapped_column(String(40), default="")  # ex.: Em operação | Alerta | Em manutenção
+    status: Mapped[str] = mapped_column(String(40), default="Operando")  # Operando | Desabilitado | Desativado
+    # Falha atual do dispositivo quando "em falha" (D-026) — distinta da falha de uma O.S.
+    falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
     ultima_manutencao: Mapped[date | None] = mapped_column(Date, default=None)
     ultimo_teste: Mapped[date | None] = mapped_column(Date, default=None)
     # Posição na planta (#MAP) — coordenadas-map.
@@ -233,6 +243,24 @@ class Equipamento(Base):
 
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
     planta: Mapped[Planta | None] = relationship()
+    falha: Mapped["Falha | None"] = relationship()
+
+
+class EquipamentoLista(Base):
+    """Lista **nomeada** de equipamentos de um cliente (#EQP-LISTAS). Serve para filtrar a
+    lista e, futuramente, gerar um documento de **manutenção preventiva** com esses itens."""
+
+    __tablename__ = "equipamento_lista"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("cliente.id", ondelete="CASCADE"))
+    nome: Mapped[str] = mapped_column(String(120))
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    cliente: Mapped[Cliente] = relationship()
+    equipamentos: Mapped[list[Equipamento]] = relationship(secondary=lista_equipamento)
 
 
 class Falha(Base):

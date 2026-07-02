@@ -4,6 +4,72 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-06-30 — #EQP-LISTAS: listas nomeadas de equipamentos (Lote 6, fim)
+
+**Branch:** `feat/lote6-equipamentos`. Full-stack — **fecha o Lote 6** (7/7).
+
+- **Modelo:** `EquipamentoLista` (nome, cliente_id cascade) + N:N `lista_equipamento`. Migração
+  `5e88d54a7547` (2 tabelas). **Backend:** CRUD `/admin/clientes/{id}/listas` + `/admin/listas/{id}`
+  (perm `gerir_usuarios`); ids de outro cliente ignorados na gravação. Teste `test_equipamento_listas`.
+- **api.ts:** `EquipamentoLista` + `api.admin.listas/criarLista/atualizarLista/removerLista`.
+- **`EquipamentosLista.tsx`:** **chips das listas no topo** (clicam → filtram a tabela), **"+ Criar
+  lista"** e ✎/✕ por lista; componente `ModalLista` (nome + seleção por checkbox com busca).
+- **104 passed**, `tsc -b` limpo. **Uso futuro:** gerar o documento de Manutenção Preventiva a
+  partir da lista.
+
+## 2026-06-30 — #EQP-PAGINA + #OS-HIST-FILTRO: página por dispositivo (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only.
+
+- **`pages/EquipamentoPagina.tsx`** (novo) em **`/equipamentos/:clienteId/:eqpId`**: dados do
+  equipamento + estado (cor por falha); **Documentos** = manuais/datasheets da biblioteca →
+  Marcas casados por **model/type** (link p/ download; senão link p/ cadastrar, D-026); **Ordens
+  de Serviço** associadas (`/cronograma/equipamento/{id}`).
+- **#OS-HIST-FILTRO:** o histórico tem **busca** (título/técnico/data) + filtros por **falha** e
+  **tipo** + limpar; itens linkam à página da O.S.
+- **`EquipamentosLista`**: linha da tabela agora **clica → página do dispositivo** (via
+  `aoClicarLinha` da `TabelaOrdenavel`). Rota nova em `App.tsx`. `tsc -b` limpo; 103 testes.
+
+## 2026-06-30 — #OS-PAGINA: criar/editar O.S. com todos os campos (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only (backend já suportava).
+
+- **`components/FormOS.tsx`** (novo, modal reutilizável): todos os campos da O.S. — `tipo`,
+  cliente, equipamento (do cliente), falha, técnicos (vazio = fixos), data, status, observações
+  e os 12 campos do documento (corretiva; `<details>` aberto na edição). Prop `dataFixa` esconde
+  o campo de data (uso no calendário).
+- **`pages/Atividades.tsx`** (Ordens de Serviço): botão **"+ Nova O.S."** + **editar** por linha
+  (ADM) abrindo o `FormOS`; recarrega a lista ao salvar.
+- **`pages/Cronograma.tsx`**: o form embutido de "Adicionar" foi **substituído** por
+  "+ Nova O.S. neste dia" que abre o mesmo `FormOS` (`dataFixa`) — **removida a duplicação**
+  (estado `nova`/`equipCliente`, função `adicionar`, campos-doc embutidos). `tsc -b` limpo; 103 testes.
+
+## 2026-06-30 — #TAB-ORDEM + #EQP-FILTROS+: lista de equipamentos tipo planilha (Lote 6)
+
+**Branch:** `feat/lote6-equipamentos`. Frontend-only.
+
+- **`components/TabelaOrdenavel.tsx`** (novo, genérico): clicar no cabeçalho ordena
+  **crescente → decrescente → sem ordem**; nulos/vazios no fim; compara número vs. texto
+  (`localeCompare` numérico pt-BR).
+- **`pages/EquipamentosLista.tsx`**: usa a tabela ordenável; filtros por **tipo, model e status**
+  (com a falha) além da busca textual + botão **limpar**; coluna Status com bolinha de cor por
+  estado (`corStatusEquip`). `tsc -b` limpo.
+
+## 2026-06-30 — #EQP-STATUS: estado do equipamento + falha atual (Lote 6, D-026)
+
+**Branch:** `feat/lote6-equipamentos`. Primeiro item do Lote 6 (fundação).
+
+- **Modelo:** `Equipamento` ganhou **`falha_id`** (FK → `Falha`, SET NULL) = falha atual quando
+  "em falha"; `status` default **"Operando"**. Migração `8bf05fde56d0` (add coluna + backfill do
+  status vazio para "Operando").
+- **Backend:** schemas `EquipamentoResumo`/`EquipamentoIn`/`EquipamentoAtualizar` + `EquipamentoPublico`
+  expõem `falha_id`/`falha_nome`; criar avulso e import CSV aplicam o default "Operando"; PATCH
+  valida `falha_id` (404 se inexistente, SET NULL ao limpar).
+- **Frontend:** `STATUS_EQUIP` + `corStatusEquip` (fonte única de cor por estado) em `lib`;
+  ClienteAdmin ganhou **coluna Status** editável (select Operando/Desabilitado/Desativado/Em falha
+  + seletor de falha quando "Em falha"); marcadores do mapa e detalhe do Buscar equipamento
+  refletem a falha. **103 passed**, `tsc -b` limpo.
+
 ## 2026-06-30 — #OS: hardening de docs + testes da unificação (D-025)
 
 **Branch:** `feat/buscar-equipamento`. Fecha as pendências D1–D4 (docs) e T1–T4 (testes).

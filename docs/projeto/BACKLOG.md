@@ -62,56 +62,48 @@ Sete solicitações do usuário. Giram em torno de dois eixos: **(a)** tornar a 
 numa ferramenta tipo planilha (ordenar/filtrar por coluna, página por dispositivo, listas
 salvas que alimentam documentos de manutenção preventiva).
 
-- [ ] **#EQP-STATUS — status padrão "Operando" + estados** (item 2). Todo equipamento nasce com
-      `status = "Operando"`. Estados: **Operando** (padrão), **Desabilitado**, **Desativado**, ou
-      **em falha**. **Decidido (D-026):** "em falha" guarda **`falha_id`** (FK ao catálogo `Falha`,
-      SET NULL) no `Equipamento` — a falha atual do dispositivo; a UI mostra o **nome da falha**
-      como status. Aplicar default no cadastro avulso e no import CSV; cor do marcador no mapa por
-      estado. *Backend:* coluna `falha_id` em `Equipamento` + migração + seletor no editor. dep: nenhuma (fundação).
+- [x] **#EQP-STATUS — status padrão "Operando" + estados** (item 2, D-026). `Equipamento` ganhou
+      **`falha_id`** (FK → `Falha`, SET NULL) = falha atual quando "em falha"; `status` padrão
+      **"Operando"** (também Desabilitado/Desativado), aplicado no cadastro avulso e no **import CSV**
+      (backfill dos vazios). Migração `8bf05fde56d0`. Resumo (admin e público) expõe `falha_id`/
+      `falha_nome`; editor no ClienteAdmin tem **seletor de status + falha**; cor do marcador no mapa
+      por estado (`corStatusEquip`). Teste `test_equipamento_status_e_falha`.
 
-- [ ] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Clicar no cabeçalho da coluna
-      ordena **crescente/decrescente** (3º clique limpa). Componente de **tabela reutilizável**
-      (`components/TabelaOrdenavel`), pois será usado na lista de equipamentos e alhures.
-      *Só frontend.* dep: nenhuma (fundação de UI).
+- [x] **#TAB-ORDEM — ordenação por coluna tipo Excel** (item 5). Componente reutilizável
+      **`components/TabelaOrdenavel`** (genérico): clicar no cabeçalho ordena **crescente →
+      decrescente → sem ordem** (3º clique); nulos/vazios sempre no fim; compara número vs. texto
+      (`localeCompare` numérico pt-BR). Aplicado à lista de equipamentos por cliente.
 
-- [ ] **#EQP-FILTROS+ — filtros por mais colunas** (item 7). Além de tag/tipo, filtrar por
-      **painel, loop, add, model, status, planta** e datas (últ. manutenção/teste). Integra com
-      `#TAB-ORDEM` (mesma tabela). *Frontend* (o endpoint `equipamentosCliente` já devolve tudo;
-      avaliar filtros server-side se a lista crescer). dep: #TAB-ORDEM.
+- [x] **#EQP-FILTROS+ — filtros por mais colunas** (item 7). Na lista do cliente, além de busca
+      textual (tag/add/painel/loop/model) e **tipo**, filtros por **model** e **status** (com a
+      falha) + botão **limpar**. Usa a `TabelaOrdenavel`. *Frontend* (endpoint já devolve tudo).
 
-- [ ] **#EQP-PAGINA — página por dispositivo** (item 4). Na lista de equipamentos do cliente, cada
-      dispositivo abre uma **página própria** (`/equipamentos/:clienteId/:eqpId`) com: **todos os
-      dados** do equipamento, **O.S. associadas** (reusa `/cronograma/equipamento/{id}`) e
-      **documentos associados**. **Decidido (D-026):** os documentos associados são **manuais/
-      datasheets** que o usuário sobe na **biblioteca → Marcas** (#DOC-MARCAS já existe); a página
-      do equipamento só exibe um **link** para o(s) documento(s) da biblioteca — **sem** relação de
-      upload nova por equipamento. **A resolver na implementação:** como casar o equipamento ao
-      documento da marca (por `model`/marca? seleção manual de um `documento_id`?). dep: #EQP-STATUS
-      (exibe estado), #OS-HIST-FILTRO (seção de O.S.).
+- [x] **#EQP-PAGINA — página por dispositivo** (item 4, D-026). `pages/EquipamentoPagina.tsx` em
+      **`/equipamentos/:clienteId/:eqpId`** (linha da lista clica → abre): **todos os dados** do
+      equipamento + estado (cor por falha), **Documentos** (manuais/datasheets da biblioteca →
+      Marcas, casados por **model/type** no nome/marca; link p/ download + link p/ cadastrar) e
+      **Ordens de Serviço** associadas (reusa `/cronograma/equipamento/{id}`) com filtros
+      (#OS-HIST-FILTRO). Associação por model/type (heurística) — seleção manual fica p/ evolução.
 
-- [ ] **#OS-HIST-FILTRO — histórico de O.S. com filtros** (item 1). No histórico de O.S. (página do
-      dispositivo e/ou Buscar equipamento), adicionar **busca** (por título/técnico/data) e
-      **filtro por falha** (e por tipo/status). *Frontend* sobre a lista já retornada; se necessário,
-      querystring no `/cronograma/equipamento/{id}`. dep: #EQP-PAGINA (onde vive), #OS-PAGINA (link p/ editar).
+- [x] **#OS-HIST-FILTRO — histórico de O.S. com filtros** (item 1). Na página do dispositivo, o
+      histórico de O.S. tem **busca** (título/técnico/data) + filtros por **falha** e **tipo** +
+      botão limpar; cada item linka à página da O.S. Frontend sobre a lista já retornada.
 
-- [ ] **#OS-PAGINA — criar/editar O.S. na página "Ordens de Serviço"** (item 3). Hoje só dá para
-      **criar no calendário**; a página de Ordens de Serviço **não** cria nem edita e **não mostra
-      todos os campos**. Objetivo: botão **"Nova O.S."** + **editar** (ADM) com **todos os campos**
-      exibidos e editáveis — `tipo`, cliente, **equipamento**, **falha**, **técnicos** (default
-      fixos), data, status, observações e os **12 campos do documento** (corretiva). **Extrair um
-      componente `FormOS` reutilizável** (hoje o form vive embutido em `Cronograma.tsx`) para não
-      duplicar. Resolve também a pendência já registrada de editar campos-doc no #ATV-1.
-      *Backend já suporta (PATCH/POST em `/cronograma`).* dep: refatorar o form do calendário em `FormOS`.
+- [x] **#OS-PAGINA — criar/editar O.S. na página "Ordens de Serviço"** (item 3). Componente
+      **`components/FormOS.tsx`** (modal reutilizável) com **todos os campos**: `tipo`, cliente,
+      **equipamento** (do cliente), **falha**, **técnicos** (vazio = fixos), data, status,
+      observações e os **12 campos do documento** (corretiva; abertos por padrão na edição).
+      Página **Ordens de Serviço** ganhou **"+ Nova O.S."** e **editar** por linha (ADM). O
+      calendário passou a **reusar o FormOS** ("+ Nova O.S. neste dia", com `dataFixa`) — removida
+      a duplicação do form embutido. Resolve a pendência de editar campos-doc fora da criação.
 
-- [ ] **#EQP-LISTAS — listas de equipamentos (base do doc de preventiva)** (item 6). Criar **listas
-      nomeadas** de equipamentos: botão **"Criar lista"** abre uma janela para **marcar** os
-      equipamentos → **Salvar** → a lista aparece **no topo**. Clicar numa lista **filtra** a tabela
-      para mostrar só os equipamentos dela. Uso futuro: **gerar um documento de Manutenção
-      Preventiva** a partir da lista (os equipamentos entram no documento automaticamente).
-      *Backend novo:* entidade `EquipamentoLista` (nome, cliente, N:N com `Equipamento`) + CRUD.
-      *Frontend:* seleção/salvar/filtrar + chip das listas no topo. dep: #TAB-ORDEM/#EQP-FILTROS+;
-      a **geração do documento** de preventiva é um item futuro à parte (ligado ao `tipo=preventiva`
-      da O.S.).
+- [x] **#EQP-LISTAS — listas de equipamentos (base do doc de preventiva)** (item 6). Entidade
+      **`EquipamentoLista`** (nome, cliente, N:N `lista_equipamento`) + CRUD `/admin/clientes/{id}/
+      listas` e `/admin/listas/{id}` (ids de outro cliente ignorados); migração `5e88d54a7547`;
+      teste `test_equipamento_listas`. **Frontend:** chips das listas **no topo** da lista do
+      cliente (filtram a tabela ao clicar), **"+ Criar lista"** e ✎/✕ por lista, modal com nome +
+      seleção por checkbox (`ModalLista`). **Futuro (à parte):** gerar o **documento de Manutenção
+      Preventiva** a partir da lista (ligado ao `tipo=preventiva` da O.S.).
 
 **Plano sugerido (sem retrabalho):** `#EQP-STATUS` → `#TAB-ORDEM` → `#EQP-FILTROS+` →
 `#OS-PAGINA` (extrai `FormOS`) → `#EQP-PAGINA` → `#OS-HIST-FILTRO` → `#EQP-LISTAS` →

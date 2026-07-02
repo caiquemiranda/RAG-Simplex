@@ -30,6 +30,7 @@ from app.modelos import (
     ConfigEstrategia,
     DocumentoTecnico,
     Equipamento,
+    EquipamentoLista,
     Falha,
     LogConsulta,
     Papel,
@@ -126,6 +127,8 @@ class EquipamentoResumo(BaseModel):
     type: str
     model: str
     status: str
+    falha_id: int | None = None
+    falha_nome: str | None = None      # nome da falha atual (D-026), quando "em falha"
     ultima_manutencao: date | None = None
     ultimo_teste: date | None = None
     planta_id: int | None = None
@@ -141,6 +144,7 @@ class EquipamentoAtualizar(BaseModel):
     type: str | None = None
     model: str | None = None
     status: str | None = None
+    falha_id: int | None = None        # #EQP-STATUS (D-026)
     ultima_manutencao: date | None = None
     ultimo_teste: date | None = None
     # Posição na planta (editor de mapa #MAP)
@@ -156,7 +160,8 @@ class EquipamentoIn(BaseModel):
     add: str = ""
     type: str = ""
     model: str = ""
-    status: str = ""
+    status: str = ""                   # vazio → "Operando" (D-026)
+    falha_id: int | None = None
     ultima_manutencao: date | None = None
     ultimo_teste: date | None = None
 
@@ -596,7 +601,9 @@ class ImportEquipOut(BaseModel):
 def _resumo_equip(e: Equipamento) -> EquipamentoResumo:
     return EquipamentoResumo(
         id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add, type=e.type,
-        model=e.model, status=e.status, ultima_manutencao=e.ultima_manutencao,
+        model=e.model, status=e.status,
+        falha_id=e.falha_id, falha_nome=(e.falha.nome if e.falha else None),
+        ultima_manutencao=e.ultima_manutencao,
         ultimo_teste=e.ultimo_teste, planta_id=e.planta_id, pos_x=e.pos_x, pos_y=e.pos_y,
     )
 
@@ -637,11 +644,15 @@ def criar_equipamento(cliente_id: int, dados: EquipamentoIn,
     """Cadastra **um** equipamento (manual). `tag` é a identificação; se vazia, compõe de
     painel+loop+add+type (item 5). Campos sem dado ficam vazios e são editáveis depois."""
     c = _cliente_ou_404(sessao, cliente_id)
+    if dados.falha_id is not None and sessao.get(Falha, dados.falha_id) is None:
+        raise HTTPException(status_code=404, detail="Falha não encontrada.")
     e = Equipamento(
         cliente_id=c.id,
         tag=_tag_composta(dados.tag, dados.painel, dados.loop, dados.add, dados.type),
         painel=dados.painel.strip(), loop=dados.loop.strip(), add=dados.add.strip(),
-        type=dados.type.strip(), model=dados.model.strip(), status=dados.status.strip(),
+        type=dados.type.strip(), model=dados.model.strip(),
+        status=(dados.status.strip() or "Operando"),   # padrão "Operando" (D-026)
+        falha_id=dados.falha_id,
         ultima_manutencao=dados.ultima_manutencao, ultimo_teste=dados.ultimo_teste,
     )
     sessao.add(e)
@@ -689,6 +700,7 @@ async def importar_equipamentos(cliente_id: int,
         if not any(valores.values()) and not u_manut and not u_teste:
             continue  # ignora linha vazia
         valores["tag"] = _tag_composta(valores["tag"], valores["painel"], valores["loop"], valores["add"], valores["type"])
+        valores["status"] = valores["status"] or "Operando"   # padrão (D-026)
         c.equipamentos.append(Equipamento(**valores, ultima_manutencao=u_manut, ultimo_teste=u_teste))
         importados += 1
     sessao.commit()
@@ -707,6 +719,10 @@ def atualizar_equipamento(equipamento_id: int, dados: EquipamentoAtualizar,
         if dados.planta_id is not None and sessao.get(Planta, dados.planta_id) is None:
             raise HTTPException(status_code=404, detail="Planta não encontrada.")
         e.planta_id = dados.planta_id
+    if "falha_id" in dados.model_fields_set:   # #EQP-STATUS (D-026)
+        if dados.falha_id is not None and sessao.get(Falha, dados.falha_id) is None:
+            raise HTTPException(status_code=404, detail="Falha não encontrada.")
+        e.falha_id = dados.falha_id
     for campo in ("tag", "painel", "loop", "add", "type", "model", "status"):
         v = getattr(dados, campo)
         if v is not None:
@@ -727,6 +743,96 @@ def remover_equipamento(equipamento_id: int,
     if e is None:
         raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
     sessao.delete(e)
+    sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Listas nomeadas de equipamentos (#EQP-LISTAS) — base do doc de preventiva.   #
+# --------------------------------------------------------------------------- #
+class ListaIn(BaseModel):
+    nome: str
+    equipamento_ids: list[int] = []
+
+
+class ListaAtualizar(BaseModel):
+    nome: str | None = None
+    equipamento_ids: list[int] | None = None
+
+
+class ListaResumo(BaseModel):
+    id: int
+    cliente_id: int
+    nome: str
+    equipamento_ids: list[int]
+
+
+def _resumo_lista(lst: EquipamentoLista) -> ListaResumo:
+    return ListaResumo(id=lst.id, cliente_id=lst.cliente_id, nome=lst.nome,
+                       equipamento_ids=[e.id for e in lst.equipamentos])
+
+
+def _equips_do_cliente(sessao: Session, cliente_id: int, ids: list[int]) -> list[Equipamento]:
+    """Carrega os equipamentos por id, garantindo que pertencem ao cliente (ignora estranhos)."""
+    if not ids:
+        return []
+    achados = sessao.scalars(select(Equipamento).where(Equipamento.id.in_(ids))).all()
+    return [e for e in achados if e.cliente_id == cliente_id]
+
+
+@router.get("/clientes/{cliente_id}/listas", response_model=list[ListaResumo])
+def listar_listas(cliente_id: int,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)) -> list[ListaResumo]:
+    _cliente_ou_404(sessao, cliente_id)
+    listas = sessao.scalars(
+        select(EquipamentoLista).where(EquipamentoLista.cliente_id == cliente_id).order_by(EquipamentoLista.nome)
+    ).all()
+    return [_resumo_lista(l) for l in listas]
+
+
+@router.post("/clientes/{cliente_id}/listas", response_model=ListaResumo,
+             status_code=status.HTTP_201_CREATED)
+def criar_lista(cliente_id: int, dados: ListaIn,
+                _: Usuario = Depends(requer("gerir_usuarios")),
+                sessao: Session = Depends(get_session)) -> ListaResumo:
+    c = _cliente_ou_404(sessao, cliente_id)
+    nome = dados.nome.strip()
+    if not nome:
+        raise HTTPException(status_code=400, detail="Informe o nome da lista.")
+    lst = EquipamentoLista(cliente_id=c.id, nome=nome)
+    lst.equipamentos = _equips_do_cliente(sessao, cliente_id, dados.equipamento_ids)
+    sessao.add(lst)
+    sessao.commit()
+    sessao.refresh(lst)
+    return _resumo_lista(lst)
+
+
+@router.patch("/listas/{lista_id}", response_model=ListaResumo)
+def atualizar_lista(lista_id: int, dados: ListaAtualizar,
+                    _: Usuario = Depends(requer("gerir_usuarios")),
+                    sessao: Session = Depends(get_session)) -> ListaResumo:
+    lst = sessao.get(EquipamentoLista, lista_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail="Lista não encontrada.")
+    if dados.nome is not None:
+        if not dados.nome.strip():
+            raise HTTPException(status_code=400, detail="Nome da lista vazio.")
+        lst.nome = dados.nome.strip()
+    if dados.equipamento_ids is not None:
+        lst.equipamentos = _equips_do_cliente(sessao, lst.cliente_id, dados.equipamento_ids)
+    sessao.commit()
+    sessao.refresh(lst)
+    return _resumo_lista(lst)
+
+
+@router.delete("/listas/{lista_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_lista(lista_id: int,
+                  _: Usuario = Depends(requer("gerir_usuarios")),
+                  sessao: Session = Depends(get_session)):
+    lst = sessao.get(EquipamentoLista, lista_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail="Lista não encontrada.")
+    sessao.delete(lst)
     sessao.commit()
 
 

@@ -85,10 +85,15 @@ export type ClienteVisivel = { id: number; nome: string; unidade: string | null;
 // Equipamento do cliente (#EQP-1) — importado por CSV.
 export type Equipamento = {
   id: number; tag: string; painel: string; loop: string; add: string; type: string; model: string
-  status: string; ultima_manutencao: string | null; ultimo_teste: string | null
+  status: string; falha_id: number | null; falha_nome: string | null
+  ultima_manutencao: string | null; ultimo_teste: string | null
   planta_id: number | null; pos_x: number | null; pos_y: number | null
 }
+// Estados possíveis do equipamento (#EQP-STATUS, D-026). "Em falha" usa falha_id.
+export const STATUS_EQUIP = ['Operando', 'Desabilitado', 'Desativado', 'Em falha'] as const
 export type ImportEquipResultado = { importados: number; total: number }
+// Lista nomeada de equipamentos (#EQP-LISTAS) — base do doc de preventiva.
+export type EquipamentoLista = { id: number; cliente_id: number; nome: string; equipamento_ids: number[] }
 // Planta (projeto) do cliente — #MAP.
 export type Planta = { id: number; nome: string; imagem_url: string; largura: number; altura: number; ordem: number }
 // Catálogo de falhas do painel (#OS, D-025).
@@ -475,6 +480,13 @@ export const api = {
       uploadMultipart<Planta[]>(`/admin/clientes/${clienteId}/plantas`, file),
     removerPlanta: (plantaId: number) =>
       request<void>(`/admin/plantas/${plantaId}`, { method: 'DELETE' }),
+    // Listas de equipamentos (#EQP-LISTAS)
+    listas: (clienteId: number) => request<EquipamentoLista[]>(`/admin/clientes/${clienteId}/listas`),
+    criarLista: (clienteId: number, dados: { nome: string; equipamento_ids: number[] }) =>
+      request<EquipamentoLista>(`/admin/clientes/${clienteId}/listas`, { method: 'POST', body: JSON.stringify(dados) }),
+    atualizarLista: (id: number, dados: { nome?: string; equipamento_ids?: number[] }) =>
+      request<EquipamentoLista>(`/admin/listas/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
+    removerLista: (id: number) => request<void>(`/admin/listas/${id}`, { method: 'DELETE' }),
     // Catálogo de falhas (#OS, D-025)
     falhas: () => request<Falha[]>('/admin/falhas'),
     criarFalha: (dados: FalhaEntrada) =>

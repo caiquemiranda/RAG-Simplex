@@ -1,18 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type ClienteVisivel, type Equipamento, type Visita, type Planta } from '../lib/api'
-import { TIPO_OS_LABEL } from '../lib/format'
+import { TIPO_OS_LABEL, corStatusEquip } from '../lib/format'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
-
-/** Cor do marcador por status do equipamento. */
-function corStatus(s: string): string {
-  const t = (s || '').toLowerCase()
-  if (t.includes('alerta') || t.includes('manuten')) return '#f59e0b'
-  if (t.includes('opera')) return '#10b981'
-  return '#ef4444'
-}
 
 /** Buscar equipamento (#MAP): cliente → tag → localiza o dispositivo na planta. */
 export default function Equipamentos() {
@@ -56,7 +48,7 @@ export default function Equipamentos() {
   // Marcadores da planta selecionada.
   const marcadores: Marcador[] = useMemo(() => equip
     .filter((e) => e.planta_id === plantaSel && e.pos_x != null && e.pos_y != null)
-    .map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status) })),
+    .map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatusEquip(e.status, e.falha_id != null) })),
     [equip, plantaSel])
 
   function selecionar(e: Equipamento) {
@@ -122,7 +114,7 @@ export default function Equipamentos() {
                 <div className="space-y-1">
                   <div className="font-semibold">{e.tag || `#${e.id}`}</div>
                   <div className="text-xs"><span className="text-muted-foreground">Tipo:</span> {e.type || '—'}</div>
-                  <div className="text-xs"><span className="text-muted-foreground">Status:</span> {e.status || '—'}</div>
+                  <div className="text-xs"><span className="text-muted-foreground">Status:</span> {e.falha_nome ? `Em falha (${e.falha_nome})` : (e.status || '—')}</div>
                   <div className="text-xs"><span className="text-muted-foreground">Última manutenção:</span> {e.ultima_manutencao ?? '—'}</div>
                 </div>
               )
@@ -142,7 +134,7 @@ export default function Equipamentos() {
             <CardContent className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
               <div><span className="text-muted-foreground">Tipo:</span> {selecionado.type || '—'}</div>
               <div><span className="text-muted-foreground">Modelo:</span> {selecionado.model || '—'}</div>
-              <div><span className="text-muted-foreground">Status:</span> {selecionado.status || '—'}</div>
+              <div><span className="text-muted-foreground">Status:</span> {selecionado.falha_nome ? `Em falha (${selecionado.falha_nome})` : (selecionado.status || '—')}</div>
               <div><span className="text-muted-foreground">Painel:</span> {selecionado.painel || '—'}</div>
               <div><span className="text-muted-foreground">Loop:</span> {selecionado.loop || '—'}</div>
               <div><span className="text-muted-foreground">Endereço (add):</span> {selecionado.add || '—'}</div>

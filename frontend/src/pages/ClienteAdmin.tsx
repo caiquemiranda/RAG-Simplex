@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, uploadArquivo, type AdminUnidade, type ClienteDetalhe, type Equipamento, type Planta } from '../lib/api'
+import { api, uploadArquivo, STATUS_EQUIP, type AdminUnidade, type ClienteDetalhe, type Equipamento, type Falha, type Planta } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
@@ -8,13 +8,9 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { VisualizadorPlanta, type Marcador } from '../components/VisualizadorPlanta'
+import { corStatusEquip } from '../lib/format'
 
-function corStatus(s: string): string {
-  const t = (s || '').toLowerCase()
-  if (t.includes('alerta') || t.includes('manuten')) return '#f59e0b'
-  if (t.includes('opera')) return '#10b981'
-  return '#ef4444'
-}
+const corStatus = corStatusEquip
 
 type Form = {
   nome: string; unidadeId: number | ''; cor: string
@@ -42,6 +38,7 @@ export default function ClienteAdmin() {
   const pdfRef = useRef<HTMLInputElement>(null)
   // Cadastro manual de equipamento (item 5)
   const [novoEq, setNovoEq] = useState({ tag: '', painel: '', loop: '', add: '', type: '', model: '' })
+  const [falhas, setFalhas] = useState<Falha[]>([])   // catálogo (#EQP-STATUS)
   // Editor: autocomplete + caixa de posicionamento (itens 2/3/4)
   const [buscaEd, setBuscaEd] = useState('')
   const [verTodos, setVerTodos] = useState(false)
@@ -66,9 +63,18 @@ export default function ClienteAdmin() {
   }
   useEffect(() => {
     carregar(); carregarPlantas()
-    if (podeGerir) api.admin.unidades().then(setUnidades).catch(() => {})
+    if (podeGerir) {
+      api.admin.unidades().then(setUnidades).catch(() => {})
+      api.admin.falhas().then(setFalhas).catch(() => {})
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cid])
+
+  // #EQP-STATUS: muda status/falha do equipamento; "Em falha" exige falha_id, os demais limpam.
+  async function atualizarStatus(e: Equipamento, dados: { status?: string; falha_id?: number | null }) {
+    try { await api.admin.atualizarEquipamento(e.id, dados); carregar() }
+    catch (err) { setErro(err instanceof Error ? err.message : 'Falha ao atualizar status') }
+  }
 
   async function subirPlanta(file: File) {
     setErro(null); setMsg(null)
@@ -216,10 +222,13 @@ export default function ClienteAdmin() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="py-1 pr-2">Tag</th><th className="py-1 pr-2">Painel</th><th className="py-1 pr-2">Loop</th><th className="py-1 pr-2">Add</th><th className="py-1 pr-2">Type</th><th className="py-1 pr-2">Model</th><th className="py-1 pr-2">Coordenadas</th><th className="py-1 pr-2">Últ. manut.</th><th></th>
+                  <th className="py-1 pr-2">Tag</th><th className="py-1 pr-2">Painel</th><th className="py-1 pr-2">Loop</th><th className="py-1 pr-2">Add</th><th className="py-1 pr-2">Type</th><th className="py-1 pr-2">Model</th><th className="py-1 pr-2">Status</th><th className="py-1 pr-2">Coordenadas</th><th className="py-1 pr-2">Últ. manut.</th><th></th>
                 </tr></thead>
                 <tbody>
-                  {cli.equipamentos.map((e) => (
+                  {cli.equipamentos.map((e) => {
+                    const emFalha = e.falha_id != null
+                    const statusSel = emFalha ? 'Em falha' : (e.status || 'Operando')
+                    return (
                     <tr key={e.id} className="border-b">
                       <td className="py-1 pr-2 font-mono text-xs font-medium">{e.tag || '—'}</td>
                       <td className="py-1 pr-2 font-mono text-xs">{e.painel}</td>
@@ -227,11 +236,30 @@ export default function ClienteAdmin() {
                       <td className="py-1 pr-2 font-mono text-xs">{e.add}</td>
                       <td className="py-1 pr-2">{e.type}</td>
                       <td className="py-1 pr-2">{e.model}</td>
+                      <td className="py-1 pr-2">
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: corStatus(e.status, emFalha) }} />
+                          <select className="h-7 rounded border bg-background px-1 text-xs" value={statusSel}
+                                  onChange={(ev) => {
+                                    const v = ev.target.value
+                                    if (v === 'Em falha') atualizarStatus(e, { status: 'Em falha', falha_id: falhas[0]?.id ?? null })
+                                    else atualizarStatus(e, { status: v, falha_id: null })
+                                  }}>
+                            {STATUS_EQUIP.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                          {emFalha && (
+                            <select className="h-7 rounded border bg-background px-1 text-xs" value={e.falha_id ?? ''}
+                                    onChange={(ev) => atualizarStatus(e, { falha_id: ev.target.value ? Number(ev.target.value) : null })}>
+                              {falhas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                            </select>
+                          )}
+                        </div>
+                      </td>
                       <td className="py-1 pr-2 text-xs text-muted-foreground">{e.pos_x != null ? `X ${e.pos_x}, Y ${e.pos_y}` : '—'}</td>
                       <td className="py-1 pr-2 text-xs text-muted-foreground">{e.ultima_manutencao ?? '—'}</td>
                       <td className="py-1 text-right"><button className="text-xs text-destructive hover:underline" onClick={() => removerEquip(e.id)}>remover</button></td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
@@ -272,7 +300,7 @@ export default function ClienteAdmin() {
         const planta = plantas.find((p) => p.id === plantaEditId)
         if (!planta) return null
         const posicionados = eqs.filter((e) => e.planta_id === plantaEditId && e.pos_x != null && e.pos_y != null)
-        const marcadores: Marcador[] = posicionados.map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status) }))
+        const marcadores: Marcador[] = posicionados.map((e) => ({ id: e.id, x: e.pos_x as number, y: e.pos_y as number, cor: corStatus(e.status, e.falha_id != null) }))
         if (pendente && colocarId != null) marcadores.push({ id: -1, x: pendente.x, y: pendente.y, cor: '#6366f1' })
         const aColocar = eqs.find((e) => e.id === colocarId) ?? null
         const t = buscaEd.trim().toLowerCase()

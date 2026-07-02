@@ -248,11 +248,62 @@ def test_equipamento_criar_avulso_e_tag_composta(ctx):
                     json={"tag": "N2-L23-DF-003", "type": "Sensor"})
     assert r.status_code == 201 and r.json()["tag"] == "N2-L23-DF-003"
 
-    # Tag vazia → composta de painel+loop+add+type.
+    # Tag vazia → composta de painel+loop+add+type. Status padrão "Operando" (#EQP-STATUS, D-026).
     r = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin,
                     json={"painel": "N2", "loop": "L23", "add": "DF", "type": "006"})
     assert r.status_code == 201 and r.json()["tag"] == "N2-L23-DF-006"
+    assert r.json()["status"] == "Operando" and r.json()["falha_id"] is None
     assert len(client.get(f"/admin/clientes/{cid}/equipamentos", headers=admin).json()) == 2
+
+
+def test_equipamento_status_e_falha(ctx):
+    """#EQP-STATUS (D-026): equipamento pode entrar 'em falha' guardando falha_id; resumo mostra o nome."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli G"}).json()["id"]
+    fid = client.post("/admin/falhas", headers=admin, json={"nome": "Dirty"}).json()["id"]
+
+    eid = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "N1-01"}).json()["id"]
+    # Coloca em falha (status textual + falha_id).
+    r = client.patch(f"/admin/equipamentos/{eid}", headers=admin, json={"status": "Em falha", "falha_id": fid})
+    assert r.status_code == 200 and r.json()["falha_id"] == fid and r.json()["falha_nome"] == "Dirty"
+    # Endpoint visível também expõe a falha.
+    pub = client.get(f"/clientes/{cid}/equipamentos", headers=admin).json()[0]
+    assert pub["falha_nome"] == "Dirty" and pub["status"] == "Em falha"
+    # Falha inexistente → 404; limpar volta a Operando sem falha.
+    assert client.patch(f"/admin/equipamentos/{eid}", headers=admin, json={"falha_id": 99999}).status_code == 404
+    r = client.patch(f"/admin/equipamentos/{eid}", headers=admin, json={"status": "Operando", "falha_id": None})
+    assert r.json()["falha_id"] is None and r.json()["falha_nome"] is None
+
+
+def test_equipamento_listas(ctx):
+    """#EQP-LISTAS: cria lista nomeada de equipamentos do cliente; edita; ignora estranhos; remove."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli L"}).json()["id"]
+    cid2 = client.post("/admin/clientes", headers=admin, json={"nome": "Outro"}).json()["id"]
+    e1 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A"}).json()["id"]
+    e2 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B"}).json()["id"]
+    alheio = client.post(f"/admin/clientes/{cid2}/equipamentos", headers=admin, json={"tag": "X"}).json()["id"]
+
+    # Cria a lista com dois equipamentos + um de outro cliente (ignorado).
+    r = client.post(f"/admin/clientes/{cid}/listas", headers=admin,
+                    json={"nome": "Preventiva Q3", "equipamento_ids": [e1, e2, alheio]})
+    assert r.status_code == 201
+    lid = r.json()["id"]
+    assert sorted(r.json()["equipamento_ids"]) == sorted([e1, e2])  # alheio fora
+
+    # Aparece na listagem do cliente.
+    assert [l["nome"] for l in client.get(f"/admin/clientes/{cid}/listas", headers=admin).json()] == ["Preventiva Q3"]
+
+    # Edita nome + conjunto de equipamentos.
+    r = client.patch(f"/admin/listas/{lid}", headers=admin, json={"nome": "Preventiva Q4", "equipamento_ids": [e1]})
+    assert r.status_code == 200 and r.json()["nome"] == "Preventiva Q4" and r.json()["equipamento_ids"] == [e1]
+
+    # RBAC: técnico não gerencia; remover some.
+    assert client.post(f"/admin/clientes/{cid}/listas", headers=_login(client, "tec@x.com"), json={"nome": "z"}).status_code == 403
+    assert client.delete(f"/admin/listas/{lid}", headers=admin).status_code == 204
+    assert client.get(f"/admin/clientes/{cid}/listas", headers=admin).json() == []
 
 
 def test_cliente_detalhe_e_campos(ctx):
