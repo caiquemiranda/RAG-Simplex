@@ -13,13 +13,13 @@
 
 ## 📍 Você está aqui
 
-- **Branch:** `feat/lote8` (do `main`). **Backend: 109 testes**. Lote 6/7 ✅ · Refinamentos ✅ ·
-  **Lote 8 (parte 1) ✅**: #DOC-CARDS (Documentos como cards por grupo), #SEC-HEADERS, #SEC-LOGIN
-  (rate-limit), #UI-MOTION. **Pendente do Lote 8** ([BACKLOG §M](BACKLOG.md)): varreduras UI
-  (#UI-ICONS/#UI-TOUCH/#UI-LABELS/#UI-FOCUS/#UI-TOKENS/#UI-CHARTS), #SEC-UPLOAD, #UI-BRAND (opcional).
-  Migrações no repo até: `ed5186ac4b27` (head).
-- **Repo limpo:** só `main` + `feat/lote4-fixes` (esta tem 1 commit de docs **não** mergeado,
-  `c1f4fa8` — decidir cherry-pick ou descarte). Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
+- **Branch:** `main`. **Backend: 110 testes**. Lote 6/7 ✅ · Refinamentos ✅ · **Lote 8 ✅**
+  (conformidade com as skills de `.agents/`): #DOC-CARDS (Documentos como cards por grupo),
+  #SEC-HEADERS, #SEC-LOGIN (rate-limit 429), #SEC-UPLOAD (download de HTML/SVG), #UI-MOTION,
+  #UI-ICONS (emoji→SVG, `components/icons.tsx`), #UI-FOCUS (`:focus-visible` global), #UI-LABELS
+  (aria-label). **Sobra do Lote 8** ([BACKLOG §M](BACKLOG.md), baixo valor/opcional): #UI-TOUCH
+  (varredura fina), #UI-TOKENS, #UI-CHARTS, #UI-BRAND. Migrações no repo até: `ed5186ac4b27` (head).
+- **Repo limpo:** só `main`. Infra "big-tech" adiada → [BACKLOG §K](BACKLOG.md).
 - **#MAP** (Buscar equipamento / mapa, D-023) — **#MAP-1/2/3/4 ✅ completo** (backend +
   visualizador custom + busca + editor + **histórico de manutenção** no detalhe).
 - **#OS** (Ordem de Serviço, **D-025 reverte D-024**) — **backend da unificação ✅**: a `Visita`
@@ -58,10 +58,14 @@
 ## ⏭️ PRÓXIMO PASSO
 
 Concluídos: Lote 5 · #MAP · #OS/D-025 · #R2 · **Lote 6 (7/7)** · #PREV-DOC · **Lote 7 (6/6)** ·
-**Refinamentos** (higiene do repo; #PREV-OS O.S.↔lista; #EQP-DOC docs manuais N:N; #EQP-SOBRE).
-Falta **mergear `feat/refinamentos` na `main`**.
+**Refinamentos** · **Lote 8** (conformidade skills). Tudo na `main`.
 
-- **Pendências restantes:** nenhuma dos refinamentos — todas fechadas.
+- **➡️ Lote 9** (registrado — ver [BACKLOG §N](BACKLOG.md)): chat interno entre usuários (#CHAT);
+  form de O.S. **por tipo** (preventiva=lista / corretiva=equipamento, descrição automática,
+  sem campos-doc na criação — #OS-TIPO-CAMPOS); O.S. **multi-data** (#OS-MULTIDATA); imagem por
+  **tipo de equipamento** (#EQP-TIPO-IMG); filtro de datas no histórico do dispositivo (#OS-HIST-DATAS).
+  **Tem decisões a confirmar** antes de codar (multi-data como intervalo?; imagem por texto de `type`?).
+- **Sobra do Lote 8** (baixo valor/opcional): #UI-TOUCH (fino), #UI-TOKENS, #UI-CHARTS, #UI-BRAND.
 - **Adiado pelo usuário:** equipamentos fase B/C; **infra "big-tech"** ([BACKLOG §K](BACKLOG.md)).
 - **Roadmap:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem, *requer
   API key*) · #1 (alinhamento ChatGPT).
