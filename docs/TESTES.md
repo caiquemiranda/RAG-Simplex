@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**109 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**110 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -95,7 +95,7 @@ pytest
 - `test_backup_copia_arquivo` — backup copia o SQLite para `backups/` (201).
 - `test_banco_exige_admin` — operador → 403 no status e no backup.
 
-### `test_auth.py` (10) — autenticação
+### `test_auth.py` (12) — autenticação
 - Hash/verificação de senha; round-trip de access token; rejeição de token
   expirado/malformado; login ok + `/me`; senha errada (401); rotas protegidas sem
   token (401); refresh emite novo access.

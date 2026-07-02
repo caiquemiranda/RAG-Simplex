@@ -81,15 +81,27 @@ app.add_middleware(
 )
 
 
+# Tipos servidos **inline** em /arquivos (o resto vira download, #SEC-UPLOAD): neutraliza
+# XSS de HTML/SVG subido à biblioteca, mantendo imagens/PDF exibíveis (avatars, plantas, fotos).
+_INLINE_OK = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "application/pdf"}
+
+
+def _pode_inline(content_type: str) -> bool:
+    return content_type.split(";")[0].strip().lower() in _INLINE_OK
+
+
 @app.middleware("http")
 async def cabecalhos_seguranca(request, call_next):
     """Headers de segurança em toda resposta (#SEC-HEADERS): impede sniffing de MIME,
-    enquadramento (clickjacking) e vazamento de referer."""
+    enquadramento (clickjacking) e vazamento de referer. Em /arquivos, força **download**
+    de tipos perigosos (HTML/SVG) — #SEC-UPLOAD."""
     resp = await call_next(request)
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
     resp.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    if request.url.path.startswith("/arquivos/") and not _pode_inline(resp.headers.get("content-type", "")):
+        resp.headers["Content-Disposition"] = "attachment"
     return resp
 
 

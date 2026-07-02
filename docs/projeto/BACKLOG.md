@@ -166,10 +166,12 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
       imprimir, gerar doc, cards de grupo) ganharam `min-h-[44px]`/`p-2`. Falta a varredura fina dos
       controles densos (selects `h-8/h-9`, chips inline) — precisa de cuidado com layout compacto.
 - [ ] **#UI-LABELS — labels visíveis** (não só placeholder) nos formulários.
-- [ ] **#UI-FOCUS — foco visível** nos `<select>` nativos e botões de ícone (base já tem `focus-visible`).
+- [x] **#UI-FOCUS — foco visível** — regra global `:focus-visible` em `index.css` (anel `ring-2`)
+      cobrindo `<select>` nativos, botões de ícone e links sem estilo próprio.
 - [ ] **#UI-TOKENS — cores de status via tokens** semânticos (hoje hex cru em `format.ts`).
-- [ ] **#SEC-UPLOAD — servir uploads com `Content-Disposition: attachment`** (evita XSS de SVG/HTML
-      subido à biblioteca; hoje mitigado por upload ser só de admin + `nosniff`).
+- [x] **#SEC-UPLOAD — servir uploads perigosos como download**. Middleware em `/arquivos`: tipos
+      fora do allowlist inline (`image/*` + `application/pdf`) recebem `Content-Disposition: attachment`
+      — neutraliza XSS de HTML/SVG, mantendo avatars/plantas/fotos/PDF inline. Teste `test_disposicao_arquivos_perigosos`.
 - [ ] **#UI-CHARTS — sinal não-cor** nos gráficos (disponibilidade não só por verde/âmbar/vermelho).
 - [ ] **(opcional) #UI-BRAND — tipografia/identidade distinta** (display+body) — frontend-design.
 

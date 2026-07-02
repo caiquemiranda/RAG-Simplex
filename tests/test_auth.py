@@ -119,6 +119,13 @@ def test_headers_seguranca(client):
     assert "Referrer-Policy" in r.headers
 
 
+def test_disposicao_arquivos_perigosos():
+    """#SEC-UPLOAD: HTML/SVG viram download; imagens/PDF ficam inline."""
+    from app.main import _pode_inline
+    assert _pode_inline("image/png") and _pode_inline("application/pdf; charset=binary")
+    assert not _pode_inline("text/html") and not _pode_inline("image/svg+xml")
+
+
 def test_rotas_protegidas_sem_token(client):
     assert client.get("/auth/me").status_code == 401
     # /query é protegida: 401 antes de tocar no RAG.
