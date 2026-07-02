@@ -180,15 +180,14 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
 ### N. Lote 9 — Chat interno + O.S. por tipo + mídia/filtros (2026-07-02)
 Solicitações do usuário. **Registradas** (a implementar depois). Há **decisões a confirmar** antes de codar.
 
-- [ ] **#OS-TIPO-CAMPOS — form de O.S. muda conforme o tipo** (itens 4, 5). A criação passa a mostrar
-      **campos diferentes** por tipo e **descrição automática**; os "Dados do documento (corretiva)"
-      **saem da criação** (ficam no documento salvo, mais completo).
-  - **Preventiva:** Cliente · **Equipamentos = lista(s) cadastrada(s)** (não equipamento único) ·
-    Técnicos · **Data(s)** (ver #OS-MULTIDATA). Descrição = `MANUTENÇÃO PREVENTIVA <mês das datas>`.
-  - **Corretiva:** Cliente · **Equipamento único** · **Falha** · Técnicos · **Data(s)**.
-    Descrição = `MANUTENÇÃO CORRETIVA <equipamento> — <falha>`.
-  - Reaproveita `Visita.lista_id` (#PREV-OS) para a preventiva; `Visita.equipamento_id`+`falha_id` p/ corretiva.
-      *Frontend `FormOS` type-aware + descrição auto; backend valida por tipo.*
+- [x] **#OS-TIPO-CAMPOS — form de O.S. muda conforme o tipo** (itens 4, 5). `FormOS` reescrito
+      **type-aware**: **preventiva** → Cliente + **lista de equipamentos** + técnicos + data(s);
+      **corretiva** → Cliente + **equipamento único** + **falha** + técnicos + data(s). **Descrição
+      automática** (`MANUTENÇÃO PREVENTIVA — <mês>` / `MANUTENÇÃO CORRETIVA — <equip> — <falha>`,
+      com override opcional). **Campos-doc de corretiva removidos da criação** (vão no documento).
+      Campo `data_fim` (#OS-MULTIDATA) + validação por tipo no front; intervalo exibido nas listas
+      (`intervaloData`). Reaproveita `Visita.lista_id`/`equipamento_id`/`falha_id`. *Backend segue
+      permissivo (a validação estrita por tipo fica no form p/ não quebrar o quick-add do calendário).*
 - [x] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5, **D-028**). Modelado como
       **intervalo**: `Visita.data` (início) + **`data_fim`** (nullable; `None` = 1 dia). Migração
       `48dbeb05d767`. `listar` usa **overlap** (aparece em todos os meses que o intervalo cruza);

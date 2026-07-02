@@ -4,6 +4,18 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 9: #OS-MULTIDATA + #OS-TIPO-CAMPOS
+
+**Branch:** `feat/lote9-multidata`.
+
+- **#OS-MULTIDATA (D-028):** `Visita.data_fim` (nullable; None = 1 dia). Migração `48dbeb05d767`.
+  `listar` com overlap; criar/PATCH validam `data_fim ≥ data`. Teste `test_os_multidata_intervalo`.
+- **#OS-TIPO-CAMPOS:** `FormOS` reescrito **por tipo** — preventiva (cliente + **lista** + técnicos +
+  data(s)) vs corretiva (cliente + **equipamento** + **falha** + técnicos + data(s)); **descrição
+  automática** (`MANUTENÇÃO PREVENTIVA — <mês>` / `MANUTENÇÃO CORRETIVA — <equip> — <falha>`, override
+  opcional); **campos-doc removidos da criação** (vão no documento). `data_fim` no form + helper
+  `intervaloData` exibindo o período nas listas. Frontend-only; 111 testes; `tsc -b` limpo.
+
 ## 2026-07-02 — Encerra o Lote 8 (docs) + registra o Lote 9
 
 - **Fechamento do Lote 8:** `ESTADO_ATUAL` atualizado (branch=`main`, 110 testes, Lote 8 ✅ com os

@@ -6,7 +6,7 @@ import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
 import { MultiFiltro } from '../components/MultiFiltro'
 import { FormOS } from '../components/FormOS'
-import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, isoData } from '../lib/format'
+import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, intervaloData, isoData } from '../lib/format'
 
 const STATUS_ALL = ['agendada', 'pendente', 'concluida', 'cancelada']
 const BAR: Record<string, string> = {
@@ -159,7 +159,7 @@ export default function Atividades() {
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    {v.data}{v.cliente_nome ? ` · ${v.cliente_nome}` : ''}{v.equipamento_tag ? ` · ${v.equipamento_tag}` : ''}{v.falha_nome ? ` · ${v.falha_nome}` : ''}
+                    {intervaloData(v.data, v.data_fim)}{v.cliente_nome ? ` · ${v.cliente_nome}` : ''}{v.equipamento_tag ? ` · ${v.equipamento_tag}` : ''}{v.falha_nome ? ` · ${v.falha_nome}` : ''}
                   </div>
                 </div>
                 <div className="flex -space-x-2">

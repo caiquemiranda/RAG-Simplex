@@ -39,6 +39,12 @@ export const CAMPOS_DOC_OS: [string, string][] = [
   ['acao_aplicada', 'Ação aplicada'],
 ]
 
+/** Intervalo de datas da O.S. (#OS-MULTIDATA): "01/08" ou "01/08 – 03/08". */
+export function intervaloData(data: string, dataFim?: string | null): string {
+  const br = (iso: string) => iso.split('-').reverse().slice(0, 2).join('/')
+  return dataFim && dataFim !== data ? `${br(data)} – ${br(dataFim)}` : br(data)
+}
+
 /** Cor do marcador/badge por estado do equipamento (#EQP-STATUS, D-026). */
 export function corStatusEquip(status: string, emFalha = false): string {
   const t = (status || '').toLowerCase()

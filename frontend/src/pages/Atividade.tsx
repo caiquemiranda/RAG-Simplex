@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { FormOS } from '../components/FormOS'
 import { IconClose, IconDoc, IconWrench, IconAlert, IconClipboard } from '../components/icons'
-import { STATUS_VISITA, TIPO_OS_COR } from '../lib/format'
+import { STATUS_VISITA, TIPO_OS_COR, intervaloData } from '../lib/format'
 
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 
@@ -90,7 +90,7 @@ export default function Atividade() {
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-lg">{atv.titulo}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">{atv.data}{atv.cliente_nome ? ` · ${atv.cliente_nome}` : ''}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{intervaloData(atv.data, atv.data_fim)}{atv.cliente_nome ? ` · ${atv.cliente_nome}` : ''}</p>
           </div>
           <div className="flex items-center gap-2">
             {ehAdmin && <Button size="sm" variant="outline" onClick={() => setEditando(true)}>Editar O.S.</Button>}
