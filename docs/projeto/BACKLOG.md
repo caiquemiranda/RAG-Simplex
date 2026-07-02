@@ -177,6 +177,42 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
 - [ ] **#UI-CHARTS — sinal não-cor** nos gráficos (disponibilidade não só por verde/âmbar/vermelho).
 - [ ] **(opcional) #UI-BRAND — tipografia/identidade distinta** (display+body) — frontend-design.
 
+### N. Lote 9 — Chat interno + O.S. por tipo + mídia/filtros (2026-07-02)
+Solicitações do usuário. **Registradas** (a implementar depois). Há **decisões a confirmar** antes de codar.
+
+- [ ] **#OS-TIPO-CAMPOS — form de O.S. muda conforme o tipo** (itens 4, 5). A criação passa a mostrar
+      **campos diferentes** por tipo e **descrição automática**; os "Dados do documento (corretiva)"
+      **saem da criação** (ficam no documento salvo, mais completo).
+  - **Preventiva:** Cliente · **Equipamentos = lista(s) cadastrada(s)** (não equipamento único) ·
+    Técnicos · **Data(s)** (ver #OS-MULTIDATA). Descrição = `MANUTENÇÃO PREVENTIVA <mês das datas>`.
+  - **Corretiva:** Cliente · **Equipamento único** · **Falha** · Técnicos · **Data(s)**.
+    Descrição = `MANUTENÇÃO CORRETIVA <equipamento> — <falha>`.
+  - Reaproveita `Visita.lista_id` (#PREV-OS) para a preventiva; `Visita.equipamento_id`+`falha_id` p/ corretiva.
+      *Frontend `FormOS` type-aware + descrição auto; backend valida por tipo.*
+- [ ] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5). Hoje `Visita.data` é única.
+      **Decisão a confirmar:** modelar como **intervalo** (`data_inicio`/`data_fim`) — recomendado —
+      ou **conjunto de datas** (tabela N:1). Afeta calendário, filtros e o "mês" da descrição preventiva.
+      *Migração + ajustes no cronograma/relatórios.*
+- [ ] **#CHAT — chat interno entre usuários** (item 1). Mensagens diretas entre técnicos e admin, com
+      **registro centralizado**. Sidebar ganha grupo **"Conversas"** listando **todos os usuários**;
+      clicar num usuário abre o chat 1-a-1. **Não lidas** com alerta (badge na conversa + no sino de
+      **Notificações**). *Backend novo:* entidades `Conversa`/`Mensagem` (par de usuários, texto,
+      lida, criado_em) + endpoints (listar conversas, histórico, enviar, marcar lida). *Frontend:*
+      grupo na sidebar + tela de chat + polling de não-lidas. **Decisão:** tempo real por **polling**
+      (processo único, sem WebSocket) — recomendado.
+- [ ] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3). Uma imagem associada ao **`type`**
+      do equipamento, exibida na **página do dispositivo** (#EQP-PAGINA) para identificação visual;
+      **uma imagem vale para todos os equipamentos daquele tipo**. *Backend:* mapa `tipo → imagem_url`
+      (entidade `TipoEquipamentoImagem` ou similar) + upload (#FILES). **Decisão a confirmar:** o `type`
+      é texto livre — o mapa é **global** por texto do tipo (recomendado) ou por cliente?
+- [ ] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Na página do
+      dispositivo (#EQP-PAGINA/#OS-HIST-FILTRO), seletor para ver **1 semana / 1 mês / todo o período**.
+      *Só frontend* sobre a lista já retornada (usa `Visita.data`/intervalo do #OS-MULTIDATA).
+
+**Decisões a confirmar antes de codar (resumo):** #OS-MULTIDATA (intervalo vs conjunto), #EQP-TIPO-IMG
+(global por texto do tipo?), #CHAT (polling). **Dependência:** #OS-TIPO-CAMPOS e #OS-HIST-DATAS
+dependem do #OS-MULTIDATA (modelo de data).
+
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
 usuário** (revisitar mais tarde). Nenhum item bloqueia o produto; são qualidade/processo.

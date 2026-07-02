@@ -143,10 +143,11 @@ técnico/analista recebem também "🔧 resolução técnica".
 | `components/AuditoriaView.tsx` | Tabela de auditoria (painel ADM). |
 | `components/Placeholder.tsx` | Páginas "em construção". |
 | `components/TabelaOrdenavel.tsx` | Tabela genérica com **ordenação por coluna** (asc→desc→sem ordem, #TAB-ORDEM) — usada na lista de equipamentos. |
-| `components/FormOS.tsx` | Formulário modal de **Ordem de Serviço** (#OS-PAGINA): todos os campos (tipo/cliente/equipamento/falha/técnicos/data/status/obs/12 campos-doc); reusado pela página de O.S. e pelo calendário. |
+| `components/FormOS.tsx` | Formulário modal de **Ordem de Serviço** (#OS-PAGINA): todos os campos (tipo/cliente/equipamento/falha/lista/técnicos/data/status/obs/12 campos-doc); reusado pela página de O.S. e pelo calendário. |
+| `components/icons.tsx` | Ícones **SVG** reutilizáveis (#UI-ICONS) — substituem emoji; `currentColor`, `aria-hidden`, tamanho por `className`. |
 | `lib/api.ts` | Cliente HTTP (inclui `queryStream` NDJSON e `feedback`). Tipos de domínio (ex.: `Visita` = O.S. com `tipo`/`equipamento`/`falha`/campos-doc; `Falha`). |
 | `lib/format.ts` | Helpers de UI: `isoData`, `STATUS_VISITA`, e para O.S. `TIPOS_OS`/`TIPO_OS_LABEL`/`TIPO_OS_COR`/`CAMPOS_DOC_OS` (#OS, D-025). |
-| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos`, `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `EquipamentoPagina` (**página por dispositivo** #EQP-PAGINA: dados + documentos + O.S. filtráveis), `SobreEquipamento` (#EQP-SOBRE), `DocumentoPreventiva` (**relatório imprimível** #PREV-DOC, rota fora do Layout), `Notificacoes`. |
+| `pages/` | `Login`, `Consulta`, `Admin` (inclui **Catálogo de falhas**), `Home`, `Relatorios`/`RelatorioCliente`, `Equipamentos`/`EquipamentosLista` (**histórico de O.S.**), `ClienteAdmin`, `Documentos` (**cards por grupo** empresa/cliente/marca + drill-in, #DOC-CARDS), `Cronograma` (calendário + form de O.S.), `Atividades` (**"Ordens de Serviço"**: lista/filtros/gráfico por tipo), `Atividade` (detalhe #ATV-1), `EquipamentoPagina` (**página por dispositivo** #EQP-PAGINA: dados + documentos + O.S. filtráveis), `SobreEquipamento` (#EQP-SOBRE), `DocumentoPreventiva` (**relatório imprimível** #PREV-DOC, rota fora do Layout), `Notificacoes`. |
 
 ### Funcionalidades da UI
 

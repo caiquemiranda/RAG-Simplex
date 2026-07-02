@@ -4,6 +4,17 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Encerra o Lote 8 (docs) + registra o Lote 9
+
+- **Fechamento do Lote 8:** `ESTADO_ATUAL` atualizado (branch=`main`, 110 testes, Lote 8 ✅ com os
+  8 itens de conformidade; sobra só #UI-TOUCH-fino/#UI-TOKENS/#UI-CHARTS/#UI-BRAND). `ARQUITETURA`
+  ganhou `components/icons.tsx` e a nota de **cards** na página Documentos. Sem lacunas.
+- **Lote 9 registrado** ([BACKLOG §N](BACKLOG.md)): #OS-TIPO-CAMPOS (form por tipo:
+  preventiva=lista / corretiva=equipamento+falha; descrição automática; sem campos-doc na criação),
+  #OS-MULTIDATA (O.S. de vários dias), #CHAT (chat interno entre usuários, grupo "Conversas"),
+  #EQP-TIPO-IMG (imagem por tipo de equipamento), #OS-HIST-DATAS (filtro semana/mês/todo).
+  Decisões a confirmar anotadas.
+
 ## 2026-07-02 — Lote 8 (parte 4): #UI-LABELS (nome acessível em todo campo)
 
 **Branch:** `feat/lote8-labels`. Frontend-only.
