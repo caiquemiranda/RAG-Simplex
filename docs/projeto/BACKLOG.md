@@ -134,13 +134,12 @@ Seis solicitações do usuário. **Registradas** (a implementar depois).
 - [x] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3, **D-027**). `avulsa` fora de tudo:
       backend `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/labels/cores/`BAR_TIPO`;
       **migração `bf54f9b66560`** back-fill `avulsa→corretiva`. Teste rejeita `tipo="avulsa"` (400).
-- [ ] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na **página da atividade/O.S.**
-      (`/cronograma/atividade/:id`, #ATV-1), permitir **abrir e editar** todos os campos ali (reusar
-      o `FormOS` embutido ou modo edição na própria página), não só pelo modal a partir da lista.
-- [ ] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No **Buscar equipamento**
-      (`/equipamentos`), no card de detalhe do dispositivo selecionado, um botão **"Detalhes do
-      dispositivo"** que navega para a **página do dispositivo** (#EQP-PAGINA,
-      `/equipamentos/:clienteId/:eqpId`).
+- [x] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na página da atividade/O.S.
+      (`/cronograma/atividade/:id`, #ATV-1) o **admin** tem **"Editar O.S."** que abre o `FormOS`
+      (todos os campos) e recarrega ao salvar; a página passa a exibir **tipo/equipamento/falha**.
+- [x] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No Buscar equipamento
+      (`/equipamentos`), o card de detalhe ganhou **"Detalhes do dispositivo →"** que navega para
+      `/equipamentos/:clienteId/:eqpId` (#EQP-PAGINA).
 - [ ] **#GIT-SKILL — skill de Git profissional** (item 6). Criar uma **skill** (em `.claude/skills/`)
       que padroniza o fluxo **ponta a ponta**: abrir trabalho (branch a partir da `main`
       atualizada) → commits no padrão `tipo(#TAG)` → certificação (testes/tsc/alembic) → PR →

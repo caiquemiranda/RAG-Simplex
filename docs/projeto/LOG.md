@@ -4,6 +4,16 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #MAP-DETALHES + #OS-EDIT-INLINE (Lote 7, frontend)
+
+**Branch:** `feat/lote7`.
+
+- **#MAP-DETALHES:** no Buscar equipamento (`Equipamentos.tsx`), o card de detalhe ganhou botão
+  **"Detalhes do dispositivo →"** que navega para `/equipamentos/:clienteId/:eqpId` (#EQP-PAGINA).
+- **#OS-EDIT-INLINE:** na página da atividade/O.S. (`Atividade.tsx`, #ATV-1), o **admin** tem
+  **"Editar O.S."** abrindo o `FormOS` (todos os campos) com recarga ao salvar; a página passa a
+  exibir **tipo/equipamento/falha**. `tsc -b` limpo.
+
 ## 2026-07-01 — #OS-SEM-AVULSA: remove o tipo "avulsa" das O.S. (Lote 7, D-027)
 
 **Branch:** `feat/lote7`. Fundação do Lote 7 (mexe em tipos em todo lugar).

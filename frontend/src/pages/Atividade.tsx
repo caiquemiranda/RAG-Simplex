@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, urlArquivo, type VisitaDetalhe } from '../lib/api'
+import { api, urlArquivo, type AdminCliente, type AdminUsuario, type Falha, type NovaVisita, type VisitaDetalhe } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { STATUS_VISITA } from '../lib/format'
+import { FormOS } from '../components/FormOS'
+import { STATUS_VISITA, TIPO_OS_COR } from '../lib/format'
 
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 
@@ -21,7 +22,13 @@ export default function Atividade() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Pode gerir = admin ou técnico atribuído (o backend também valida).
-  const podeGerir = !!usuario && (usuario.permissoes.includes('gerir_usuarios') || (atv?.tecnicos.some((t) => t.id === usuario.id) ?? false))
+  const ehAdmin = usuario?.permissoes.includes('gerir_usuarios') ?? false
+  const podeGerir = !!usuario && (ehAdmin || (atv?.tecnicos.some((t) => t.id === usuario.id) ?? false))
+  // Edição completa da O.S. (#OS-EDIT-INLINE) — só admin, via FormOS na própria página.
+  const [editando, setEditando] = useState(false)
+  const [clientes, setClientes] = useState<AdminCliente[]>([])
+  const [tecnicos, setTecnicos] = useState<AdminUsuario[]>([])
+  const [falhas, setFalhas] = useState<Falha[]>([])
 
   async function carregar() {
     setErro(null)
@@ -29,6 +36,17 @@ export default function Atividade() {
     catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao carregar a atividade') }
   }
   useEffect(() => { carregar() /* eslint-disable-next-line */ }, [vid])
+  useEffect(() => {
+    if (!ehAdmin) return
+    Promise.all([api.admin.clientes(), api.admin.usuarios(), api.admin.falhas()])
+      .then(([c, u, f]) => { setClientes(c); setTecnicos(u); setFalhas(f) })
+      .catch(() => {})
+  }, [ehAdmin])
+
+  async function salvarOS(dados: NovaVisita) {
+    await api.cronograma.atualizar(vid, dados)
+    carregar()
+  }
 
   async function mudarStatus(status: string) {
     try { await api.cronograma.atualizar(vid, { status }); carregar() }
@@ -72,15 +90,24 @@ export default function Atividade() {
             <CardTitle className="text-lg">{atv.titulo}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">📅 {atv.data}{atv.cliente_nome ? ` · 📍 ${atv.cliente_nome}` : ''}</p>
           </div>
-          {podeGerir ? (
-            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={atv.status} onChange={(e) => mudarStatus(e.target.value)}>
-              {STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          ) : (
-            <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_VISITA[atv.status] ?? ''}`}>{atv.status}</span>
-          )}
+          <div className="flex items-center gap-2">
+            {ehAdmin && <Button size="sm" variant="outline" onClick={() => setEditando(true)}>Editar O.S.</Button>}
+            {podeGerir ? (
+              <select className="h-9 rounded-md border bg-background px-2 text-sm" value={atv.status} onChange={(e) => mudarStatus(e.target.value)}>
+                {STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            ) : (
+              <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_VISITA[atv.status] ?? ''}`}>{atv.status}</span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Tipo / equipamento / falha (#OS) */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={`rounded-full px-2 py-0.5 ${TIPO_OS_COR[atv.tipo] ?? 'bg-muted'}`}>{atv.tipo}</span>
+            {atv.equipamento_tag && <span className="text-muted-foreground">🔧 {atv.equipamento_tag}</span>}
+            {atv.falha_nome && <span className="text-muted-foreground">⚠️ {atv.falha_nome}</span>}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Técnicos:</span>
             {atv.tecnicos.map((t) => (
@@ -146,6 +173,14 @@ export default function Atividade() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edição completa da O.S. na própria página (#OS-EDIT-INLINE) */}
+      {editando && ehAdmin && (
+        <FormOS
+          clientes={clientes} tecnicos={tecnicos} falhas={falhas} inicial={atv}
+          aoSalvar={salvarOS} aoFechar={() => setEditando(false)}
+        />
+      )}
 
       {/* Lightbox: imagem ampliada na mesma página, com X para fechar. */}
       {zoom && (
