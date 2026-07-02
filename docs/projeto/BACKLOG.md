@@ -119,6 +119,34 @@ salvas que alimentam documentos de manutenção preventiva).
 **Decisões confirmadas:** ver [D-026](DECISOES.md) — `Equipamento.falha_id` para o estado "em
 falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upload por equipamento.
 
+### L. Lote 7 — Relatórios por tipo + refinamentos de O.S./mapa (2026-07-01)
+Seis solicitações do usuário. **Registradas** (a implementar depois).
+
+- [ ] **#R2-CARDS — cards de cliente maiores com gráficos** (item 1). Na tela **Relatórios**, os
+      cards de cliente ficam **maiores** e mostram **gráficos**: **disponibilidade** (equipamentos
+      Operando vs. em falha/desativado), **preventiva** (nº de O.S. preventivas / cobertura) e
+      **quantidade de corretivas**. *Frontend* sobre dados já disponíveis (equipamentos + O.S. do
+      cliente); avaliar um endpoint de agregação se ficar pesado.
+- [ ] **#R2-TIPOS — dois cards por tipo dentro do relatório do cliente** (item 2). Ao abrir o card
+      de um cliente (`/relatorios/:id`), exibir **dois cards**: **"Manutenção Preventiva"** e
+      **"Manutenção Corretiva"**, cada um listando **apenas as O.S. daquele tipo** do cliente.
+      dep: #OS-SEM-AVULSA (só 2 tipos).
+- [ ] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3). Tirar `avulsa` de **tudo**: backend
+      `_TIPOS_OS = {preventiva, corretiva}`; frontend `TIPOS_OS`, `FormOS`, filtros e gráficos.
+      **Atenção:** back-fill de O.S. existentes com `tipo="avulsa"` → definir destino (provável
+      `corretiva`). **Atualiza a D-025** (que previa 3 tipos) — registrar em `DECISOES.md`.
+- [ ] **#OS-EDIT-INLINE — editar a O.S. na própria página** (item 4). Na **página da atividade/O.S.**
+      (`/cronograma/atividade/:id`, #ATV-1), permitir **abrir e editar** todos os campos ali (reusar
+      o `FormOS` embutido ou modo edição na própria página), não só pelo modal a partir da lista.
+- [ ] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No **Buscar equipamento**
+      (`/equipamentos`), no card de detalhe do dispositivo selecionado, um botão **"Detalhes do
+      dispositivo"** que navega para a **página do dispositivo** (#EQP-PAGINA,
+      `/equipamentos/:clienteId/:eqpId`).
+- [ ] **#GIT-SKILL — skill de Git profissional** (item 6). Criar uma **skill** (em `.claude/skills/`)
+      que padroniza o fluxo **ponta a ponta**: abrir trabalho (branch a partir da `main`
+      atualizada) → commits no padrão `tipo(#TAG)` → certificação (testes/tsc/alembic) → PR →
+      **merge `--no-ff` para a `main`** → limpeza da branch. Baseada no [`../GUIA_GIT.md`](../GUIA_GIT.md).
+
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
 usuário** (revisitar mais tarde). Nenhum item bloqueia o produto; são qualidade/processo.

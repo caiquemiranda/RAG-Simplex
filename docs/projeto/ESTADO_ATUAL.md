@@ -56,19 +56,17 @@
 
 ## ⏭️ PRÓXIMO PASSO
 
-Tudo mergeado na `main` (Lote 5 PR #8 · #MAP · #OS/D-025 · #R2). Frente aberta a escolher:
+Tudo mergeado na `main` (Lote 5 · #MAP · #OS/D-025 · #R2 · **Lote 6 (7/7)** · **#PREV-DOC**).
 
-- **➡️ Lote 6** (novo, 7 itens — ver [`BACKLOG.md`](BACKLOG.md) §J): O.S. como CRUD completo pelo
-  ADM (`#OS-PAGINA`, extrai `FormOS`) + histórico com filtros (`#OS-HIST-FILTRO`); lista de
-  equipamentos tipo planilha (`#TAB-ORDEM` ordenar por coluna, `#EQP-FILTROS+`), **página por
-  dispositivo** (`#EQP-PAGINA`: dados + O.S. + documentos), status padrão "Operando"
-  (`#EQP-STATUS`) e **listas de equipamentos** (`#EQP-LISTAS`, base do doc de preventiva).
-  **Decisões confirmadas ([D-026](DECISOES.md)):** estado "em falha" via `Equipamento.falha_id`;
-  documentos do equipamento = link para a biblioteca (Marcas). Pronto para começar por `#EQP-STATUS`.
-- **Campos-doc da O.S.** editáveis fora da criação — **absorvido pelo `#OS-PAGINA`** do Lote 6.
-- **Lacunas restantes (stubs):** `/equipamentos/sobre`.
-- **Adiado pelo usuário:** equipamentos fase B (colunas última manutenção/teste) e fase C
-  (histórico do painel — hoje suprido pela O.S.).
+- **➡️ Lote 7** (registrado, 6 itens — ver [`BACKLOG.md`](BACKLOG.md) §L): `#R2-CARDS` (cards de
+  cliente maiores com gráficos), `#R2-TIPOS` (relatório do cliente com cards Preventiva/Corretiva),
+  **`#OS-SEM-AVULSA`** (remover o tipo "avulsa" de tudo — **atualiza a D-025**), `#OS-EDIT-INLINE`
+  (editar a O.S. na própria página #ATV-1), `#MAP-DETALHES` (botão "Detalhes do dispositivo" no
+  mapa → #EQP-PAGINA), `#GIT-SKILL` (skill de Git profissional). **A decidir:** destino das O.S.
+  `tipo=avulsa` existentes ao remover (provável → `corretiva`).
+- **Lacunas/pendências menores:** `feat/lote4-fixes` (commit `c1f4fa8` não mergeado); stub
+  `/equipamentos/sobre`; associação equipamento↔documento manual no #EQP-PAGINA.
+- **Adiado pelo usuário:** equipamentos fase B/C; **infra "big-tech"** ([BACKLOG §K](BACKLOG.md)).
 - **Roadmap:** Fase 11 (reranker D-020 + RAGAS-lite, *sem key*) · Fase 10 (nuvem, *requer
   API key*) · #1 (alinhamento ChatGPT).
 
