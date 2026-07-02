@@ -122,15 +122,14 @@ falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upl
 ### L. Lote 7 — Relatórios por tipo + refinamentos de O.S./mapa (2026-07-01)
 Seis solicitações do usuário. **Registradas** (a implementar depois).
 
-- [ ] **#R2-CARDS — cards de cliente maiores com gráficos** (item 1). Na tela **Relatórios**, os
-      cards de cliente ficam **maiores** e mostram **gráficos**: **disponibilidade** (equipamentos
-      Operando vs. em falha/desativado), **preventiva** (nº de O.S. preventivas / cobertura) e
-      **quantidade de corretivas**. *Frontend* sobre dados já disponíveis (equipamentos + O.S. do
-      cliente); avaliar um endpoint de agregação se ficar pesado.
-- [ ] **#R2-TIPOS — dois cards por tipo dentro do relatório do cliente** (item 2). Ao abrir o card
-      de um cliente (`/relatorios/:id`), exibir **dois cards**: **"Manutenção Preventiva"** e
-      **"Manutenção Corretiva"**, cada um listando **apenas as O.S. daquele tipo** do cliente.
-      dep: #OS-SEM-AVULSA (só 2 tipos).
+- [x] **#R2-CARDS — cards de cliente maiores com gráficos** (item 1). Endpoint de agregação
+      **`GET /relatorios/resumo`** (respeita visibilidade por papel) → por cliente: disponibilidade
+      (operando/total + em falha), O.S. preventivas/corretivas/abertas/concluídas. `Relatorios.tsx`
+      renderiza cards maiores com **barra de disponibilidade** (verde/âmbar/vermelho) + stats por
+      tipo. Teste `test_relatorios_resumo`.
+- [x] **#R2-TIPOS — dois cards por tipo dentro do relatório do cliente** (item 2). `RelatorioCliente`
+      exibe **"Manutenção Preventiva"** e **"Manutenção Corretiva"** lado a lado, cada um só com as
+      O.S. do respectivo tipo (substitui "Atividades recentes").
 - [x] **#OS-SEM-AVULSA — remover "manutenção avulsa"** (item 3, **D-027**). `avulsa` fora de tudo:
       backend `_TIPOS_OS={preventiva,corretiva}`; frontend `TIPOS_OS`/labels/cores/`BAR_TIPO`;
       **migração `bf54f9b66560`** back-fill `avulsa→corretiva`. Teste rejeita `tipo="avulsa"` (400).

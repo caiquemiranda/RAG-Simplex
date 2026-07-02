@@ -40,7 +40,14 @@ export default function RelatorioCliente() {
     return [...m.values()].sort((a, b) => a.nome.localeCompare(b.nome))
   }, [atividades])
 
-  const recentes = useMemo(() => [...atividades].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 12), [atividades])
+  // #R2-TIPOS: O.S. separadas por tipo (mais recentes primeiro).
+  const porTipo = useMemo(() => {
+    const ord = (arr: Visita[]) => [...arr].sort((a, b) => b.data.localeCompare(a.data))
+    return {
+      preventiva: ord(atividades.filter((v) => v.tipo === 'preventiva')),
+      corretiva: ord(atividades.filter((v) => v.tipo === 'corretiva')),
+    }
+  }, [atividades])
 
   return (
     <div className="h-full overflow-y-auto">
@@ -96,20 +103,27 @@ export default function RelatorioCliente() {
               </CardContent>
             </Card>
 
-            {/* Atividades */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Atividades recentes</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {recentes.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma atividade.</p>}
-                {recentes.map((v) => (
-                  <Link key={v.id} to={`/cronograma/atividade/${v.id}`} className="flex items-center justify-between gap-2 rounded-lg border p-2 text-sm hover:bg-accent">
-                    <span className="min-w-0 flex-1 truncate">{v.titulo}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">{v.data}</span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
+            {/* O.S. por tipo (#R2-TIPOS) */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {([
+                ['Manutenção Preventiva', porTipo.preventiva],
+                ['Manutenção Corretiva', porTipo.corretiva],
+              ] as const).map(([titulo, lista]) => (
+                <Card key={titulo}>
+                  <CardHeader><CardTitle className="text-base">{titulo} ({lista.length})</CardTitle></CardHeader>
+                  <CardContent className="space-y-2">
+                    {lista.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma O.S.</p>}
+                    {lista.map((v) => (
+                      <Link key={v.id} to={`/cronograma/atividade/${v.id}`} className="flex items-center justify-between gap-2 rounded-lg border p-2 text-sm hover:bg-accent">
+                        <span className="min-w-0 flex-1 truncate">{v.titulo}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">{v.data}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[v.status] ?? ''}`}>{v.status}</span>
+                      </Link>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
             {/* Documentos do cliente */}
             <Card>

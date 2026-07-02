@@ -374,6 +374,29 @@ def test_os_editar_deletar_falha_e_rbac(ctx):
     assert "Warm Start" not in nomes and "No Answer" in nomes
 
 
+def test_relatorios_resumo(ctx):
+    """#R2-CARDS: resumo por cliente = disponibilidade dos equipamentos + contagem de O.S."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    cid = ids["cliente"]
+    fid = client.post("/admin/falhas", headers=admin, json={"nome": "Dirty"}).json()["id"]
+    e1 = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A"}).json()["id"]
+    client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B"})  # Operando
+    client.patch(f"/admin/equipamentos/{e1}", headers=admin, json={"status": "Em falha", "falha_id": fid})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-08-01", "titulo": "P", "tipo": "preventiva"})
+    client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-08-02", "titulo": "C", "tipo": "corretiva", "status": "concluida"})
+
+    r = client.get("/relatorios/resumo", headers=admin)
+    assert r.status_code == 200
+    res = next(x for x in r.json() if x["cliente_id"] == cid)
+    assert res["equip_total"] == 2 and res["equip_operando"] == 1 and res["equip_falha"] == 1
+    assert res["os_preventiva"] == 1 and res["os_corretiva"] == 1
+    assert res["os_abertas"] == 1 and res["os_concluidas"] == 1
+
+    # Técnico sem clientes vinculados → resumo vazio.
+    assert client.get("/relatorios/resumo", headers=_login(client, "tec2@x.com")).json() == []
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

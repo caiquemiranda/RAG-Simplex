@@ -4,6 +4,18 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #R2-CARDS + #R2-TIPOS: Relatórios com gráficos e por tipo (Lote 7)
+
+**Branch:** `feat/lote7`.
+
+- **#R2-CARDS:** endpoint **`GET /relatorios/resumo`** (agrega por cliente: disponibilidade
+  operando/total + em falha, O.S. preventiva/corretiva/abertas/concluídas; respeita visibilidade).
+  `Relatorios.tsx` reescrito — cards maiores com **barra de disponibilidade** + stats por tipo.
+  Teste `test_relatorios_resumo`. **106 testes.**
+- **#R2-TIPOS:** `RelatorioCliente.tsx` — dois cards **"Manutenção Preventiva"** e **"Manutenção
+  Corretiva"** lado a lado, cada um só com as O.S. do respectivo tipo (substitui "Atividades
+  recentes"). `tsc -b` limpo.
+
 ## 2026-07-01 — #MAP-DETALHES + #OS-EDIT-INLINE (Lote 7, frontend)
 
 **Branch:** `feat/lote7`.

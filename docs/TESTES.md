@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**105 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**106 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -142,8 +142,9 @@ pytest
 - `test_documento_cliente_e_busca` — categoria `cliente` (exige `cliente_id`) + busca por nome.
 - `test_categoria_invalida_e_op_nao_sobe` — 400 (categoria) e 403 (operador).
 
-### `test_cronograma.py` (16) — cronograma (multi-técnico, cliente fixo, unidade, atividade, feriados, notificações)
+### `test_cronograma.py` (17) — cronograma (multi-técnico, cliente fixo, unidade, atividade, feriados, notificações)
 - `test_clientes_visiveis_por_papel` — `/clientes`: admin vê todos; técnico só os seus.
+- `test_relatorios_resumo` — #R2-CARDS: `/relatorios/resumo` = disponibilidade (operando/falha) + O.S. por tipo/status; técnico sem clientes → vazio.
 - `test_unidade_crud_e_visao_por_unidade` — CRUD de unidade (409 duplicado); vincula cliente;
   `/cronograma?unidade_id=` filtra pela unidade do cliente; `/unidades`; DELETE em uso → 409.
 - `test_multiplos_tecnicos_por_atividade` — vários técnicos numa visita; todos veem/são notificados; qualquer um fecha.

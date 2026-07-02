@@ -81,6 +81,12 @@ export type ClienteEntrada = {
   endereco?: string | null; contato?: string | null; telefone?: string | null; email?: string | null; observacoes?: string | null
 }
 export type ClienteVisivel = { id: number; nome: string; unidade: string | null; unidade_id: number | null; cor: string | null; logo_url: string | null }
+// Resumo por cliente para os cards de Relatórios (#R2-CARDS).
+export type ResumoCliente = {
+  cliente_id: number; nome: string; cor: string | null; logo_url: string | null; unidade: string | null
+  equip_total: number; equip_operando: number; equip_falha: number
+  os_preventiva: number; os_corretiva: number; os_abertas: number; os_concluidas: number
+}
 
 // Equipamento do cliente (#EQP-1) — importado por CSV.
 export type Equipamento = {
@@ -407,6 +413,7 @@ export const api = {
   me: () => request<Usuario>('/auth/me'),
   meusDocumentos: () => request<DocumentoTecnico[]>('/me/documentos'),
   clientesVisiveis: () => request<ClienteVisivel[]>('/clientes'),
+  relatoriosResumo: () => request<ResumoCliente[]>('/relatorios/resumo'),
   unidadesVisiveis: () => request<UnidadeVisivel[]>('/unidades'),
   equipamentosCliente: (clienteId: number, busca?: string) =>
     request<Equipamento[]>(`/clientes/${clienteId}/equipamentos${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`),
