@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, urlArquivo, type ClienteVisivel, type DocEquip, type DocEquipRef, type Equipamento, type Visita } from '../lib/api'
+import { api, uploadArquivo, urlArquivo, type ClienteVisivel, type DocEquip, type DocEquipRef, type Equipamento, type Visita } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -21,6 +21,7 @@ export default function EquipamentoPagina() {
   const [docsFixados, setDocsFixados] = useState<DocEquipRef[]>([])   // #EQP-DOC: manuais fixados
   const [marcas, setMarcas] = useState<DocEquip[]>([])                // biblioteca (Marcas) — p/ o seletor
   const [gerenciar, setGerenciar] = useState(false)
+  const [tipoImg, setTipoImg] = useState<string | null>(null)   // #EQP-TIPO-IMG
   const [erro, setErro] = useState<string | null>(null)
   // #OS-HIST-FILTRO: busca + filtros do histórico. #OS-HIST-DATAS: período (semana/mês/todo).
   const [busca, setBusca] = useState('')
@@ -31,11 +32,21 @@ export default function EquipamentoPagina() {
   function carregarDocs() {
     api.documentosEquipamento(eid).then(setDocsFixados).catch(() => setDocsFixados([]))
   }
+  // #EQP-TIPO-IMG: admin envia a imagem do tipo (global para todos daquele type).
+  async function enviarImagemTipo(file: File) {
+    if (!eq?.type) { setErro('Equipamento sem "tipo" definido.'); return }
+    try {
+      const { url } = await uploadArquivo(file, 'tipos')
+      await api.admin.definirTipoImagem(eq.type, url)
+      setTipoImg(url)
+    } catch (e) { setErro(e instanceof Error ? e.message : 'Falha ao enviar a imagem do tipo') }
+  }
   useEffect(() => {
     api.clientesVisiveis().then((cs) => setCliente(cs.find((c) => c.id === cid) ?? null)).catch(() => {})
     api.equipamentosCliente(cid).then((es) => setEq(es.find((e) => e.id === eid) ?? null))
       .catch((e) => setErro(e instanceof Error ? e.message : 'Falha ao carregar o equipamento'))
     api.ordensEquipamento(eid).then(setOrdens).catch(() => setOrdens([]))
+    api.tipoImagemEquipamento(eid).then((r) => setTipoImg(r.imagem_url)).catch(() => setTipoImg(null))
     carregarDocs()
     // Biblioteca (Marcas) só é necessária para o admin gerenciar os vínculos.
     if (podeGerir) api.biblioteca.listar({ categoria: 'marca' }).then(setMarcas).catch(() => setMarcas([]))
@@ -88,7 +99,25 @@ export default function EquipamentoPagina() {
                 {emFalha ? `Em falha (${eq.falha_nome})` : (eq.status || '—')}
               </span>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+            <CardContent className="space-y-3">
+            {/* Imagem do tipo (#EQP-TIPO-IMG) — identifica o dispositivo */}
+            <div className="flex items-center gap-3">
+              {tipoImg ? (
+                <img src={urlArquivo(tipoImg)} alt={`Tipo ${eq.type}`} className="h-20 w-20 rounded-md border object-cover" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-md border bg-muted text-[10px] text-muted-foreground">sem imagem</div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                <div>Imagem do tipo <strong>{eq.type || '—'}</strong> (vale para todos desse tipo).</div>
+                {podeGerir && eq.type && (
+                  <label className="mt-1 inline-flex min-h-[36px] cursor-pointer items-center rounded-md border bg-background px-2 text-xs hover:bg-accent">
+                    {tipoImg ? 'Trocar imagem' : 'Enviar imagem'}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) enviarImagemTipo(f); e.target.value = '' }} />
+                  </label>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
               <div><span className="text-muted-foreground">Painel:</span> {eq.painel || '—'}</div>
               <div><span className="text-muted-foreground">Loop:</span> {eq.loop || '—'}</div>
               <div><span className="text-muted-foreground">Endereço (add):</span> {eq.add || '—'}</div>
@@ -97,6 +126,7 @@ export default function EquipamentoPagina() {
               <div><span className="text-muted-foreground">Coordenadas:</span> {eq.pos_x != null ? `X ${eq.pos_x}, Y ${eq.pos_y}` : '—'}</div>
               <div><span className="text-muted-foreground">Última manutenção:</span> {eq.ultima_manutencao ?? '—'}</div>
               <div><span className="text-muted-foreground">Último teste:</span> {eq.ultimo_teste ?? '—'}</div>
+            </div>
             </CardContent>
           </Card>
 

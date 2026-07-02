@@ -200,11 +200,11 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
       lida, criado_em) + endpoints (listar conversas, histórico, enviar, marcar lida). *Frontend:*
       grupo na sidebar + tela de chat + polling de não-lidas. **Decisão:** tempo real por **polling**
       (processo único, sem WebSocket) — recomendado.
-- [ ] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3). Uma imagem associada ao **`type`**
-      do equipamento, exibida na **página do dispositivo** (#EQP-PAGINA) para identificação visual;
-      **uma imagem vale para todos os equipamentos daquele tipo**. *Backend:* mapa `tipo → imagem_url`
-      (entidade `TipoEquipamentoImagem` ou similar) + upload (#FILES). **Decisão a confirmar:** o `type`
-      é texto livre — o mapa é **global** por texto do tipo (recomendado) ou por cliente?
+- [x] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3, **D-028**). Entidade
+      `TipoEquipamentoImagem` (`tipo` único → `imagem_url`), **global**. Endpoints: `GET/PUT
+      /admin/tipos-equipamento` (upsert; `imagem_url` vazio remove) + `GET /equipamentos/{id}/tipo-imagem`
+      (público, RBAC pelo cliente). Migração `55a1f2053b04`. Frontend: **imagem no topo** da página do
+      dispositivo (#EQP-PAGINA); admin **envia/troca** (upload → PUT por `type`). Teste `test_tipo_equipamento_imagem`.
 - [x] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Seletor
       **Todo o período / Última semana / Último mês** na barra de filtros do histórico (#EQP-PAGINA);
       corta por `data_fim ?? data` relativo a hoje. Intervalo (`intervaloData`) exibido em cada O.S.

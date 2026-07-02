@@ -4,6 +4,16 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 9: #EQP-TIPO-IMG (imagem global por tipo de equipamento)
+
+**Branch:** `feat/lote9-multidata`.
+
+- **Modelo:** `TipoEquipamentoImagem` (`tipo` único → `imagem_url`, global). Migração `55a1f2053b04`.
+  **Backend:** `GET/PUT /admin/tipos-equipamento` (upsert; vazio remove) + `GET
+  /equipamentos/{id}/tipo-imagem` (público, RBAC pelo cliente). Teste `test_tipo_equipamento_imagem`.
+- **Frontend:** imagem do tipo **no topo** da página do dispositivo; admin envia/troca (upload → PUT
+  por `type`). **112 testes**, `tsc -b` limpo.
+
 ## 2026-07-02 — Lote 9: #OS-HIST-DATAS (filtro de período no histórico)
 
 **Branch:** `feat/lote9-multidata`. Frontend-only.

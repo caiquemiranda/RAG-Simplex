@@ -427,6 +427,7 @@ export const api = {
   plantasCliente: (clienteId: number) => request<Planta[]>(`/clientes/${clienteId}/plantas`),
   ordensEquipamento: (equipamentoId: number) => request<Visita[]>(`/cronograma/equipamento/${equipamentoId}`),
   documentosEquipamento: (equipamentoId: number) => request<DocEquipRef[]>(`/equipamentos/${equipamentoId}/documentos`),
+  tipoImagemEquipamento: (equipamentoId: number) => request<{ tipo: string; imagem_url: string | null }>(`/equipamentos/${equipamentoId}/tipo-imagem`),
   query: (pergunta: string, persona?: string) =>
     request<RespostaQuery>('/query', {
       method: 'POST',
@@ -499,6 +500,8 @@ export const api = {
       request<Equipamento>(`/admin/clientes/${clienteId}/equipamentos`, { method: 'POST', body: JSON.stringify(dados) }),
     definirDocumentosEquipamento: (eqpId: number, documento_ids: number[]) =>
       request<DocEquipRef[]>(`/admin/equipamentos/${eqpId}/documentos`, { method: 'PUT', body: JSON.stringify({ documento_ids }) }),
+    definirTipoImagem: (tipo: string, imagem_url: string) =>
+      request<{ id: number; tipo: string; imagem_url: string }>(`/admin/tipos-equipamento`, { method: 'PUT', body: JSON.stringify({ tipo, imagem_url }) }),
     atualizarEquipamento: (eqpId: number, dados: Partial<Equipamento>) =>
       request<Equipamento>(`/admin/equipamentos/${eqpId}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     // Plantas (#MAP)

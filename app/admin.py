@@ -38,6 +38,7 @@ from app.modelos import (
     Permissao,
     Planta,
     Provedor,
+    TipoEquipamentoImagem,
     Unidade,
     Usuario,
 )
@@ -745,6 +746,50 @@ def remover_equipamento(equipamento_id: int,
         raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
     sessao.delete(e)
     sessao.commit()
+
+
+# --------------------------------------------------------------------------- #
+# Imagem por tipo de equipamento (#EQP-TIPO-IMG, D-028) — global por texto.    #
+# --------------------------------------------------------------------------- #
+class TipoImagemIn(BaseModel):
+    tipo: str
+    imagem_url: str
+
+
+class TipoImagemResumo(BaseModel):
+    id: int
+    tipo: str
+    imagem_url: str
+
+
+@router.get("/tipos-equipamento", response_model=list[TipoImagemResumo])
+def listar_tipo_imagens(_: Usuario = Depends(requer("gerir_usuarios")),
+                        sessao: Session = Depends(get_session)) -> list[TipoImagemResumo]:
+    return [TipoImagemResumo(id=t.id, tipo=t.tipo, imagem_url=t.imagem_url)
+            for t in sessao.scalars(select(TipoEquipamentoImagem).order_by(TipoEquipamentoImagem.tipo))]
+
+
+@router.put("/tipos-equipamento", response_model=TipoImagemResumo)
+def definir_tipo_imagem(dados: TipoImagemIn,
+                        _: Usuario = Depends(requer("gerir_usuarios")),
+                        sessao: Session = Depends(get_session)) -> TipoImagemResumo:
+    """Upsert da imagem de um tipo (global). Sem imagem_url → remove o vínculo."""
+    tipo = dados.tipo.strip()
+    if not tipo:
+        raise HTTPException(status_code=400, detail="Informe o tipo.")
+    existente = sessao.scalar(select(TipoEquipamentoImagem).where(TipoEquipamentoImagem.tipo == tipo))
+    if not dados.imagem_url.strip():
+        if existente:
+            sessao.delete(existente); sessao.commit()
+        return TipoImagemResumo(id=0, tipo=tipo, imagem_url="")
+    if existente:
+        existente.imagem_url = dados.imagem_url.strip()
+    else:
+        existente = TipoEquipamentoImagem(tipo=tipo, imagem_url=dados.imagem_url.strip())
+        sessao.add(existente)
+    sessao.commit()
+    sessao.refresh(existente)
+    return TipoImagemResumo(id=existente.id, tipo=existente.tipo, imagem_url=existente.imagem_url)
 
 
 class DocsEquipIn(BaseModel):

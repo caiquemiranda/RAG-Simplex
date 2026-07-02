@@ -255,6 +255,20 @@ class Equipamento(Base):
     documentos: Mapped[list["DocumentoEquipamento"]] = relationship(secondary=equipamento_documento)
 
 
+class TipoEquipamentoImagem(Base):
+    """Imagem associada ao **texto do `type`** do equipamento (#EQP-TIPO-IMG, D-028) — **global**
+    (vale para todos os equipamentos daquele tipo). Ajuda a identificar o dispositivo."""
+
+    __tablename__ = "tipo_equipamento_imagem"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tipo: Mapped[str] = mapped_column(String(80), unique=True)
+    imagem_url: Mapped[str] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
 class EquipamentoLista(Base):
     """Lista **nomeada** de equipamentos de um cliente (#EQP-LISTAS). Serve para filtrar a
     lista e, futuramente, gerar um documento de **manutenção preventiva** com esses itens."""
