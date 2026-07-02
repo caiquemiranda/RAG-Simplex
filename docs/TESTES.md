@@ -1,6 +1,6 @@
 # Testes — RAG-Simplex
 
-**106 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
+**107 testes** automatizados (pytest). Cobrem parsing, recuperação, estratégias,
 geração, persistência (+ micro-migração + **migrações Alembic**), autenticação
 (+ **e-mail case-insensitive**), RBAC, painel ADM (usuários, perfil, documentos,
 **clientes**, **unidades**, **banco de dados**), **cronograma** (visitas, **feriados**,
@@ -106,7 +106,7 @@ pytest
 - `test_montar_texto_filtra_camadas` — filtragem do texto por papel.
 - `test_operador_bloqueado_em_ingest` / `test_analista_pode_ingerir` — gating de `/ingest`.
 
-### `test_admin.py` (18) — painel ADM
+### `test_admin.py` (19) — painel ADM
 - `test_nao_admin_barrado` — sem `gerir_usuarios` → 403.
 - `test_admin_lista_e_cria_usuario` — CRUD de usuário.
 - `test_email_case_insensitive` — e-mail normalizado (minúsculo) no cadastro/login; duplicado por caixa → 409.
@@ -116,6 +116,7 @@ pytest
 - `test_equipamento_status_e_falha` — #EQP-STATUS/D-026: pôr "em falha" grava `falha_id` (resumo admin+público mostra `falha_nome`); falha inexistente → 404; limpar volta a Operando.
 - `test_equipamento_listas` — #EQP-LISTAS: cria lista nomeada (ids de outro cliente ignorados), edita nome+conjunto, RBAC (técnico 403), remove.
 - `test_documento_preventiva` — #PREV-DOC: documento monta cliente + equipamentos da lista ordenados por tag; RBAC (técnico 403) + 404.
+- `test_equipamento_documentos_manuais` — #EQP-DOC: admin fixa documentos (Marcas) no equipamento (`PUT`); `GET` público lista; limpar; RBAC (técnico 403).
 - `test_equipamentos_visiveis_por_papel` — #EQP-2: `GET /clientes/{id}/equipamentos` admin vê; técnico só dos seus (403).
 - `test_admin_troca_estrategia_vale_na_consulta` — estratégia aplicada na consulta.
 - `test_estrategia_por_usuario_get_e_put` — GET nulo → PUT → GET com valor.

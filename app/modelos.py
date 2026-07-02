@@ -73,6 +73,14 @@ lista_equipamento = Table(
     Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Documentos (manuais/datasheets da biblioteca) fixados a um equipamento (#EQP-DOC, seleção manual).
+equipamento_documento = Table(
+    "equipamento_documento",
+    Base.metadata,
+    Column("equipamento_id", ForeignKey("equipamento.id", ondelete="CASCADE"), primary_key=True),
+    Column("documento_id", ForeignKey("documento_equipamento.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 class Permissao(Base):
     __tablename__ = "permissao"
@@ -244,6 +252,7 @@ class Equipamento(Base):
     cliente: Mapped[Cliente] = relationship(back_populates="equipamentos")
     planta: Mapped[Planta | None] = relationship()
     falha: Mapped["Falha | None"] = relationship()
+    documentos: Mapped[list["DocumentoEquipamento"]] = relationship(secondary=equipamento_documento)
 
 
 class EquipamentoLista(Base):
@@ -297,6 +306,8 @@ class Visita(Base):
     tipo: Mapped[str] = mapped_column(String(20), default="corretiva")   # preventiva|corretiva
     equipamento_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento.id", ondelete="SET NULL"), default=None)
     falha_id: Mapped[int | None] = mapped_column(ForeignKey("falha.id", ondelete="SET NULL"), default=None)
+    # Lista de equipamentos da O.S. preventiva → base do documento de preventiva (#PREV-OS).
+    lista_id: Mapped[int | None] = mapped_column(ForeignKey("equipamento_lista.id", ondelete="SET NULL"), default=None)
     # Campos do documento de O.S. corretiva (todos opcionais).
     especialidade: Mapped[str | None] = mapped_column(String(160), default=None)
     requisitante: Mapped[str | None] = mapped_column(String(120), default=None)
@@ -315,6 +326,7 @@ class Visita(Base):
     cliente: Mapped[Cliente | None] = relationship()
     equipamento: Mapped[Equipamento | None] = relationship()
     falha: Mapped[Falha | None] = relationship()
+    lista: Mapped["EquipamentoLista | None"] = relationship()
     tecnicos: Mapped[list[Usuario]] = relationship(secondary=visita_tecnico)  # #CR8
     # Página da atividade (#ATV-1): comentários e anexos de imagem.
     comentarios: Mapped[list[ComentarioVisita]] = relationship(

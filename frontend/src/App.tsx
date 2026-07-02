@@ -11,8 +11,8 @@ import RelatorioCliente from './pages/RelatorioCliente'
 import Equipamentos from './pages/Equipamentos'
 import EquipamentosLista from './pages/EquipamentosLista'
 import EquipamentoPagina from './pages/EquipamentoPagina'
+import SobreEquipamento from './pages/SobreEquipamento'
 import DocumentoPreventiva from './pages/DocumentoPreventiva'
-import Placeholder from './components/Placeholder'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
 import Atividade from './pages/Atividade'
@@ -32,7 +32,7 @@ export default function App() {
           <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/relatorios/:id" element={<RelatorioCliente />} />
           <Route path="/equipamentos" element={<Equipamentos />} />
-          <Route path="/equipamentos/sobre" element={<Placeholder titulo="Sobre equipamento" descricao="Em breve: informações técnicas dos equipamentos/painéis (4100, F3200, QE90, IMS/TrueSite)." />} />
+          <Route path="/equipamentos/sobre" element={<SobreEquipamento />} />
           <Route path="/equipamentos/lista" element={<EquipamentosLista />} />
           <Route path="/equipamentos/lista/:id" element={<EquipamentosLista />} />
           <Route path="/equipamentos/:clienteId/:eqpId" element={<EquipamentoPagina />} />

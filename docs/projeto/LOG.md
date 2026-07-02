@@ -4,6 +4,42 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Refinamento #EQP-SOBRE: página "Sobre equipamento"
+
+**Branch:** `feat/refinamentos`. Frontend-only.
+
+- `pages/SobreEquipamento.tsx` substitui o `Placeholder` de `/equipamentos/sobre`: visão geral das
+  famílias (4100/4100ES, F3200, QE90, IMS/TrueSite) **em alto nível** (sem inventar
+  tensões/endereços — segurança de vida) + aviso e atalhos para Consulta (RAG), Documentos→Marcas,
+  Buscar equipamento e Lista. Import órfão de `Placeholder` removido do `App.tsx`. `tsc -b` limpo.
+
+## 2026-07-02 — Refinamento #EQP-DOC: documentos manuais do equipamento (N:N)
+
+**Branch:** `feat/refinamentos`. Decisão do usuário: **seleção manual** (não heurística).
+
+- **Modelo:** N:N **`equipamento_documento`** (`Equipamento.documentos` ↔ `DocumentoEquipamento`).
+  Migração `ed5186ac4b27`. **Backend:** `PUT /admin/equipamentos/{id}/documentos {documento_ids}`
+  (fixa; RBAC `gerir_usuarios`) + `GET /equipamentos/{id}/documentos` (público, RBAC pelo cliente).
+- **Frontend:** `EquipamentoPagina` mostra os **documentos fixados** (via GET); admin tem
+  **"Gerenciar"** (modal `GerenciarDocs` com checkboxes da biblioteca → Marcas). Substitui a
+  associação heurística por model/type.
+- **Bug corrigido:** a `EquipamentoPagina` filtrava a biblioteca por `categoria:'marcas'` (plural),
+  mas a categoria armazenada é **`'marca'`** (singular) — a seção de documentos nunca casava nada.
+  Agora usa `'marca'`. Teste `test_equipamento_documentos_manuais`. **107 testes.**
+
+## 2026-07-02 — Refinamentos: #PREV-OS (O.S. preventiva ↔ lista) + higiene
+
+**Branch:** `feat/refinamentos`.
+
+- **Higiene:** `feat/lote4-fixes` **descartada** (local+remota) — commit `c1f4fa8` já superado na
+  `main` (spec-lote4 idêntico; FLUXOS cobre login/#ALOC/#FER-1). Repo = só `main`.
+- **#PREV-OS (refinamento 2):** `Visita.lista_id` (FK → `EquipamentoLista`, SET NULL) — a O.S.
+  **preventiva** referencia a lista que vira o documento. Backend: `_OSDoc`/`VisitaResumo`
+  (+`lista_id`/`lista_nome`), `_aplicar_os` valida (404), `_resumo` popula. Migração `ff498bb4b9d6`.
+  Frontend: `FormOS` mostra **seletor de lista** quando tipo=preventiva (carrega listas do cliente);
+  a página da O.S. exibe 📋 lista e botão **"Gerar documento de preventiva"** → `/preventiva/:listaId`.
+  Teste no `test_os_unificada...` (cria preventiva com lista; `lista_id` inexistente → 404).
+
 ## 2026-07-01 — #GIT-SKILL: skill git-flow (Lote 7, fim)
 
 **Branch:** `feat/lote7`. Fecha o Lote 7 (6/6).

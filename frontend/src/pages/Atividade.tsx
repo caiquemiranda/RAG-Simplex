@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, urlArquivo, type AdminCliente, type AdminUsuario, type Falha, type NovaVisita, type VisitaDetalhe } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../components/Avatar'
@@ -14,6 +14,7 @@ const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
 export default function Atividade() {
   const { id } = useParams()
   const vid = Number(id)
+  const navigate = useNavigate()
   const { usuario } = useAuth()
   const [atv, setAtv] = useState<VisitaDetalhe | null>(null)
   const [erro, setErro] = useState<string | null>(null)
@@ -102,11 +103,16 @@ export default function Atividade() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Tipo / equipamento / falha (#OS) */}
+          {/* Tipo / equipamento / falha / lista (#OS) */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={`rounded-full px-2 py-0.5 ${TIPO_OS_COR[atv.tipo] ?? 'bg-muted'}`}>{atv.tipo}</span>
             {atv.equipamento_tag && <span className="text-muted-foreground">🔧 {atv.equipamento_tag}</span>}
             {atv.falha_nome && <span className="text-muted-foreground">⚠️ {atv.falha_nome}</span>}
+            {atv.lista_nome && <span className="text-muted-foreground">📋 {atv.lista_nome}</span>}
+            {atv.tipo === 'preventiva' && atv.lista_id != null && (
+              <button className="rounded-md border px-2 py-0.5 text-primary hover:bg-accent"
+                      onClick={() => navigate(`/preventiva/${atv.lista_id}`)}>📄 Gerar documento de preventiva</button>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Técnicos:</span>

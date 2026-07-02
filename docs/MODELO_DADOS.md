@@ -28,6 +28,8 @@ erDiagram
   FALHA ||--o{ EQUIPAMENTO : "0..1 (falha atual #EQP-STATUS)"
   CLIENTE ||--o{ EQUIPAMENTO_LISTA : "1:N (cascade #EQP-LISTAS)"
   EQUIPAMENTO_LISTA }o--o{ EQUIPAMENTO : "N:N lista_equipamento"
+  EQUIPAMENTO_LISTA ||--o{ VISITA : "0..1 (O.S. preventiva #PREV-OS)"
+  EQUIPAMENTO }o--o{ DOCUMENTO_EQUIPAMENTO : "N:N equipamento_documento (#EQP-DOC)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -90,6 +92,7 @@ erDiagram
     string tipo "manutenção: preventiva|corretiva|avulsa"
     int equipamento_id FK "SET NULL (alvo da O.S.)"
     int falha_id FK "SET NULL (catálogo)"
+    int lista_id FK "SET NULL — lista da O.S. preventiva (#PREV-OS)"
     string campos_doc "12 campos de corretiva (especialidade…ação_aplicada)"
   }
   FALHA {

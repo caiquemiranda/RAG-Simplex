@@ -323,6 +323,12 @@ def test_os_unificada_falha_equipamento_manutencao(ctx):
     assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "xpto"}).status_code == 400
     assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-02", "titulo": "x", "tipo": "avulsa"}).status_code == 400
 
+    # #PREV-OS: O.S. preventiva referencia uma lista de equipamentos (para o documento).
+    lid = client.post(f"/admin/clientes/{cid}/listas", headers=admin, json={"nome": "Prev", "equipamento_ids": [eid]}).json()["id"]
+    r = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "cliente_id": cid, "data": "2026-08-05", "titulo": "Rota", "tipo": "preventiva", "lista_id": lid})
+    assert r.status_code == 201 and r.json()["lista_id"] == lid and r.json()["lista_nome"] == "Prev"
+    assert client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-06", "titulo": "x", "lista_id": 99999}).status_code == 404
+
     # Item 5: sem técnicos → usa os fixos do cliente.
     client.patch(f"/admin/usuarios/{ids['tec2']}", headers=admin, json={"cliente_padrao_id": cid})
     r = client.post("/cronograma", headers=admin, json={"cliente_id": cid, "data": "2026-08-03", "titulo": "Preventiva", "tipo": "preventiva"})
