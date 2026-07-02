@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { IconDoc, IconClose } from '../components/icons'
-import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, corStatusEquip } from '../lib/format'
+import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, corStatusEquip, intervaloData } from '../lib/format'
 
 /** Página de um dispositivo (#EQP-PAGINA): dados + O.S. associadas (com filtros) + documentos. */
 export default function EquipamentoPagina() {
@@ -22,10 +22,11 @@ export default function EquipamentoPagina() {
   const [marcas, setMarcas] = useState<DocEquip[]>([])                // biblioteca (Marcas) — p/ o seletor
   const [gerenciar, setGerenciar] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  // #OS-HIST-FILTRO: busca + filtros do histórico.
+  // #OS-HIST-FILTRO: busca + filtros do histórico. #OS-HIST-DATAS: período (semana/mês/todo).
   const [busca, setBusca] = useState('')
   const [fFalha, setFFalha] = useState('')
   const [fTipo, setFTipo] = useState('')
+  const [fPeriodo, setFPeriodo] = useState<'tudo' | 'semana' | 'mes'>('tudo')
 
   function carregarDocs() {
     api.documentosEquipamento(eid).then(setDocsFixados).catch(() => setDocsFixados([]))
@@ -47,12 +48,20 @@ export default function EquipamentoPagina() {
   )
   const ordensFiltradas = useMemo(() => {
     const t = busca.trim().toLowerCase()
+    // #OS-HIST-DATAS: corte por período (relativo a hoje). Usa data_fim se houver (fim do intervalo).
+    let corte = ''
+    if (fPeriodo !== 'tudo') {
+      const d = new Date()
+      d.setDate(d.getDate() - (fPeriodo === 'semana' ? 7 : 30))
+      corte = d.toISOString().slice(0, 10)
+    }
     return ordens.filter((o) =>
       (!fFalha || o.falha_nome === fFalha) &&
       (!fTipo || o.tipo === fTipo) &&
+      (!corte || (o.data_fim ?? o.data) >= corte) &&
       (!t || [o.titulo, o.data, ...o.tecnicos.map((x) => x.nome)].some((v) => (v || '').toLowerCase().includes(t))),
     )
-  }, [ordens, busca, fFalha, fTipo])
+  }, [ordens, busca, fFalha, fTipo, fPeriodo])
 
   const emFalha = eq?.falha_id != null
 
@@ -128,8 +137,13 @@ export default function EquipamentoPagina() {
                   <option value="">Todas as falhas</option>
                   {falhasNasOrdens.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
-                {(busca || fTipo || fFalha) && (
-                  <button className="text-xs text-primary hover:underline" onClick={() => { setBusca(''); setFTipo(''); setFFalha('') }}>limpar</button>
+                <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Filtrar O.S. por período" value={fPeriodo} onChange={(e) => setFPeriodo(e.target.value as 'tudo' | 'semana' | 'mes')}>
+                  <option value="tudo">Todo o período</option>
+                  <option value="semana">Última semana</option>
+                  <option value="mes">Último mês</option>
+                </select>
+                {(busca || fTipo || fFalha || fPeriodo !== 'tudo') && (
+                  <button className="text-xs text-primary hover:underline" onClick={() => { setBusca(''); setFTipo(''); setFFalha(''); setFPeriodo('tudo') }}>limpar</button>
                 )}
               </div>
               {ordensFiltradas.length === 0 ? (
@@ -140,7 +154,7 @@ export default function EquipamentoPagina() {
                     <Link key={o.id} to={`/cronograma/atividade/${o.id}`}
                           className="block rounded-md border-l-2 border-primary bg-muted/30 p-2 hover:bg-accent/40">
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="font-medium text-primary">{o.data}</span>
+                        <span className="font-medium text-primary">{intervaloData(o.data, o.data_fim)}</span>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] ${TIPO_OS_COR[o.tipo] ?? 'bg-muted'}`}>{o.tipo}</span>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUS_VISITA[o.status] ?? ''}`}>{o.status}</span>
                       </div>

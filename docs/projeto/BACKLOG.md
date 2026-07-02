@@ -205,9 +205,9 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
       **uma imagem vale para todos os equipamentos daquele tipo**. *Backend:* mapa `tipo → imagem_url`
       (entidade `TipoEquipamentoImagem` ou similar) + upload (#FILES). **Decisão a confirmar:** o `type`
       é texto livre — o mapa é **global** por texto do tipo (recomendado) ou por cliente?
-- [ ] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Na página do
-      dispositivo (#EQP-PAGINA/#OS-HIST-FILTRO), seletor para ver **1 semana / 1 mês / todo o período**.
-      *Só frontend* sobre a lista já retornada (usa `Visita.data`/intervalo do #OS-MULTIDATA).
+- [x] **#OS-HIST-DATAS — filtro de datas no histórico de O.S. do dispositivo** (item 2). Seletor
+      **Todo o período / Última semana / Último mês** na barra de filtros do histórico (#EQP-PAGINA);
+      corta por `data_fim ?? data` relativo a hoje. Intervalo (`intervaloData`) exibido em cada O.S.
 
 **Decisões a confirmar antes de codar (resumo):** #OS-MULTIDATA (intervalo vs conjunto), #EQP-TIPO-IMG
 (global por texto do tipo?), #CHAT (polling). **Dependência:** #OS-TIPO-CAMPOS e #OS-HIST-DATAS

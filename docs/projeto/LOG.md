@@ -4,6 +4,14 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 9: #OS-HIST-DATAS (filtro de período no histórico)
+
+**Branch:** `feat/lote9-multidata`. Frontend-only.
+
+- Página do dispositivo (#EQP-PAGINA): seletor **Todo o período / Última semana / Último mês** no
+  histórico de O.S. (corta por `data_fim ?? data` relativo a hoje) + intervalo (`intervaloData`)
+  em cada item. `tsc -b` limpo.
+
 ## 2026-07-02 — Lote 9: #OS-MULTIDATA + #OS-TIPO-CAMPOS
 
 **Branch:** `feat/lote9-multidata`.
