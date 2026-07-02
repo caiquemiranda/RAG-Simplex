@@ -4,6 +4,15 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Refinamento #EQP-SOBRE: página "Sobre equipamento"
+
+**Branch:** `feat/refinamentos`. Frontend-only.
+
+- `pages/SobreEquipamento.tsx` substitui o `Placeholder` de `/equipamentos/sobre`: visão geral das
+  famílias (4100/4100ES, F3200, QE90, IMS/TrueSite) **em alto nível** (sem inventar
+  tensões/endereços — segurança de vida) + aviso e atalhos para Consulta (RAG), Documentos→Marcas,
+  Buscar equipamento e Lista. Import órfão de `Placeholder` removido do `App.tsx`. `tsc -b` limpo.
+
 ## 2026-07-02 — Refinamento #EQP-DOC: documentos manuais do equipamento (N:N)
 
 **Branch:** `feat/refinamentos`. Decisão do usuário: **seleção manual** (não heurística).
