@@ -189,10 +189,11 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
     Descrição = `MANUTENÇÃO CORRETIVA <equipamento> — <falha>`.
   - Reaproveita `Visita.lista_id` (#PREV-OS) para a preventiva; `Visita.equipamento_id`+`falha_id` p/ corretiva.
       *Frontend `FormOS` type-aware + descrição auto; backend valida por tipo.*
-- [ ] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5). Hoje `Visita.data` é única.
-      **Decisão a confirmar:** modelar como **intervalo** (`data_inicio`/`data_fim`) — recomendado —
-      ou **conjunto de datas** (tabela N:1). Afeta calendário, filtros e o "mês" da descrição preventiva.
-      *Migração + ajustes no cronograma/relatórios.*
+- [x] **#OS-MULTIDATA — O.S. pode durar mais de um dia** (item 5, **D-028**). Modelado como
+      **intervalo**: `Visita.data` (início) + **`data_fim`** (nullable; `None` = 1 dia). Migração
+      `48dbeb05d767`. `listar` usa **overlap** (aparece em todos os meses que o intervalo cruza);
+      criar/PATCH validam `data_fim ≥ data` (400). Teste `test_os_multidata_intervalo`.
+      *Falta o campo `data_fim` no `FormOS` → entra no #OS-TIPO-CAMPOS.*
 - [ ] **#CHAT — chat interno entre usuários** (item 1). Mensagens diretas entre técnicos e admin, com
       **registro centralizado**. Sidebar ganha grupo **"Conversas"** listando **todos os usuários**;
       clicar num usuário abre o chat 1-a-1. **Não lidas** com alerta (badge na conversa + no sino de

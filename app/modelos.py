@@ -298,7 +298,8 @@ class Visita(Base):
     # Técnico responsável (1º da lista) — mantido para compat; a lista completa é `tecnicos`.
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
     cliente_id: Mapped[int | None] = mapped_column(ForeignKey("cliente.id"), default=None)
-    data: Mapped[date] = mapped_column(Date)
+    data: Mapped[date] = mapped_column(Date)                    # início da O.S. (data_inicio)
+    data_fim: Mapped[date | None] = mapped_column(Date, default=None)  # fim (#OS-MULTIDATA, D-028); None = 1 dia
     titulo: Mapped[str] = mapped_column(String(160))            # serviço / atividade
     status: Mapped[str] = mapped_column(String(20), default="agendada")  # agendada|pendente|concluida|cancelada
     observacoes: Mapped[str | None] = mapped_column(Text, default=None)

@@ -155,6 +155,7 @@ export type Visita = CamposDocOS & {
   unidade: string | null
   unidade_id: number | null
   data: string
+  data_fim: string | null
   titulo: string
   status: string
   observacoes: string | null
@@ -176,6 +177,7 @@ export type NovaVisita = CamposDocOS & {
   usuario_ids: number[]        // vazio → usa os técnicos fixos do cliente (#ALOC)
   cliente_id?: number | null
   data: string
+  data_fim?: string | null     // fim do intervalo (#OS-MULTIDATA)
   titulo: string
   status?: string
   observacoes?: string | null
