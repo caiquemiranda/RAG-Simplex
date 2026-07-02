@@ -414,6 +414,24 @@ class Notificacao(Base):
     )
 
 
+class Mensagem(Base):
+    """Mensagem de **chat interno** 1-a-1 entre usuários (#CHAT). A conversa entre A e B é o
+    conjunto de mensagens com {remetente, destinatario} = {A, B}."""
+
+    __tablename__ = "mensagem"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    remetente_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    destinatario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id", ondelete="CASCADE"))
+    texto: Mapped[str] = mapped_column(Text)
+    lida: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    remetente: Mapped["Usuario"] = relationship(foreign_keys=[remetente_id])
+
+
 class DocumentoEquipamento(Base):
     """Documento de equipamento/empresa (manual, datasheet…). Só admin sobe; #DOC1."""
 

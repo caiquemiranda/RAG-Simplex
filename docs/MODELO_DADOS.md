@@ -30,6 +30,7 @@ erDiagram
   EQUIPAMENTO_LISTA }o--o{ EQUIPAMENTO : "N:N lista_equipamento"
   EQUIPAMENTO_LISTA ||--o{ VISITA : "0..1 (O.S. preventiva #PREV-OS)"
   EQUIPAMENTO }o--o{ DOCUMENTO_EQUIPAMENTO : "N:N equipamento_documento (#EQP-DOC)"
+  USUARIO ||--o{ MENSAGEM : "1:N remetente/destinatário (#CHAT)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -85,7 +86,8 @@ erDiagram
     int id PK "= Ordem de Serviço (D-025)"
     int usuario_id FK "responsável (1º); demais em visita_tecnico"
     int cliente_id FK "opcional"
-    date data
+    date data "início"
+    date data_fim "fim do intervalo (#OS-MULTIDATA); null = 1 dia"
     string titulo "O.S./atividade"
     string status "agendada|pendente|concluida|cancelada"
     text observacoes
@@ -154,6 +156,20 @@ erDiagram
     int id PK
     date data UK
     string descricao
+  }
+  MENSAGEM {
+    int id PK
+    int remetente_id FK "usuario (cascade)"
+    int destinatario_id FK "usuario (cascade)"
+    text texto
+    bool lida
+    datetime criado_em
+  }
+  TIPO_EQUIPAMENTO_IMAGEM {
+    int id PK
+    string tipo UK "texto do type — global (#EQP-TIPO-IMG)"
+    text imagem_url
+    datetime criado_em
   }
   NOTIFICACAO {
     int id PK

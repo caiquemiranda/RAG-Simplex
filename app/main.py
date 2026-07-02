@@ -34,6 +34,7 @@ from app.banco import router as banco_router
 from app.biblioteca import router as biblioteca_router
 from app.plantas import router as plantas_router
 from app.cronograma import router as cronograma_router
+from app.conversas import router as conversas_router
 from app.notificacoes import router as notificacoes_router
 from app.auth import (
     TokenInvalido,
@@ -61,6 +62,7 @@ app = FastAPI(
 )
 app.include_router(admin_router)
 app.include_router(cronograma_router)
+app.include_router(conversas_router)
 app.include_router(notificacoes_router)
 app.include_router(arquivos_router)
 app.include_router(biblioteca_router)

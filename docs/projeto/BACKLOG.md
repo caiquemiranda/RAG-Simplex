@@ -193,13 +193,12 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
       `48dbeb05d767`. `listar` usa **overlap** (aparece em todos os meses que o intervalo cruza);
       criar/PATCH validam `data_fim ≥ data` (400). Teste `test_os_multidata_intervalo`.
       *Falta o campo `data_fim` no `FormOS` → entra no #OS-TIPO-CAMPOS.*
-- [ ] **#CHAT — chat interno entre usuários** (item 1). Mensagens diretas entre técnicos e admin, com
-      **registro centralizado**. Sidebar ganha grupo **"Conversas"** listando **todos os usuários**;
-      clicar num usuário abre o chat 1-a-1. **Não lidas** com alerta (badge na conversa + no sino de
-      **Notificações**). *Backend novo:* entidades `Conversa`/`Mensagem` (par de usuários, texto,
-      lida, criado_em) + endpoints (listar conversas, histórico, enviar, marcar lida). *Frontend:*
-      grupo na sidebar + tela de chat + polling de não-lidas. **Decisão:** tempo real por **polling**
-      (processo único, sem WebSocket) — recomendado.
+- [x] **#CHAT — chat interno entre usuários** (item 1, **D-028**). Entidade `Mensagem` (remetente/
+      destinatário/texto/lida). Router `/conversas`: contatos (com não-lidas), histórico (marca lidas
+      ao abrir), enviar (cria `Notificacao` só na **1ª** não lida — dedupe), total não-lidas. Migração
+      `615d05505836`. Frontend: **grupo "Conversas"** na sidebar (usuários + badge de não-lidas,
+      polling 15s), páginas `Conversas` (lista) e `Conversa` (thread + envio + polling 5s); notificação
+      de chat linka a `/conversas/{remetente}`. **Polling** (sem WebSocket). Teste `test_conversas.py`.
 - [x] **#EQP-TIPO-IMG — imagem por tipo de equipamento** (item 3, **D-028**). Entidade
       `TipoEquipamentoImagem` (`tipo` único → `imagem_url`), **global**. Endpoints: `GET/PUT
       /admin/tipos-equipamento` (upsert; `imagem_url` vazio remove) + `GET /equipamentos/{id}/tipo-imagem`

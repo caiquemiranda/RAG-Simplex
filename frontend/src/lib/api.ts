@@ -198,6 +198,9 @@ export type DocEquip = {
   url: string
   oculto: boolean
 }
+// Chat interno (#CHAT).
+export type ContatoChat = { id: number; nome: string; email: string; foto: string | null; nao_lidas: number }
+export type MensagemChat = { id: number; remetente_id: number; texto: string; meu: boolean; criado_em: string }
 export type Notificacao = {
   id: number
   tipo: string
@@ -593,6 +596,13 @@ export const api = {
     atualizar: (id: number, dados: { nome?: string; marca?: string; oculto?: boolean }) =>
       request<DocEquip>(`/biblioteca/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
     remover: (id: number) => request<void>(`/biblioteca/${id}`, { method: 'DELETE' }),
+  },
+  conversas: {
+    contatos: () => request<ContatoChat[]>('/conversas'),
+    naoLidas: () => request<{ total: number }>('/conversas/nao-lidas'),
+    historico: (outroId: number) => request<MensagemChat[]>(`/conversas/${outroId}`),
+    enviar: (outroId: number, texto: string) =>
+      request<MensagemChat>(`/conversas/${outroId}`, { method: 'POST', body: JSON.stringify({ texto }) }),
   },
   notificacoes: {
     listar: (apenasNaoLidas = false) =>

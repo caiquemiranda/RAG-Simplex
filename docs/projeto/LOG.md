@@ -4,6 +4,20 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 9: #CHAT (chat interno entre usuários) — fecha o Lote 9 (5/5)
+
+**Branch:** `feat/lote9-multidata`. Full-stack.
+
+- **Modelo:** `Mensagem` (remetente/destinatário/texto/lida). Migração `615d05505836`. **Router
+  `app/conversas.py`** (`/conversas`): `GET ""` contatos com não-lidas (ordena não-lidas primeiro),
+  `GET /nao-lidas` total, `GET /{id}` histórico (marca as recebidas como lidas ao abrir),
+  `POST /{id}` envia (cria `Notificacao tipo=chat` **só na 1ª não lida** — dedupe). Teste
+  `test_conversas.py::test_chat_fluxo_completo`.
+- **Frontend:** sidebar ganha grupo **"Conversas"** (lista usuários + badge de não-lidas; polling
+  15s); `pages/Conversas` (lista) + `pages/Conversa` (thread com bolhas, envio Enter, polling 5s,
+  auto-scroll). Notificação de chat linka a `/conversas/{remetente}`. **113 testes**, `tsc -b` limpo.
+- **Lote 9 concluído (5/5).**
+
 ## 2026-07-02 — Lote 9: #EQP-TIPO-IMG (imagem global por tipo de equipamento)
 
 **Branch:** `feat/lote9-multidata`.
