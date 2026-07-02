@@ -11,6 +11,7 @@ import RelatorioCliente from './pages/RelatorioCliente'
 import Equipamentos from './pages/Equipamentos'
 import EquipamentosLista from './pages/EquipamentosLista'
 import EquipamentoPagina from './pages/EquipamentoPagina'
+import DocumentoPreventiva from './pages/DocumentoPreventiva'
 import Placeholder from './components/Placeholder'
 import Documentos from './pages/Documentos'
 import Cronograma from './pages/Cronograma'
@@ -23,6 +24,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute />}>
+        {/* Fora do Layout — documento em folha cheia para impressão (#PREV-DOC) */}
+        <Route path="/preventiva/:listaId" element={<DocumentoPreventiva />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
           <Route path="/consulta" element={<Consulta />} />

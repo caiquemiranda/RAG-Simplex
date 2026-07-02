@@ -306,6 +306,27 @@ def test_equipamento_listas(ctx):
     assert client.get(f"/admin/clientes/{cid}/listas", headers=admin).json() == []
 
 
+def test_documento_preventiva(ctx):
+    """#PREV-DOC: o documento de preventiva monta cabeçalho do cliente + equipamentos da lista (por tag)."""
+    client, _ = ctx
+    admin = _login(client, "admin@x.com")
+    cid = client.post("/admin/clientes", headers=admin, json={"nome": "Cli P", "endereco": "Rua 9"}).json()["id"]
+    eb = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "B-02"}).json()["id"]
+    ea = client.post(f"/admin/clientes/{cid}/equipamentos", headers=admin, json={"tag": "A-01"}).json()["id"]
+    lid = client.post(f"/admin/clientes/{cid}/listas", headers=admin,
+                      json={"nome": "Preventiva Set", "equipamento_ids": [eb, ea]}).json()["id"]
+
+    doc = client.get(f"/admin/listas/{lid}/documento-preventiva", headers=admin)
+    assert doc.status_code == 200
+    j = doc.json()
+    assert j["lista_nome"] == "Preventiva Set" and j["cliente"]["nome"] == "Cli P" and j["cliente"]["endereco"] == "Rua 9"
+    assert j["gerado_em"] and [e["tag"] for e in j["equipamentos"]] == ["A-01", "B-02"]  # ordenado por tag
+
+    # RBAC + 404.
+    assert client.get(f"/admin/listas/{lid}/documento-preventiva", headers=_login(client, "tec@x.com")).status_code == 403
+    assert client.get("/admin/listas/99999/documento-preventiva", headers=admin).status_code == 404
+
+
 def test_cliente_detalhe_e_campos(ctx):
     """#CLI-PG: cadastro completo do cliente (endereço/contatos) + detalhe com equipamentos."""
     client, _ = ctx
