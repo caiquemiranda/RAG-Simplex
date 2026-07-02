@@ -4,6 +4,16 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 8 (parte 3): #SEC-UPLOAD + #UI-FOCUS
+
+**Branch:** `feat/lote8-seg-a11y`.
+
+- **#SEC-UPLOAD:** o middleware de `/arquivos` força `Content-Disposition: attachment` para tipos
+  fora do allowlist inline (`image/png|jpeg|gif|webp` + `application/pdf`) — HTML/SVG viram download
+  (neutraliza XSS), avatars/plantas/fotos/PDF seguem inline. Teste `test_disposicao_arquivos_perigosos`.
+- **#UI-FOCUS:** regra global `:focus-visible` em `index.css` (anel `ring-2 ring-ring`) — foco
+  visível em `<select>` nativos, botões de ícone e links. **110 testes**, `tsc -b` limpo.
+
 ## 2026-07-02 — Lote 8 (parte 2): #UI-ICONS (emoji → SVG) + #UI-TOUCH parcial
 
 **Branch:** `feat/lote8-ui`. Frontend-only.

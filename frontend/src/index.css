@@ -55,6 +55,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* #UI-FOCUS: anel de foco visível em qualquer elemento focável por teclado
+     (cobre <select> nativos, <button> de ícone e links que não têm estilo próprio). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-1 ring-offset-background;
+  }
 }
 
 /* #UI-MOTION: respeita "movimento reduzido" do sistema — desliga animações/transições. */
