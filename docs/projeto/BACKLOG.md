@@ -111,6 +111,24 @@ salvas que alimentam documentos de manutenção preventiva).
 **Decisões confirmadas:** ver [D-026](DECISOES.md) — `Equipamento.falha_id` para o estado "em
 falha"; documentos do equipamento = link para a **biblioteca (Marcas)**, sem upload por equipamento.
 
+### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
+Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
+usuário** (revisitar mais tarde). Nenhum item bloqueia o produto; são qualidade/processo.
+- [ ] **#CI — GitHub Actions:** workflow que roda `pytest` (backend) + `tsc -b`/build (frontend)
+      em cada push/PR; cache de deps; matriz de versões se necessário. Vira **status check obrigatório**.
+- [ ] **#BRANCH-PROTECTION:** proteger a `main` — exigir PR, **≥1 aprovação**, checks de CI verdes,
+      conversas resolvidas, história linear; proibir push direto e `--force`.
+- [ ] **#TEMPLATES:** `.github/PULL_REQUEST_TEMPLATE.md` (contexto, como testar, checklist DoD) +
+      `ISSUE_TEMPLATE/` (bug/feature) + `CONTRIBUTING.md` (fluxo do `GUIA_GIT.md`).
+- [ ] **#RELEASES — tags + SemVer:** primeira tag anotada (ex.: `v0.6.0` fecha o Lote 6) + Release
+      no GitHub + `CHANGELOG.md` (Keep a Changelog) alimentado pelo `LOG.md`.
+- [ ] **#CODEOWNERS:** donos por área (`app/`, `frontend/`, `docs/`) revisando obrigatoriamente.
+- [ ] **#SEGURANCA-REPO:** Dependabot (deps vulneráveis) + secret scanning + CodeQL (SAST);
+      opcional: **commits assinados** (GPG/SSH) obrigatórios.
+- [ ] **#PRE-COMMIT:** hooks locais (ruff/black no Python, eslint/prettier no front, `pytest` rápido)
+      para pegar problemas antes do push.
+Referência de conceitos: [`../GUIA_GIT.md`](../GUIA_GIT.md).
+
 ### G. Lote 4 — novas solicitações (2026-06-25)
 
 **Correções rápidas (independentes, baixo risco):**
