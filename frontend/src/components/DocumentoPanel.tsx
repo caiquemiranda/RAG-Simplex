@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
 import { Markdown } from './Markdown'
 import { Button } from './ui/button'
+import { IconDoc, IconClose } from './icons'
 
 /** Slug a partir do texto de um cabeçalho (para casar fonte ↔ seção do documento).
  *  Aplicado igualmente aos dois lados, então a normalização só precisa ser
@@ -71,11 +72,11 @@ export function DocumentoPanel({
   return (
     <div className="flex h-full w-full flex-col border-l md:w-1/2">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b p-3">
-        <div className="truncate text-sm font-medium" title={nome}>
-          📄 {nome}
+        <div className="flex items-center gap-1.5 truncate text-sm font-medium" title={nome}>
+          <IconDoc /> <span className="truncate">{nome}</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={onFechar}>
-          Fechar ✕
+        <Button variant="ghost" size="sm" onClick={onFechar} className="gap-1">
+          Fechar <IconClose />
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">

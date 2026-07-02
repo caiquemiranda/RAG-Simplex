@@ -158,9 +158,13 @@ Ver o diagnóstico no histórico. `find-skills`/`token-efficiency` não se aplic
 - [x] **#SEC-LOGIN** — rate-limit de login em memória (5 falhas/5 min por conta → 429). Sucesso
       limpa o contador. Teste `test_rate_limit_login`.
 - [x] **#UI-MOTION** — `@media (prefers-reduced-motion: reduce)` global em `index.css`.
-- [ ] **#UI-ICONS — emoji → SVG** em todo o frontend (78 ocorrências / 12 arquivos). Sidebar já usa
-      SVG; falta o restante (📄🔧⚠️📋📅📍🖨️…). *(Documentos já migrado.)*
-- [ ] **#UI-TOUCH — alvos de toque ≥44×44px** (44 controles `h-7/h-8/h-9` + botões `text-xs`).
+- [x] **#UI-ICONS — emoji → SVG** em todo o frontend. Novo módulo `components/icons.tsx` (Doc,
+      Wrench, Alert, Clipboard, Calendar, Pin, Print, Database, Building, Flag, Key, External, Edit,
+      Close, Monitor, User, Search, Eye/EyeOff). **0 emoji** restante; emoji decorativo inline
+      removido; ícones de ação com `aria-label`.
+- [~] **#UI-TOUCH — alvos de toque ≥44×44px** — *parcial*: botões de ação principais (upload, fechar,
+      imprimir, gerar doc, cards de grupo) ganharam `min-h-[44px]`/`p-2`. Falta a varredura fina dos
+      controles densos (selects `h-8/h-9`, chips inline) — precisa de cuidado com layout compacto.
 - [ ] **#UI-LABELS — labels visíveis** (não só placeholder) nos formulários.
 - [ ] **#UI-FOCUS — foco visível** nos `<select>` nativos e botões de ícone (base já tem `focus-visible`).
 - [ ] **#UI-TOKENS — cores de status via tokens** semânticos (hoje hex cru em `format.ts`).

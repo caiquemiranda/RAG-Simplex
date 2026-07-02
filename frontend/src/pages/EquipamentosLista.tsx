@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { TabelaOrdenavel, type Coluna } from '../components/TabelaOrdenavel'
+import { IconDoc, IconEdit, IconClose } from '../components/icons'
 import { corStatusEquip } from '../lib/format'
 
 /** Rótulo de estado do equipamento (mostra a falha quando "em falha"). */
@@ -116,9 +117,9 @@ export default function EquipamentosLista() {
                 {listas.map((l) => (
                   <span key={l.id} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs ${listaSel === l.id ? 'border-primary bg-accent font-medium' : ''}`}>
                     <button onClick={() => setListaSel(listaSel === l.id ? null : l.id)}>{l.nome} ({l.equipamento_ids.length})</button>
-                    <button className="text-muted-foreground hover:text-primary" title="Gerar documento de preventiva" onClick={() => navigate(`/preventiva/${l.id}`)}>📄</button>
-                    <button className="text-muted-foreground hover:text-primary" title="Editar lista" onClick={() => setModal({ lista: l })}>✎</button>
-                    <button className="text-muted-foreground hover:text-destructive" title="Remover lista" onClick={() => removerLista(l)}>✕</button>
+                    <button className="p-1 text-muted-foreground hover:text-primary" title="Gerar documento de preventiva" aria-label="Gerar documento" onClick={() => navigate(`/preventiva/${l.id}`)}><IconDoc className="h-3.5 w-3.5" /></button>
+                    <button className="p-1 text-muted-foreground hover:text-primary" title="Editar lista" aria-label="Editar lista" onClick={() => setModal({ lista: l })}><IconEdit className="h-3.5 w-3.5" /></button>
+                    <button className="p-1 text-muted-foreground hover:text-destructive" title="Remover lista" aria-label="Remover lista" onClick={() => removerLista(l)}><IconClose className="h-3.5 w-3.5" /></button>
                   </span>
                 ))}
                 <button className="rounded-full border border-dashed px-3 py-1 text-xs text-primary hover:bg-accent" onClick={() => setModal({})}>+ Criar lista</button>
@@ -218,7 +219,7 @@ function ModalLista({ clienteId, equip, lista, aoFechar, aoSalvar }: {
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl border bg-card shadow-xl">
         <div className="flex shrink-0 items-center justify-between border-b p-4">
           <h2 className="font-semibold">{lista ? 'Editar lista' : 'Nova lista de equipamentos'}</h2>
-          <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={aoFechar}>✕</button>
+          <button className="rounded p-2 text-muted-foreground hover:bg-accent" onClick={aoFechar} aria-label="Fechar"><IconClose /></button>
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
           {erro && <p className="text-sm text-destructive">{erro}</p>}

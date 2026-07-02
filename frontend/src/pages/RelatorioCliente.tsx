@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api, urlArquivo, type ClienteVisivel, type DocEquip, type Equipamento, type Visita } from '../lib/api'
 import { Avatar } from '../components/Avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { IconDoc, IconExternal } from '../components/icons'
 import { STATUS_VISITA, isoData } from '../lib/format'
 
 const STATUS_ALL = ['agendada', 'pendente', 'concluida', 'cancelada']
@@ -81,7 +82,7 @@ export default function RelatorioCliente() {
               </div>
               <Link to={`/equipamentos/lista/${cid}`} className="rounded-xl border bg-card p-3 text-center hover:bg-accent">
                 <div className="text-2xl font-bold">{equipamentos.length}</div>
-                <div className="text-xs text-muted-foreground">equipamentos ↗</div>
+                <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">equipamentos <IconExternal className="h-3 w-3" /></div>
               </Link>
             </div>
 
@@ -134,7 +135,7 @@ export default function RelatorioCliente() {
                 ) : (
                   documentos.map((d) => (
                     <a key={d.id} href={urlArquivo(d.url)} download className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-accent">
-                      <span className="truncate">📄 {d.nome}</span>
+                      <span className="inline-flex items-center gap-1.5 truncate"><IconDoc /> {d.nome}</span>
                     </a>
                   ))
                 )}

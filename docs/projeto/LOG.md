@@ -4,6 +4,18 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-02 — Lote 8 (parte 2): #UI-ICONS (emoji → SVG) + #UI-TOUCH parcial
+
+**Branch:** `feat/lote8-ui`. Frontend-only.
+
+- **#UI-ICONS:** novo `components/icons.tsx` (19 ícones SVG, `currentColor`, `aria-hidden`).
+  Substituídos **todos os emoji** usados como ícone/decoração no frontend (Atividade, Atividades,
+  Cronograma, Admin, EquipamentosLista, EquipamentoPagina, RelatorioCliente, Notificacoes, Home,
+  ClienteAdmin, DocumentoPreventiva, DocumentoPanel, FormOS, SobreEquipamento). **0 emoji** restante;
+  ícones de ação com `aria-label`.
+- **#UI-TOUCH (parcial):** botões de ação principais receberam `min-h-[44px]`/`p-2`. Varredura fina
+  dos controles densos fica para depois. `tsc -b` limpo; 109 testes (frontend-only).
+
 ## 2026-07-02 — Lote 8 (parte 1): cards de documentos + conformidade de segurança/motion
 
 **Branch:** `feat/lote8`. Auditoria das skills em `.agents/skills/`.

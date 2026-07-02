@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   api,
@@ -20,6 +20,7 @@ import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { AuditoriaView } from '../components/AuditoriaView'
 import { Avatar } from '../components/Avatar'
+import { IconUser, IconKey, IconDatabase, IconBuilding, IconAlert, IconClipboard, IconClose, IconMonitor, IconWrench, IconEye, IconEyeOff } from '../components/icons'
 import { statusDoc } from '../lib/format'
 
 type FormEdicao = {
@@ -54,13 +55,13 @@ function formatarBytes(n: number | null): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone: string }[] = [
-  { chave: 'usuarios', titulo: 'Gerenciar usuários', desc: 'Criar/editar usuários, papéis e permissões.', icone: '👤' },
-  { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: '🔑' },
-  { chave: 'banco', titulo: 'Banco de dados', desc: 'Gerenciar bancos de dados do sistema.', icone: '🗄️' },
-  { chave: 'clientes', titulo: 'Clientes e unidades', desc: 'Clientes, unidades (bases) e quais técnicos têm acesso.', icone: '🏢' },
-  { chave: 'falhas', titulo: 'Catálogo de falhas', desc: 'Falhas do painel (No Answer, Dirty…) usadas nas O.S.', icone: '⚠️' },
-  { chave: 'auditoria', titulo: 'Auditoria', desc: 'Histórico de consultas e feedback.', icone: '📋' },
+const CARDS: { chave: Exclude<Secao, null>; titulo: string; desc: string; icone: ReactNode }[] = [
+  { chave: 'usuarios', titulo: 'Gerenciar usuários', desc: 'Criar/editar usuários, papéis e permissões.', icone: <IconUser className="h-8 w-8" /> },
+  { chave: 'apikeys', titulo: 'Gerenciar API keys', desc: 'Chaves de provedores para integrações.', icone: <IconKey className="h-8 w-8" /> },
+  { chave: 'banco', titulo: 'Banco de dados', desc: 'Gerenciar bancos de dados do sistema.', icone: <IconDatabase className="h-8 w-8" /> },
+  { chave: 'clientes', titulo: 'Clientes e unidades', desc: 'Clientes, unidades (bases) e quais técnicos têm acesso.', icone: <IconBuilding className="h-8 w-8" /> },
+  { chave: 'falhas', titulo: 'Catálogo de falhas', desc: 'Falhas do painel (No Answer, Dirty…) usadas nas O.S.', icone: <IconAlert className="h-8 w-8" /> },
+  { chave: 'auditoria', titulo: 'Auditoria', desc: 'Histórico de consultas e feedback.', icone: <IconClipboard className="h-8 w-8" /> },
 ]
 
 export default function Admin() {
@@ -440,7 +441,7 @@ export default function Admin() {
                 onClick={() => { setSecao(c.chave); setMsg(null); setErro(null) }}
                 className="flex flex-col items-start rounded-xl border bg-card p-5 text-left shadow-sm transition hover:border-primary hover:shadow-md"
               >
-                <span className="text-3xl">{c.icone}</span>
+                <span className="text-primary">{c.icone}</span>
                 <span className="mt-3 font-semibold">{c.titulo}</span>
                 <span className="mt-1 text-sm text-muted-foreground">{c.desc}</span>
               </button>
@@ -500,7 +501,7 @@ export default function Admin() {
                     <Button size="sm" onClick={salvarProv} disabled={!novoProv.nome.trim() || !novoProv.api_key.trim()}>Salvar chave</Button>
                   </div>
                   <p className="text-xs text-muted-foreground sm:col-span-2">
-                    🔒 A chave é armazenada <strong>cifrada</strong> e nunca retornada em claro (só mascarada). Uso real na <strong>Fase 10</strong> (estratégias de nuvem).
+                    A chave é armazenada <strong>cifrada</strong> e nunca retornada em claro (só mascarada). Uso real na <strong>Fase 10</strong> (estratégias de nuvem).
                   </p>
                 </CardContent>
               </Card>
@@ -571,7 +572,7 @@ export default function Admin() {
                       <span key={u.id} className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs">
                         <span className="font-medium">{u.nome}</span>
                         {u.cidade && <span className="text-muted-foreground">· {u.cidade}</span>}
-                        <button className="text-destructive hover:underline" title="Remover unidade" onClick={() => removerUnidade(u)}>✕</button>
+                        <button className="p-1 text-destructive hover:underline" title="Remover unidade" aria-label="Remover unidade" onClick={() => removerUnidade(u)}><IconClose className="h-3 w-3" /></button>
                       </span>
                     ))}
                   </div>
@@ -649,7 +650,7 @@ export default function Admin() {
                   <div key={f.id} className="flex items-center gap-3 py-2">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{f.nome}</div>
-                      {f.termo_en && <div className="truncate text-xs text-muted-foreground">🖥️ {f.termo_en}</div>}
+                      {f.termo_en && <div className="inline-flex items-center gap-1 truncate text-xs text-muted-foreground"><IconMonitor className="h-3 w-3" /> {f.termo_en}</div>}
                     </div>
                     <Button variant="outline" size="sm" onClick={() => removerFalha(f)}>Remover</Button>
                   </div>
@@ -709,8 +710,8 @@ export default function Admin() {
                         <Label>Nova senha (opcional)</Label>
                         <div className="relative">
                           <Input type={verSenha ? 'text' : 'password'} className="pr-9" value={form.senha} placeholder="deixe em branco para não alterar" onChange={(e) => setForm({ ...form, senha: e.target.value })} />
-                          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground" title={verSenha ? 'Ocultar' : 'Mostrar'} onClick={() => setVerSenha((v) => !v)}>
-                            {verSenha ? '🙈' : '👁'}
+                          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'} title={verSenha ? 'Ocultar' : 'Mostrar'} onClick={() => setVerSenha((v) => !v)}>
+                            {verSenha ? <IconEyeOff /> : <IconEye />}
                           </button>
                         </div>
                       </div>
@@ -776,7 +777,7 @@ export default function Admin() {
               <CardContent className="space-y-2">
                 {(() => {
                   const venc = documentos.filter((d) => d.validade && Math.ceil((new Date(d.validade + 'T00:00:00').getTime() - Date.now()) / 86400000) <= 30).length
-                  return venc > 0 ? <p className="text-xs font-medium text-amber-700 dark:text-amber-300">⚠️ {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
+                  return venc > 0 ? <p className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300"><IconAlert className="h-3.5 w-3.5" /> {venc} documento(s) vencido(s) ou vencendo em até 30 dias — providenciar renovação.</p> : null
                 })()}
                 {documentos.length === 0 && <p className="text-xs text-muted-foreground">Nenhum documento cadastrado.</p>}
                 {documentos.map((d) => {
@@ -846,7 +847,9 @@ export default function Admin() {
                           if (e.target.checked) camadas.add(c); else camadas.delete(c)
                           setEstr({ ...estr, camadas })
                         }} />
-                        {c === 'simples' ? '🟢 simples' : '🔧 técnica'}
+                        {c === 'simples'
+                          ? <span className="inline-flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> simples</span>
+                          : <span className="inline-flex items-center gap-1"><IconWrench className="h-3.5 w-3.5" /> técnica</span>}
                       </label>
                     ))}
                   </div>
@@ -891,7 +894,7 @@ export default function Admin() {
                         <span className="truncate text-sm font-medium">{u.email}</span>
                         {u.docs_alerta > 0 && (
                           <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-200" title="Documentos vencidos ou vencendo em até 30 dias">
-                            ⚠️ {u.docs_alerta} doc.
+                            <IconAlert className="mr-0.5 inline h-3 w-3" />{u.docs_alerta} doc.
                           </span>
                         )}
                       </div>

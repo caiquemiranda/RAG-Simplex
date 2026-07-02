@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { IconAlert } from '../components/icons'
 
 /** Famílias de painéis atendidas — descrição de alto nível (sem dados técnicos inventados). */
 const FAMILIAS: { nome: string; resumo: string; usa: string }[] = [
@@ -32,12 +33,15 @@ export default function SobreEquipamento() {
       <h1 className="text-lg font-semibold">Sobre os equipamentos</h1>
 
       {/* Aviso de segurança de vida */}
-      <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm dark:bg-amber-900/20">
-        ⚠️ <strong>Sistema de segurança de vida.</strong> Esta página é uma visão geral. Para
+      <div className="flex gap-2 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm dark:bg-amber-900/20">
+        <IconAlert className="mt-0.5 shrink-0 text-amber-600" />
+        <div>
+        <strong>Sistema de segurança de vida.</strong> Esta página é uma visão geral. Para
         procedimentos, tensões, endereços e dip-switches, use sempre a base de conhecimento
         (<Link to="/consulta" className="text-primary hover:underline">Consulta</Link>) e os manuais
         oficiais em <Link to="/documentos?cat=marcas" className="text-primary hover:underline">Documentos → Marcas</Link>.
         Nunca improvise procedimento fora do que consta na fonte.
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

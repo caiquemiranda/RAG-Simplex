@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input'
 import { Avatar } from '../components/Avatar'
 import { MultiFiltro } from '../components/MultiFiltro'
 import { FormOS } from '../components/FormOS'
+import { IconClose, IconFlag } from '../components/icons'
 import { STATUS_VISITA, TIPO_OS_LABEL, TIPOS_OS, isoData as fmt } from '../lib/format'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -219,7 +220,7 @@ export default function Cronograma() {
                   <div className="mt-1 space-y-1">
                     {feriados[c.iso] && (
                       <div className="truncate rounded px-1 py-0.5 text-[10px] font-medium text-destructive" title={feriados[c.iso].descricao}>
-                        🎌 {feriados[c.iso].descricao}
+                        <IconFlag className="mr-0.5 inline h-3 w-3" />{feriados[c.iso].descricao}
                       </div>
                     )}
                     {agruparPorCliente(c.evs).slice(0, 2).map((g) => (
@@ -268,7 +269,7 @@ export default function Cronograma() {
               <h2 className="font-semibold capitalize">
                 {new Date(diaSel + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
               </h2>
-              <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={() => setDiaSel(null)}>✕</button>
+              <button className="rounded p-2 text-muted-foreground hover:bg-accent" onClick={() => setDiaSel(null)} aria-label="Fechar"><IconClose /></button>
             </div>
 
             {/* Corpo rolável (único scroll) */}
@@ -280,7 +281,7 @@ export default function Cronograma() {
               if (fer) {
                 return (
                   <div className="mb-2 flex items-center justify-between rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">
-                    <span>🎌 Feriado: {fer.descricao}</span>
+                    <span className="inline-flex items-center gap-1"><IconFlag className="h-3 w-3" /> Feriado: {fer.descricao}</span>
                     {podeGerir && <button className="hover:underline" onClick={() => removerFeriado(fer.id)}>remover</button>}
                   </div>
                 )
@@ -306,7 +307,7 @@ export default function Cronograma() {
                     <Avatar nome={e.nome} fotoUrl={e.foto ?? undefined} className="h-9 w-9" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{e.nome}</div>
-                      <div className="truncate text-xs text-muted-foreground">📍 {e.local}{e.fixo ? ' · fixo' : e.titulo ? ` · ${e.titulo}` : ''}</div>
+                      <div className="truncate text-xs text-muted-foreground">{e.local}{e.fixo ? ' · fixo' : e.titulo ? ` · ${e.titulo}` : ''}</div>
                     </div>
                   </div>
                 ))}
@@ -378,7 +379,7 @@ export default function Cronograma() {
                             <span className="truncate font-medium">{v.titulo}</span>
                             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${STATUS_COR[v.status] ?? 'bg-muted'}`}>{v.status}</span>
                           </div>
-                          <div className="truncate text-xs text-muted-foreground">📍 {v.cliente_nome ?? 'sem cliente'}</div>
+                          <div className="truncate text-xs text-muted-foreground">{v.cliente_nome ?? 'sem cliente'}</div>
                           <div className="flex -space-x-2">
                             {v.tecnicos.map((t) => (
                               <Avatar key={t.id} nome={t.nome} fotoUrl={t.foto ?? undefined} className="h-7 w-7 border-2 border-card text-[9px]" title={t.nome} />

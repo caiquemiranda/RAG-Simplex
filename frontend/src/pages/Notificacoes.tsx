@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useNotificacoes } from '../notificacoes/NotificacoesContext'
 import { Button } from '../components/ui/button'
+import { IconExternal } from '../components/icons'
 import type { Notificacao } from '../lib/api'
 
 /** Destino da notificação: atividade (cronograma) ou calendário (feriado). */
@@ -36,7 +37,7 @@ export default function Notificacoes() {
                   {n.texto && <span className="block text-xs text-muted-foreground">{n.texto}</span>}
                   <span className="block text-[11px] text-muted-foreground">
                     {new Date(n.criado_em).toLocaleString('pt-BR')}
-                    {para && <span className="ml-1 text-primary">· abrir ↗</span>}
+                    {para && <span className="ml-1 inline-flex items-center gap-0.5 text-primary">· abrir <IconExternal className="h-3 w-3" /></span>}
                   </span>
                 </span>
               </>

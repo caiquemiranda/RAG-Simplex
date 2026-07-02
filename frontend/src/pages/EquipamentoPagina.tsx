@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { IconDoc, IconClose } from '../components/icons'
 import { STATUS_VISITA, TIPO_OS_COR, TIPO_OS_LABEL, TIPOS_OS, corStatusEquip } from '../lib/format'
 
 /** Página de um dispositivo (#EQP-PAGINA): dados + O.S. associadas (com filtros) + documentos. */
@@ -105,7 +106,7 @@ export default function EquipamentoPagina() {
               ) : docsFixados.map((d) => (
                 <a key={d.id} href={urlArquivo(d.url)} target="_blank" rel="noreferrer"
                    className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-accent">
-                  <span className="text-muted-foreground">📄</span>
+                  <IconDoc className="text-muted-foreground" />
                   <span className="min-w-0 flex-1 truncate">{d.nome}</span>
                   {d.marca && <span className="shrink-0 text-xs text-muted-foreground">{d.marca}</span>}
                 </a>
@@ -188,7 +189,7 @@ function GerenciarDocs({ marcas, fixadosIds, aoFechar, aoSalvar }: {
       <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl border bg-card shadow-xl">
         <div className="flex shrink-0 items-center justify-between border-b p-4">
           <h2 className="font-semibold">Documentos do equipamento</h2>
-          <button className="rounded p-1 text-muted-foreground hover:bg-accent" onClick={aoFechar}>✕</button>
+          <button className="rounded p-2 text-muted-foreground hover:bg-accent" onClick={aoFechar} aria-label="Fechar"><IconClose /></button>
         </div>
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
           <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Filtrar por nome/marca…" />

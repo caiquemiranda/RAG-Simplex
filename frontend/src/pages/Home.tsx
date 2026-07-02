@@ -40,7 +40,7 @@ export default function Home() {
           </h1>
           {!podeGerir && locais.length > 0 && (
             <p className="mt-1 text-sm text-muted-foreground">
-              📍 Hoje você estará em: <strong>{locais.join(', ')}</strong>
+              Hoje você estará em: <strong>{locais.join(', ')}</strong>
             </p>
           )}
         </div>
@@ -66,7 +66,7 @@ export default function Home() {
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {podeGerir && <>{v.tecnico_nome} · </>}
-                    📍 {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
+                    {v.cliente_nome ?? '—'}{v.unidade ? ` (${v.unidade})` : ''}
                   </div>
                 </div>
               </div>
