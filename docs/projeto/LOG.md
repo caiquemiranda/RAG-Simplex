@@ -4,6 +4,14 @@ Histórico **append-only** do que foi feito. Entrada mais recente no topo. Não
 reescrever entradas antigas — apenas adicionar. Para o "onde estou agora", use
 [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
+## 2026-07-01 — #GIT-SKILL: skill git-flow (Lote 7, fim)
+
+**Branch:** `feat/lote7`. Fecha o Lote 7 (6/6).
+
+- Nova skill **`git-flow`** em `.claude/skills/git-flow/SKILL.md` (frontmatter name/description +
+  fases: abrir → commits `tipo(#TAG)` → certificar → fechar `--no-ff` → higiene/releases).
+  Invocável via `/git-flow`; espelha o `docs/GUIA_GIT.md`. Primeira skill do repo (`.claude/skills/`).
+
 ## 2026-07-01 — #R2-CARDS + #R2-TIPOS: Relatórios com gráficos e por tipo (Lote 7)
 
 **Branch:** `feat/lote7`.

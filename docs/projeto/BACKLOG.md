@@ -139,10 +139,11 @@ Seis solicitações do usuário. **Registradas** (a implementar depois).
 - [x] **#MAP-DETALHES — botão "Detalhes do dispositivo" no mapa** (item 5). No Buscar equipamento
       (`/equipamentos`), o card de detalhe ganhou **"Detalhes do dispositivo →"** que navega para
       `/equipamentos/:clienteId/:eqpId` (#EQP-PAGINA).
-- [ ] **#GIT-SKILL — skill de Git profissional** (item 6). Criar uma **skill** (em `.claude/skills/`)
-      que padroniza o fluxo **ponta a ponta**: abrir trabalho (branch a partir da `main`
-      atualizada) → commits no padrão `tipo(#TAG)` → certificação (testes/tsc/alembic) → PR →
-      **merge `--no-ff` para a `main`** → limpeza da branch. Baseada no [`../GUIA_GIT.md`](../GUIA_GIT.md).
+- [x] **#GIT-SKILL — skill de Git profissional** (item 6). Skill **`git-flow`**
+      (`.claude/skills/git-flow/SKILL.md`) padroniza o fluxo ponta a ponta: abrir (branch da `main`
+      atualizada) → commits `tipo(#TAG)` → certificar (pytest/tsc/alembic) → fechar (PR ou merge
+      `--no-ff` + push + limpeza) → higiene/releases. Invocável via `/git-flow`; baseada no
+      [`../GUIA_GIT.md`](../GUIA_GIT.md). **Lote 7 concluído (6/6).**
 
 ### K. Infra de engenharia "big-tech" — FUTURO (⏸️ não iniciar sem OK do usuário)
 Elevar o repositório ao padrão de uma empresa de tecnologia grande. **Adiado a pedido do
