@@ -96,6 +96,7 @@ frontend (React)   → chat estilo ChatGPT + painel ADM
 | GET/POST `/admin/clientes/{id}/listas` · PATCH/DELETE `/admin/listas/{id}` | `gerir_usuarios` | **Listas de equipamentos** (#EQP-LISTAS): nome + N:N; ids de outro cliente ignorados. |
 | GET | `/admin/listas/{id}/documento-preventiva` | `gerir_usuarios` | **Documento de Manutenção Preventiva** (#PREV-DOC): cabeçalho do cliente + equipamentos da lista (por tag). |
 | GET | `/cronograma/equipamento/{id}` | autenticado | **Histórico de O.S.** do equipamento (#MAP-4); RBAC pelo cliente. |
+| GET | `/cronograma/{id}/documento-preventiva` | `gerir_usuarios` | **Documento único** da preventiva do mês (#OS-PREV-DATAS): datas marcadas + equipamentos da lista. |
 | GET | `/unidades` | autenticado | Unidades ativas (seletor da "visão por unidade"). |
 | GET | `/cronograma?de=&ate=&tecnico_ids=&cliente_ids=&unidade_id=` | autenticado | Visitas (técnico vê as próprias; admin vê todas). Filtros **Equipe** (`tecnico_ids`, multi) e **Clientes** (`cliente_ids`, multi) + **unidade**. #ALOC só seg–sex. |
 | POST/PATCH/DELETE | `/cronograma[/{id}]` | `gerir_usuarios` | Gerencia **O.S./visitas** (#OS, D-025): `tipo` (preventiva/corretiva/avulsa), equipamento, falha, campos-doc; sem técnicos → fixos do cliente; concluir grava `ultima_manutencao`. |

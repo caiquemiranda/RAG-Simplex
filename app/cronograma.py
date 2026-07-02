@@ -28,6 +28,7 @@ from app.modelos import (
     Notificacao,
     Usuario,
     Visita,
+    VisitaData,
 )
 
 router = APIRouter(prefix="/cronograma", tags=["cronograma"])
@@ -76,6 +77,7 @@ class VisitaIn(_OSDoc):
     cliente_id: int | None = None
     data: date
     data_fim: date | None = None      # fim do intervalo (#OS-MULTIDATA); None = 1 dia
+    datas: list[date] = []            # datas avulsas da preventiva mensal (#OS-PREV-DATAS)
     titulo: str
     status: str = "agendada"
     observacoes: str | None = None
@@ -86,6 +88,7 @@ class VisitaAtualizar(_OSDoc):
     cliente_id: int | None = None
     data: date | None = None
     data_fim: date | None = None
+    datas: list[date] | None = None   # substitui o conjunto de datas da preventiva (#OS-PREV-DATAS)
     titulo: str | None = None
     status: str | None = None
     observacoes: str | None = None
@@ -111,6 +114,7 @@ class VisitaResumo(BaseModel):
     unidade_id: int | None = None     # base do cliente (D-021) — para a visão por unidade
     data: date
     data_fim: date | None = None      # fim do intervalo (#OS-MULTIDATA)
+    datas: list[date] = []            # datas avulsas da preventiva (#OS-PREV-DATAS)
     titulo: str
     status: str
     observacoes: str | None = None
@@ -182,7 +186,8 @@ def _resumo(v: Visita) -> VisitaResumo:
         cliente_logo=v.cliente.logo_url if v.cliente else None,
         unidade=_nome_unidade(v.cliente),
         unidade_id=v.cliente.unidade_id if v.cliente else None,
-        data=v.data, data_fim=v.data_fim, titulo=v.titulo, status=v.status, observacoes=v.observacoes,
+        data=v.data, data_fim=v.data_fim, datas=[d.data for d in v.datas],
+        titulo=v.titulo, status=v.status, observacoes=v.observacoes,
         tipo=v.tipo, equipamento_id=v.equipamento_id,
         equipamento_tag=(v.equipamento.tag or v.equipamento.add) if v.equipamento else None,
         falha_id=v.falha_id, falha_nome=v.falha.nome if v.falha else None,
@@ -351,11 +356,41 @@ def criar(dados: VisitaIn,
     if dados.data_fim is not None and dados.data_fim < dados.data:
         raise HTTPException(status_code=400, detail="Data final antes da inicial.")
     tecnicos = _carregar_tecnicos(sessao, ids)
+    datas_set = sorted(set(dados.datas)) if dados.datas else []
+
+    # #OS-PREV-DATAS (D-029): a preventiva mensal é única por **cliente + mês**. Marcar mais dias
+    # adiciona datas à mesma O.S./documento em vez de criar outra.
+    if dados.tipo == "preventiva" and dados.cliente_id and datas_set:
+        ref = datas_set[0]
+        existentes = sessao.scalars(select(Visita).where(
+            Visita.tipo == "preventiva", Visita.cliente_id == dados.cliente_id)).all()
+        alvo = next((x for x in existentes if x.data.year == ref.year and x.data.month == ref.month), None)
+        if alvo is not None:
+            atuais = {d.data for d in alvo.datas}
+            for d in datas_set:
+                if d not in atuais:
+                    alvo.datas.append(VisitaData(data=d))
+            todas = sorted({d.data for d in alvo.datas})
+            alvo.data = todas[0]
+            alvo.data_fim = todas[-1] if len(todas) > 1 else None
+            if dados.usuario_ids:                       # só troca a equipe se informada
+                alvo.tecnicos = tecnicos
+                alvo.usuario_id = tecnicos[0].id
+            _aplicar_os(sessao, alvo, dados)            # lista/tipo/etc.
+            if dados.titulo.strip():
+                alvo.titulo = dados.titulo.strip()
+            sessao.commit()
+            sessao.refresh(alvo)
+            return _resumo(alvo)
+
     v = Visita(
-        usuario_id=tecnicos[0].id, cliente_id=dados.cliente_id, data=dados.data,
-        data_fim=dados.data_fim, titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
+        usuario_id=tecnicos[0].id, cliente_id=dados.cliente_id, data=(datas_set[0] if datas_set else dados.data),
+        data_fim=(datas_set[-1] if len(datas_set) > 1 else dados.data_fim),
+        titulo=dados.titulo.strip(), status=dados.status, observacoes=dados.observacoes,
     )
     v.tecnicos = tecnicos
+    if datas_set:
+        v.datas = [VisitaData(data=d) for d in datas_set]
     _aplicar_os(sessao, v, dados)
     sessao.add(v)
     sessao.flush()
@@ -407,6 +442,13 @@ def atualizar(visita_id: int, dados: VisitaAtualizar,
         v.data = dados.data
     if admin and "data_fim" in dados.model_fields_set:
         v.data_fim = dados.data_fim
+    # #OS-PREV-DATAS: substitui o conjunto de datas da preventiva (ajusta data/data_fim).
+    if admin and dados.datas is not None:
+        datas_set = sorted(set(dados.datas))
+        v.datas = [VisitaData(data=d) for d in datas_set]
+        if datas_set:
+            v.data = datas_set[0]
+            v.data_fim = datas_set[-1] if len(datas_set) > 1 else None
     if admin and (v.data_fim is not None and v.data_fim < v.data):
         raise HTTPException(status_code=400, detail="Data final antes da inicial.")
     if admin and dados.titulo is not None:
@@ -441,6 +483,56 @@ def ordens_do_equipamento(equipamento_id: int,
         select(Visita).where(Visita.equipamento_id == equipamento_id).order_by(Visita.data.desc())
     ).all()
     return [_resumo(v) for v in ordens]
+
+
+# --------------------------------------------------------------------------- #
+# Documento de Manutenção Preventiva a partir da O.S. mensal (#OS-PREV-DATAS)   #
+# --------------------------------------------------------------------------- #
+class DocPrevEquipC(BaseModel):
+    id: int
+    tag: str
+    painel: str
+    loop: str
+    add: str
+    type: str
+    model: str
+
+
+class DocPrevClienteC(BaseModel):
+    id: int
+    nome: str
+    endereco: str | None = None
+    unidade: str | None = None
+
+
+class DocPreventivaOSOut(BaseModel):
+    visita_id: int
+    titulo: str
+    gerado_em: date
+    datas: list[date]                 # dias avulsos marcados no mês
+    cliente: DocPrevClienteC | None = None
+    equipamentos: list[DocPrevEquipC]
+
+
+@router.get("/{visita_id}/documento-preventiva", response_model=DocPreventivaOSOut)
+def documento_preventiva_os(visita_id: int,
+                            _: Usuario = Depends(requer("gerir_usuarios")),
+                            sessao: Session = Depends(get_session)) -> DocPreventivaOSOut:
+    """Documento **único** da preventiva do mês (#OS-PREV-DATAS): cabeçalho do cliente + **datas
+    marcadas** + equipamentos da lista da O.S."""
+    v = sessao.get(Visita, visita_id)
+    if v is None:
+        raise HTTPException(status_code=404, detail="O.S. não encontrada.")
+    if v.tipo != "preventiva":
+        raise HTTPException(status_code=400, detail="A O.S. não é de manutenção preventiva.")
+    c = v.cliente
+    eqs = sorted(v.lista.equipamentos, key=lambda e: (e.tag or "").lower()) if v.lista else []
+    return DocPreventivaOSOut(
+        visita_id=v.id, titulo=v.titulo, gerado_em=date.today(),
+        datas=[d.data for d in v.datas],
+        cliente=DocPrevClienteC(id=c.id, nome=c.nome, endereco=c.endereco, unidade=_nome_unidade(c)) if c else None,
+        equipamentos=[DocPrevEquipC(id=e.id, tag=e.tag, painel=e.painel, loop=e.loop, add=e.add, type=e.type, model=e.model) for e in eqs],
+    )
 
 
 @router.delete("/{visita_id}", status_code=status.HTTP_204_NO_CONTENT)

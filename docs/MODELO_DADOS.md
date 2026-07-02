@@ -31,6 +31,7 @@ erDiagram
   EQUIPAMENTO_LISTA ||--o{ VISITA : "0..1 (O.S. preventiva #PREV-OS)"
   EQUIPAMENTO }o--o{ DOCUMENTO_EQUIPAMENTO : "N:N equipamento_documento (#EQP-DOC)"
   USUARIO ||--o{ MENSAGEM : "1:N remetente/destinatário (#CHAT)"
+  VISITA ||--o{ VISITA_DATA : "1:N datas avulsas da preventiva (#OS-PREV-DATAS)"
   UNIDADE ||--o{ CLIENTE : "0..1 (unidade_id, D-021)"
   UNIDADE ||--o{ USUARIO : "0..1 (unidade_id, base)"
   USUARIO ||--o{ NOTIFICACAO : "1:N (usuario_id)"
@@ -156,6 +157,10 @@ erDiagram
     int id PK
     date data UK
     string descricao
+  }
+  VISITA_DATA {
+    int visita_id FK "cascade (PK composta)"
+    date data "PK composta — dia avulso da preventiva (#OS-PREV-DATAS)"
   }
   MENSAGEM {
     int id PK

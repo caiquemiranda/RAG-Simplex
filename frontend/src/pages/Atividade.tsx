@@ -6,7 +6,7 @@ import { Avatar } from '../components/Avatar'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { FormOS } from '../components/FormOS'
-import { IconClose, IconDoc, IconWrench, IconAlert, IconClipboard } from '../components/icons'
+import { IconClose, IconDoc, IconWrench, IconAlert, IconClipboard, IconCalendar } from '../components/icons'
 import { STATUS_VISITA, TIPO_OS_COR, intervaloData } from '../lib/format'
 
 const STATUS = ['agendada', 'pendente', 'concluida', 'cancelada']
@@ -110,9 +110,10 @@ export default function Atividade() {
             {atv.equipamento_tag && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconWrench className="h-3 w-3" /> {atv.equipamento_tag}</span>}
             {atv.falha_nome && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconAlert className="h-3 w-3" /> {atv.falha_nome}</span>}
             {atv.lista_nome && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconClipboard className="h-3 w-3" /> {atv.lista_nome}</span>}
-            {atv.tipo === 'preventiva' && atv.lista_id != null && (
+            {atv.datas.length > 0 && <span className="inline-flex items-center gap-1 text-muted-foreground"><IconCalendar className="h-3 w-3" /> {atv.datas.map((d) => d.split('-').reverse().slice(0, 2).join('/')).join(', ')}</span>}
+            {atv.tipo === 'preventiva' && (
               <button className="inline-flex min-h-[44px] items-center gap-1 rounded-md border px-2 text-primary hover:bg-accent"
-                      onClick={() => navigate(`/preventiva/${atv.lista_id}`)}><IconDoc className="h-3.5 w-3.5" /> Gerar documento de preventiva</button>
+                      onClick={() => navigate(`/preventiva/os/${atv.id}`)}><IconDoc className="h-3.5 w-3.5" /> Gerar documento de preventiva</button>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">

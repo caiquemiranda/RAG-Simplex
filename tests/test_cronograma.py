@@ -422,6 +422,50 @@ def test_os_multidata_intervalo(ctx):
     assert client.patch(f"/cronograma/{vid}", headers=admin, json={"data_fim": "2026-07-01"}).status_code == 400
 
 
+def test_preventiva_datas_mensal(ctx):
+    """#OS-PREV-DATAS (D-029): a preventiva do mês é única por cliente+mês; marcar mais dias
+    adiciona datas à MESMA O.S.; outro mês cria outra."""
+    client, ids = ctx
+    admin = _login(client, "admin@x.com")
+    cid = ids["cliente"]
+    lid = client.post(f"/admin/clientes/{cid}/listas", headers=admin, json={"nome": "Prev"}).json()["id"]
+
+    # 1ª marcação: dias 2 e 3 de agosto.
+    r = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": cid, "titulo": "MANUTENÇÃO PREVENTIVA — AGOSTO/2026",
+        "tipo": "preventiva", "lista_id": lid, "data": "2026-08-02", "datas": ["2026-08-02", "2026-08-03"]})
+    assert r.status_code == 201
+    osid = r.json()["id"]
+    assert r.json()["datas"] == ["2026-08-02", "2026-08-03"]
+
+    # 2ª marcação no mesmo mês: dias 15, 16, 20 → mesma O.S., datas mescladas.
+    r2 = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": cid, "titulo": "x",
+        "tipo": "preventiva", "data": "2026-08-15", "datas": ["2026-08-15", "2026-08-16", "2026-08-20", "2026-08-02"]})
+    assert r2.json()["id"] == osid   # mesma O.S.
+    assert r2.json()["datas"] == ["2026-08-02", "2026-08-03", "2026-08-15", "2026-08-16", "2026-08-20"]
+    assert r2.json()["data"] == "2026-08-02" and r2.json()["data_fim"] == "2026-08-20"  # bounding do mês
+
+    # Setembro → O.S. diferente.
+    r3 = client.post("/cronograma", headers=admin, json={
+        "usuario_ids": [ids["tec"]], "cliente_id": cid, "titulo": "set", "tipo": "preventiva",
+        "data": "2026-09-01", "datas": ["2026-09-01"]})
+    assert r3.json()["id"] != osid
+
+    # Documento único da preventiva (a partir da O.S.) traz as datas marcadas + cliente + equipamentos.
+    doc = client.get(f"/cronograma/{osid}/documento-preventiva", headers=admin)
+    assert doc.status_code == 200
+    assert doc.json()["datas"] == ["2026-08-02", "2026-08-03", "2026-08-15", "2026-08-16", "2026-08-20"]
+    assert doc.json()["cliente"]["nome"] == "Shopping X"
+    # Corretiva → 400 no documento de preventiva.
+    corr = client.post("/cronograma", headers=admin, json={"usuario_ids": [ids["tec"]], "data": "2026-08-01", "titulo": "c", "tipo": "corretiva"}).json()["id"]
+    assert client.get(f"/cronograma/{corr}/documento-preventiva", headers=admin).status_code == 400
+
+    # PATCH substitui o conjunto de datas.
+    r4 = client.patch(f"/cronograma/{osid}", headers=admin, json={"datas": ["2026-08-10"]})
+    assert r4.json()["datas"] == ["2026-08-10"] and r4.json()["data"] == "2026-08-10"
+
+
 def test_feriado_crud(ctx):
     client, _ = ctx
     admin = _login(client, "admin@x.com")

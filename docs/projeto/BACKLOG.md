@@ -193,6 +193,13 @@ Solicitações do usuário. **Registradas** (a implementar depois). Há **decis�
       `48dbeb05d767`. `listar` usa **overlap** (aparece em todos os meses que o intervalo cruza);
       criar/PATCH validam `data_fim ≥ data` (400). Teste `test_os_multidata_intervalo`.
       *Falta o campo `data_fim` no `FormOS` → entra no #OS-TIPO-CAMPOS.*
+- [x] **#OS-PREV-DATAS — preventiva mensal com datas avulsas** (refinamento, **D-029**, ajusta D-028).
+      A preventiva do mês é **1 O.S./documento por cliente+mês**, mas com **dias avulsos** (2,3,15,16,20).
+      Tabela **`visita_data`** (N datas por O.S.; corretiva mantém intervalo). Migração `965839fdf8d7`.
+      `criar` de preventiva com `datas` **mescla** na O.S. do mesmo cliente+mês (dedupe). Documento
+      único: `GET /cronograma/{id}/documento-preventiva` (datas + equipamentos da lista) + rota
+      `/preventiva/os/:visitaId`. `FormOS` preventiva com **multi-date picker** (mesmo mês). Teste
+      `test_preventiva_datas_mensal`.
 - [x] **#CHAT — chat interno entre usuários** (item 1, **D-028**). Entidade `Mensagem` (remetente/
       destinatário/texto/lida). Router `/conversas`: contatos (com não-lidas), histórico (marca lidas
       ao abrir), enviar (cria `Notificacao` só na **1ª** não lida — dedupe), total não-lidas. Migração
